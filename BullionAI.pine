@@ -1,0 +1,304 @@
+//@version=6
+indicator("BullionAI", overlay=true)
+
+// ===== INPUTS =====
+emaLen = input.int(50)
+rsiLen = input.int(14)
+atrLen = input.int(14)
+atrMult = input.float(1.5)
+
+stAtr = input.int(10)
+stFactor = input.float(3.0)
+
+// ===== INDICATORS =====
+emaTrend = ta.ema(close, emaLen)
+rsi = ta.rsi(close, rsiLen)
+atr = ta.atr(atrLen)
+
+[supertrend, direction] = ta.supertrend(stFactor, stAtr)
+[macdLine, macdSignal, _] = ta.macd(close,12,26,9)
+
+// ===== TREND =====
+trendBull = direction < 0
+trendBear = direction > 0
+
+momentumBull = rsi > 50 and macdLine > macdSignal
+momentumBear = rsi < 50 and macdLine < macdSignal
+
+// ===== SIGNAL CONDITIONS =====
+buyCondition = trendBull and momentumBull
+sellCondition = trendBear and momentumBear
+
+// ===== TRADE STORAGE =====
+var string lastSignal = "NONE"
+var string tradeStatus = "CLOSED"
+
+var float entryPrice = na
+var float trailSL = na
+var float exitSL = na
+var float points = na
+
+// ===== ANALYTICS =====
+var float maxHigh = na
+var float maxLow = na
+var float maxProfit = na
+
+// ===== ENTRY DATE/TIME =====
+var int entryYear = na
+var int entryMonth = na
+var int entryDay = na
+var int entryHour = na
+var int entryMinute = na
+
+// ===== EXIT DATE/TIME =====
+var int exitYear = na
+var int exitMonth = na
+var int exitDay = na
+var int exitHour = na
+var int exitMinute = na
+
+// ===== NEW TRADE =====
+newBuy =
+ buyCondition and tradeStatus=="CLOSED"
+
+newSell =
+ sellCondition and tradeStatus=="CLOSED"
+
+if newBuy or newSell
+
+    entryPrice := close
+
+    entryYear := year
+    entryMonth := month
+    entryDay := dayofmonth
+
+    entryHour := hour
+    entryMinute := minute
+
+    trailSL := na
+    exitSL := na
+    points := na
+
+    // ===== RESET ANALYTICS =====
+    maxHigh := high
+    maxLow := low
+    maxProfit := na
+
+    exitYear := na
+    exitMonth := na
+    exitDay := na
+    exitHour := na
+    exitMinute := na
+
+    tradeStatus := "OPEN"
+
+    lastSignal := newBuy ? "BUY" : "SELL"
+
+// ===== TRAILING SL =====
+atrSL_buy = close - atr * atrMult
+atrSL_sell = close + atr * atrMult
+
+rawBuySL = math.max(supertrend, atrSL_buy)
+rawSellSL = math.min(supertrend, atrSL_sell)
+
+if tradeStatus=="OPEN"
+
+    if lastSignal=="BUY"
+
+        trailSL :=
+         na(trailSL)
+         ? rawBuySL
+         : math.max(trailSL, rawBuySL)
+
+        // Highest Price During BUY
+        maxHigh := math.max(maxHigh, high)
+        maxProfit := maxHigh - entryPrice
+
+    if lastSignal=="SELL"
+
+        trailSL :=
+         na(trailSL)
+         ? rawSellSL
+         : math.min(trailSL, rawSellSL)
+
+        // Lowest Price During SELL
+        maxLow := math.min(maxLow, low)
+        maxProfit := entryPrice - maxLow
+
+// ===== EXIT CONDITION =====
+// ===== EXIT CONDITION =====
+slHitBuy =
+ lastSignal=="BUY" and close<=trailSL
+
+slHitSell =
+ lastSignal=="SELL" and close>=trailSL
+
+if (slHitBuy or slHitSell) and tradeStatus=="OPEN"
+
+    exitSL := trailSL
+
+    exitYear := year
+    exitMonth := month
+    exitDay := dayofmonth
+
+    // ===== STORE EXIT TIME =====
+    exitHour := hour
+    exitMinute := minute
+
+    tradeStatus := "CLOSED"
+
+    points :=
+     lastSignal=="BUY"
+     ? exitSL-entryPrice
+     : entryPrice-exitSL
+
+// ===== DATE FORMAT =====
+entryDate =
+ str.tostring(entryDay)+"-"+
+ str.tostring(entryMonth)+"-"+
+ str.tostring(entryYear)
+
+exitDate =
+ tradeStatus=="CLOSED"
+ ? str.tostring(exitDay)+"-"+str.tostring(exitMonth)+"-"+str.tostring(exitYear)
+ : "-"
+
+// ===== ENTRY TIME =====
+h = entryHour%12
+h := h==0?12:h
+
+ampm =
+ entryHour>=12?"PM":"AM"
+
+entryTime =
+ str.tostring(h)+":"+
+ str.tostring(entryMinute)+" "+
+ ampm
+
+// ===== EXIT TIME =====
+eh = exitHour%12
+eh := eh==0?12:eh
+
+exitAmpm =
+ exitHour>=12?"PM":"AM"
+
+exitTime =
+ tradeStatus=="CLOSED"
+ ? str.tostring(eh)+":"+str.tostring(exitMinute)+" "+exitAmpm
+ : "-"
+
+// ===== POINT TEXT =====
+pointsText =
+ tradeStatus=="CLOSED"
+ ? str.tostring(math.round(points))
+ : "-"
+
+// ===== ANALYTICS =====
+maxPriceText =
+ lastSignal=="BUY"
+ ? str.tostring(math.round(maxHigh))
+ : str.tostring(math.round(maxLow))
+
+maxProfitText =
+ not na(maxProfit)
+ ? str.tostring(math.round(maxProfit))
+ : "-"
+
+
+// ===== CURRENT P/L =====
+currentPL =
+ tradeStatus=="OPEN"
+ ? (
+     lastSignal=="BUY"
+     ? close - entryPrice
+     : entryPrice - close
+   )
+ : na
+
+currentPLText =
+ tradeStatus=="OPEN"
+ ? str.tostring(math.round(currentPL))
+ : "-"
+
+// ===== SIGNAL LABELS =====
+plotshape(newBuy,
+ location=location.belowbar,
+ style=shape.labelup,
+ color=color.green,
+ text="BUY",
+ textcolor=color.white)
+
+plotshape(newSell,
+ location=location.abovebar,
+ style=shape.labeldown,
+ color=color.red,
+ text="SELL",
+ textcolor=color.white)
+
+// ===== TRAILING SL =====
+plot(trailSL,
+ color =
+ lastSignal=="BUY"
+ ? color.lime
+ : color.red,
+
+ linewidth=3,
+ style=plot.style_linebr)
+
+// ===== PREMIUM PANEL =====
+var table panel =
+ table.new(position.bottom_right,2,11,
+ bgcolor=color.rgb(15,15,18),
+ frame_color=color.rgb(120,120,120),
+ frame_width=2,
+ border_width=1)
+
+if barstate.islast
+
+    // Header
+    table.cell(panel,0,0,"BULLIONAI PRO",
+      bgcolor=color.rgb(190,150,25),
+      text_color=color.black)
+
+    table.cell(panel,1,0,"",
+      bgcolor=color.rgb(190,150,25),
+      text_color=color.black)
+
+    // Trade
+    table.cell(panel,0,1,"Trade",text_color=color.silver)
+    table.cell(panel,1,1,lastSignal,text_color=lastSignal=="BUY"?color.lime:color.red)
+
+    table.cell(panel,0,2,"Status",text_color=color.silver)
+    table.cell(panel,1,2,tradeStatus,text_color=tradeStatus=="OPEN"?color.yellow:color.white)
+
+    // Execution
+    table.cell(panel,0,3,"Entry Price",text_color=color.silver)
+    table.cell(panel,1,3,str.tostring(math.round(entryPrice)),text_color=color.white)
+
+    table.cell(panel,0,4,"Trail SL",text_color=color.silver)
+    table.cell(panel,1,4,str.tostring(math.round(trailSL)),text_color=color.orange)
+
+    // Performance
+    table.cell(panel,0,5,lastSignal=="BUY"?"Highest":"Lowest",text_color=color.silver)
+    table.cell(panel,1,5,maxPriceText,text_color=color.aqua)
+
+    table.cell(panel,0,6,"Current P/L",text_color=color.silver)
+    table.cell(panel,1,6,currentPLText,
+        text_color=tradeStatus=="OPEN"?(currentPL>=0?color.lime:color.red):color.white)
+
+    table.cell(panel,0,7,"Best P/L",text_color=color.silver)
+    table.cell(panel,1,7,maxProfitText,text_color=color.lime)
+
+    table.cell(panel,0,8,"Realized P/L",text_color=color.silver)
+    table.cell(panel,1,8,pointsText,text_color=points>=0?color.lime:color.red)
+
+    // Timeline
+    table.cell(panel,0,9,"Entry",text_color=color.silver)
+    table.cell(panel,1,9,entryDate+"  "+entryTime,text_color=color.white)
+
+    table.cell(panel,0,10,"Exit",text_color=color.silver)
+    table.cell(panel,1,10,tradeStatus=="CLOSED"?exitDate+"  "+exitTime:"-",text_color=color.white)
+
+// ===== ALERTS =====
+alertcondition(newBuy,"BUY SIGNAL","BUY {{ticker}}")
+alertcondition(newSell,"SELL SIGNAL","SELL {{ticker}}")

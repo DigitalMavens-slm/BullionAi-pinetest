@@ -1,0 +1,245 @@
+/* =========================================================
+   BULLIONAI — PREMIUM DASHBOARD STYLES
+   ========================================================= */
+
+/* ---------- Live ticker tape ---------- */
+
+@keyframes bullionai-marquee {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.ticker-viewport {
+  overflow: hidden;
+  position: relative;
+}
+
+.ticker-track {
+  display: flex;
+  width: max-content;
+  animation: bullionai-marquee 38s linear infinite;
+}
+
+.ticker-viewport:hover .ticker-track {
+  animation-play-state: paused;
+}
+
+/* Fade edges */
+.ticker-viewport::before,
+.ticker-viewport::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 56px;
+  z-index: 5;
+  pointer-events: none;
+}
+
+.ticker-viewport::before {
+  left: 0;
+  background: linear-gradient(
+    to right,
+    #ffffff,
+    transparent
+  );
+}
+
+.ticker-viewport::after {
+  right: 0;
+  background: linear-gradient(
+    to left,
+    #ffffff,
+    transparent
+  );
+}
+
+/* ---------- Live pulse dot ---------- */
+
+@keyframes bullionai-ping {
+  0% {
+    transform: scale(1);
+    opacity: 0.7;
+  }
+  75%,
+  100% {
+    transform: scale(2.4);
+    opacity: 0;
+  }
+}
+
+.live-dot {
+  position: relative;
+  display: inline-flex;
+  height: 6px;
+  width: 6px;
+}
+
+.live-dot::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  background: currentColor;
+  animation: bullionai-ping 1.6s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+.live-dot::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  background: currentColor;
+}
+
+/* ---------- Premium card treatment ---------- */
+
+.premium-card {
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  background: linear-gradient(
+    180deg,
+    #ffffff 0%,
+    #fdfdfe 100%
+  );
+  box-shadow:
+    0 1px 2px rgba(15, 23, 42, 0.04),
+    0 12px 32px -16px rgba(15, 23, 42, 0.14);
+  transition:
+    box-shadow 0.25s ease,
+    transform 0.25s ease,
+    border-color 0.25s ease;
+}
+
+.premium-card:hover {
+  transform: translateY(-1px);
+  border-color: rgba(203, 213, 225, 1);
+  box-shadow:
+    0 2px 4px rgba(15, 23, 42, 0.05),
+    0 18px 44px -18px rgba(15, 23, 42, 0.2);
+}
+
+/* ---------- Brand gradient text ---------- */
+
+.brand-text {
+  background: linear-gradient(
+    120deg,
+    #1d4ed8 0%,
+    #4f46e5 55%,
+    #7c3aed 100%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.brand-gold-dot {
+  background: linear-gradient(
+    135deg,
+    #fbbf24,
+    #b45309
+  );
+  box-shadow:
+    0 0 0 2px rgba(251, 191, 36, 0.25),
+    0 2px 8px rgba(180, 83, 9, 0.45);
+}
+
+/* ---------- Metal icons (gold / silver) ---------- */
+
+.icon-gold {
+  background: linear-gradient(
+    135deg,
+    #fef3c7 0%,
+    #fde68a 45%,
+    #f59e0b 130%
+  );
+  color: #92400e;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.7),
+    0 3px 10px -3px rgba(245, 158, 11, 0.55);
+}
+
+.icon-silver {
+  background: linear-gradient(
+    135deg,
+    #f8fafc 0%,
+    #e2e8f0 55%,
+    #94a3b8 140%
+  );
+  color: #475569;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    0 3px 10px -3px rgba(100, 116, 139, 0.45);
+}
+
+/* ---------- Active timeframe pill ---------- */
+
+.tf-active {
+  background: linear-gradient(
+    135deg,
+    #2563eb,
+    #4f46e5
+  );
+  box-shadow:
+    0 2px 6px rgba(37, 99, 235, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.25);
+}
+
+/* ---------- Ambient page glow ---------- */
+
+.page-glow {
+  background:
+    radial-gradient(
+      900px 420px at 85% -80px,
+      rgba(99, 102, 241, 0.07),
+      transparent 60%
+    ),
+    radial-gradient(
+      700px 380px at -60px 30%,
+      rgba(245, 158, 11, 0.05),
+      transparent 60%
+    ),
+    #f6f7f9;
+}
+
+/* ---------- Price tick flash ---------- */
+
+@keyframes bullionai-flash-up {
+  0% { color:#059669; text-shadow:0 0 18px rgba(16,185,129,.45);}
+  100% { text-shadow:none; }
+}
+
+@keyframes bullionai-flash-down {
+  0% { color:#e11d48; text-shadow:0 0 18px rgba(244,63,94,.45);}
+  100% { text-shadow:none; }
+}
+
+.price-flash-up { animation: bullionai-flash-up .65s ease-out; }
+.price-flash-down { animation: bullionai-flash-down .65s ease-out; }
+
+/* ---------- Gold brand ---------- */
+
+.gold-text {
+  background: linear-gradient(115deg,#b45309,#f59e0b 40%,#fbbf24 60%,#b45309);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+
+/* ---------- Session progress ---------- */
+
+.session-track { background:linear-gradient(90deg,#f1f5f9,#e2e8f0); box-shadow:inset 0 1px 2px rgba(15,23,42,.08); }
+.session-fill { background:linear-gradient(90deg,#059669,#10b981 60%,#34d399); box-shadow:0 0 10px rgba(16,185,129,.35); transition:width .8s cubic-bezier(.22,1,.36,1); }
+.session-closed .session-fill { background:linear-gradient(90deg,#94a3b8,#cbd5e1); box-shadow:none; }
+
+/* ---------- Signals ---------- */
+
+@keyframes bullionai-signal-in { from{opacity:0;transform:translateY(-4px);} to{opacity:1;transform:none;} }
+.signal-latest { animation:bullionai-signal-in .45s ease-out; background:linear-gradient(90deg,rgba(59,130,246,.06),transparent 70%); }
+
+/* ---------- Slim scrollbar ---------- */
+
+.slim-scroll::-webkit-scrollbar{width:6px;height:6px;}
+.slim-scroll::-webkit-scrollbar-thumb{background:#dbe2ea;border-radius:9999px;}
+.slim-scroll::-webkit-scrollbar-thumb:hover{background:#c3ccd6;}

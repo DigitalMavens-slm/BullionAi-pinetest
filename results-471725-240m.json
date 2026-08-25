@@ -1,0 +1,4057 @@
+{
+  "indicator": {
+    "title": "BullionAI",
+    "shorttitle": "",
+    "overlay": true,
+    "format": "inherit",
+    "precision": 10,
+    "scale": "points",
+    "max_bars_back": 0,
+    "timeframe": "",
+    "timeframe_gaps": true,
+    "explicit_plot_zorder": false,
+    "max_lines_count": 50,
+    "max_labels_count": 50,
+    "max_boxes_count": 50,
+    "calc_bars_count": 0,
+    "max_polylines_count": 50,
+    "dynamic_requests": false,
+    "behind_chart": true
+  },
+  "plots": {
+    "plot": {
+      "options": {
+        "location": "BelowBar",
+        "style": "shape",
+        "color": "#4CAF50",
+        "text": "BUY",
+        "textcolor": "#FFFFFF",
+        "shape": "shape_label_up",
+        "overlay": true
+      },
+      "data": [
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": true,
+          "options": {
+            "text": "BUY",
+            "textcolor": "#FFFFFF",
+            "color": "#4CAF50",
+            "shape": "shape_label_up",
+            "location": "BelowBar"
+          }
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": true,
+          "options": {
+            "text": "SELL",
+            "textcolor": "#FFFFFF",
+            "color": "#F23645",
+            "shape": "shape_label_down",
+            "location": "AboveBar"
+          }
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": true,
+          "options": {
+            "text": "SELL",
+            "textcolor": "#FFFFFF",
+            "color": "#F23645",
+            "shape": "shape_label_down",
+            "location": "AboveBar"
+          }
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": true,
+          "options": {
+            "text": "BUY",
+            "textcolor": "#FFFFFF",
+            "color": "#4CAF50",
+            "shape": "shape_label_up",
+            "location": "BelowBar"
+          }
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": true,
+          "options": {
+            "text": "BUY",
+            "textcolor": "#FFFFFF",
+            "color": "#4CAF50",
+            "shape": "shape_label_up",
+            "location": "BelowBar"
+          }
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": true,
+          "options": {
+            "text": "SELL",
+            "textcolor": "#FFFFFF",
+            "color": "#F23645",
+            "shape": "shape_label_down",
+            "location": "AboveBar"
+          }
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": true,
+          "options": {
+            "text": "BUY",
+            "textcolor": "#FFFFFF",
+            "color": "#4CAF50",
+            "shape": "shape_label_up",
+            "location": "BelowBar"
+          }
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": true,
+          "options": {
+            "text": "SELL",
+            "textcolor": "#FFFFFF",
+            "color": "#F23645",
+            "shape": "shape_label_down",
+            "location": "AboveBar"
+          }
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": true,
+          "options": {
+            "text": "BUY",
+            "textcolor": "#FFFFFF",
+            "color": "#4CAF50",
+            "shape": "shape_label_up",
+            "location": "BelowBar"
+          }
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        }
+      ]
+    },
+    "Signal": {
+      "title": "Signal",
+      "options": {
+        "display": "data_window",
+        "overlay": true
+      },
+      "data": [
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 1,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": -1,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": -1,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 1,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 1,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": -1,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 1,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": -1,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 1,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        },
+        {
+          "title": "Signal",
+          "value": 0,
+          "options": {
+            "color": "#2962ff"
+          }
+        }
+      ]
+    },
+    "#1": {
+      "options": {
+        "color": "#F23645",
+        "linewidth": 3,
+        "style": "style_linebr",
+        "overlay": true
+      },
+      "data": [
+        {
+          "value": null,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": null,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": null,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": null,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": null,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": null,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": null,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": null,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": null,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": null,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": null,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": null,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": null,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": null,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": null,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": null,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": null,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": null,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": null,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": null,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": null,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": null,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": null,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": null,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": null,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": null,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": null,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": null,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": null,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": null,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": null,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": null,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": null,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": 225666.4680700437,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 225666.4680700437,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 225666.4680700437,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 228520.6546464599,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 231101.4293145699,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 232569.0772206721,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 232569.0772206721,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 232569.0772206721,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 232569.0772206721,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 232799.2671543007,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 232799.2671543007,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 232799.2671543007,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 232799.2671543007,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 232799.2671543007,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 232799.2671543007,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 232799.2671543007,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 232799.2671543007,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 232799.2671543007,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 229423.5326398558,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": 225914.0303084376,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": 225914.0303084376,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": 225914.0303084376,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": 231773.5437637162,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": 231216.6120663079,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": 230858.1754901431,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": 228345.8415265614,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": 227177.817131807,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": 227177.817131807,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": 223520.1178330377,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": 223520.1178330377,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": 223520.1178330377,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": 223312.7982431428,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": 223312.7982431428,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": 223312.7982431428,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": 223312.7982431428,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": 223312.7982431428,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": 223312.7982431428,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": 223312.7982431428,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": 223312.7982431428,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": 223312.7982431428,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": 223312.7982431428,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": 222967.1323981528,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": 222945.3015125704,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": 221210.8156902439,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": 219728.8645695122,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": 219724.1599574042,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": 219034.2199604467,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": 219034.2199604467,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": 219034.2199604467,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": 219034.2199604467,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": 219034.2199604467,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": 219034.2199604467,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": 219034.2199604467,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": 219662.7444920973,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 219662.7444920973,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 220266.5679549205,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 222193.4559581406,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 222193.4559581406,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 222193.4559581406,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 223875.785801762,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 223875.785801762,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 223875.785801762,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 219178.2097272488,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 219178.2097272488,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 227393.8617979521,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 225602.6993851924,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": 225602.6993851924,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": 225602.6993851924,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": 225602.6993851924,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": 225602.6993851924,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": 225602.6993851924,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": 225481.4292084852,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": 222172.184265022,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": 221609.8853889489,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": 220614.5364325955,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": 220364.0338302672,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": 220364.0338302672,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": 220364.0338302672,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": 220364.0338302672,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": 219156.6862173642,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": 219156.6862173642,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": 219156.6862173642,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": 219156.6862173642,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": 219156.6862173642,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": 219156.6862173642,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": 219156.6862173642,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": 219156.6862173642,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": 219156.6862173642,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": 219156.6862173642,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": 219156.6862173642,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": 219156.6862173642,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": 219156.6862173642,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": 219156.6862173642,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": 219156.6862173642,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": 219156.6862173642,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": 219156.6862173642,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": 220268.4428984214,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 223014.125548534,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 223218.5451522102,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 223422.4704984809,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 224364.8654628751,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 224364.8654628751,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 224364.8654628751,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 224364.8654628751,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 224404.1080014884,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 228602.4217156678,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 229149.034450263,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 229149.034450263,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 229149.034450263,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 230602.9313728964,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 230602.9313728964,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 232599.1678674463,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 234114.9058769146,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 234114.9058769146,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 234114.9058769146,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 234114.9058769146,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 234114.9058769146,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 234459.6200592707,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 235406.6471978942,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 235406.6471978942,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 235406.6471978942,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 235406.6471978942,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 235406.6471978942,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 235406.6471978942,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 235406.6471978942,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 235406.6471978942,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 235406.6471978942,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 235406.6471978942,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 235406.6471978942,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 235406.6471978942,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 235406.6471978942,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 235406.6471978942,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 235406.6471978942,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 235406.6471978942,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 235406.6471978942,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 235406.6471978942,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 233740.1262099004,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": 233261.6529091933,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": 233261.6529091933,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": 225085.2042676037,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": 225085.2042676037,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": 234632.4588130085,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 234632.4588130085,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 238367.1762214206,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 239665.949348462,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 241310.0243950004,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 242566.8083667861,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 242566.8083667861,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 242566.8083667861,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 242566.8083667861,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 242566.8083667861,
+          "options": {
+            "color": "#00E676"
+          }
+        }
+      ]
+    },
+    "__tables__": {
+      "title": "__tables__",
+      "options": {
+        "style": "table",
+        "overlay": true
+      },
+      "data": [
+        {
+          "time": 0,
+          "value": [
+            {
+              "id": 0,
+              "position": "bottom_right",
+              "columns": 2,
+              "rows": 11,
+              "bgcolor": "rgb(15, 15, 18)",
+              "frame_color": "rgb(120, 120, 120)",
+              "frame_width": 2,
+              "border_color": "",
+              "border_width": 1,
+              "force_overlay": false,
+              "_deleted": false,
+              "cells": [
+                [
+                  {
+                    "text": "BULLIONAI PRO",
+                    "width": 0,
+                    "height": 0,
+                    "text_color": "#363A45",
+                    "text_halign": "center",
+                    "text_valign": "center",
+                    "text_size": "normal",
+                    "bgcolor": "rgb(190, 150, 25)",
+                    "tooltip": "",
+                    "text_font_family": "default",
+                    "_merged": false,
+                    "_merge_parent": null
+                  },
+                  {
+                    "text": "",
+                    "width": 0,
+                    "height": 0,
+                    "text_color": "#363A45",
+                    "text_halign": "center",
+                    "text_valign": "center",
+                    "text_size": "normal",
+                    "bgcolor": "rgb(190, 150, 25)",
+                    "tooltip": "",
+                    "text_font_family": "default",
+                    "_merged": false,
+                    "_merge_parent": null
+                  }
+                ],
+                [
+                  {
+                    "text": "Trade",
+                    "width": 0,
+                    "height": 0,
+                    "text_color": "#B2B5BE",
+                    "text_halign": "center",
+                    "text_valign": "center",
+                    "text_size": "normal",
+                    "bgcolor": "",
+                    "tooltip": "",
+                    "text_font_family": "default",
+                    "_merged": false,
+                    "_merge_parent": null
+                  },
+                  {
+                    "text": "BUY",
+                    "width": 0,
+                    "height": 0,
+                    "text_color": "#00E676",
+                    "text_halign": "center",
+                    "text_valign": "center",
+                    "text_size": "normal",
+                    "bgcolor": "",
+                    "tooltip": "",
+                    "text_font_family": "default",
+                    "_merged": false,
+                    "_merge_parent": null
+                  }
+                ],
+                [
+                  {
+                    "text": "Status",
+                    "width": 0,
+                    "height": 0,
+                    "text_color": "#B2B5BE",
+                    "text_halign": "center",
+                    "text_valign": "center",
+                    "text_size": "normal",
+                    "bgcolor": "",
+                    "tooltip": "",
+                    "text_font_family": "default",
+                    "_merged": false,
+                    "_merge_parent": null
+                  },
+                  {
+                    "text": "OPEN",
+                    "width": 0,
+                    "height": 0,
+                    "text_color": "#FDD835",
+                    "text_halign": "center",
+                    "text_valign": "center",
+                    "text_size": "normal",
+                    "bgcolor": "",
+                    "tooltip": "",
+                    "text_font_family": "default",
+                    "_merged": false,
+                    "_merge_parent": null
+                  }
+                ],
+                [
+                  {
+                    "text": "Entry Price",
+                    "width": 0,
+                    "height": 0,
+                    "text_color": "#B2B5BE",
+                    "text_halign": "center",
+                    "text_valign": "center",
+                    "text_size": "normal",
+                    "bgcolor": "",
+                    "tooltip": "",
+                    "text_font_family": "default",
+                    "_merged": false,
+                    "_merge_parent": null
+                  },
+                  {
+                    "text": "239021",
+                    "width": 0,
+                    "height": 0,
+                    "text_color": "#FFFFFF",
+                    "text_halign": "center",
+                    "text_valign": "center",
+                    "text_size": "normal",
+                    "bgcolor": "",
+                    "tooltip": "",
+                    "text_font_family": "default",
+                    "_merged": false,
+                    "_merge_parent": null
+                  }
+                ],
+                [
+                  {
+                    "text": "Trail SL",
+                    "width": 0,
+                    "height": 0,
+                    "text_color": "#B2B5BE",
+                    "text_halign": "center",
+                    "text_valign": "center",
+                    "text_size": "normal",
+                    "bgcolor": "",
+                    "tooltip": "",
+                    "text_font_family": "default",
+                    "_merged": false,
+                    "_merge_parent": null
+                  },
+                  {
+                    "text": "242567",
+                    "width": 0,
+                    "height": 0,
+                    "text_color": "#FF9800",
+                    "text_halign": "center",
+                    "text_valign": "center",
+                    "text_size": "normal",
+                    "bgcolor": "",
+                    "tooltip": "",
+                    "text_font_family": "default",
+                    "_merged": false,
+                    "_merge_parent": null
+                  }
+                ],
+                [
+                  {
+                    "text": "Highest",
+                    "width": 0,
+                    "height": 0,
+                    "text_color": "#B2B5BE",
+                    "text_halign": "center",
+                    "text_valign": "center",
+                    "text_size": "normal",
+                    "bgcolor": "",
+                    "tooltip": "",
+                    "text_font_family": "default",
+                    "_merged": false,
+                    "_merge_parent": null
+                  },
+                  {
+                    "text": "248124",
+                    "width": 0,
+                    "height": 0,
+                    "text_color": "#00BCD4",
+                    "text_halign": "center",
+                    "text_valign": "center",
+                    "text_size": "normal",
+                    "bgcolor": "",
+                    "tooltip": "",
+                    "text_font_family": "default",
+                    "_merged": false,
+                    "_merge_parent": null
+                  }
+                ],
+                [
+                  {
+                    "text": "Current P/L",
+                    "width": 0,
+                    "height": 0,
+                    "text_color": "#B2B5BE",
+                    "text_halign": "center",
+                    "text_valign": "center",
+                    "text_size": "normal",
+                    "bgcolor": "",
+                    "tooltip": "",
+                    "text_font_family": "default",
+                    "_merged": false,
+                    "_merge_parent": null
+                  },
+                  {
+                    "text": "7090",
+                    "width": 0,
+                    "height": 0,
+                    "text_color": "#00E676",
+                    "text_halign": "center",
+                    "text_valign": "center",
+                    "text_size": "normal",
+                    "bgcolor": "",
+                    "tooltip": "",
+                    "text_font_family": "default",
+                    "_merged": false,
+                    "_merge_parent": null
+                  }
+                ],
+                [
+                  {
+                    "text": "Best P/L",
+                    "width": 0,
+                    "height": 0,
+                    "text_color": "#B2B5BE",
+                    "text_halign": "center",
+                    "text_valign": "center",
+                    "text_size": "normal",
+                    "bgcolor": "",
+                    "tooltip": "",
+                    "text_font_family": "default",
+                    "_merged": false,
+                    "_merge_parent": null
+                  },
+                  {
+                    "text": "9103",
+                    "width": 0,
+                    "height": 0,
+                    "text_color": "#00E676",
+                    "text_halign": "center",
+                    "text_valign": "center",
+                    "text_size": "normal",
+                    "bgcolor": "",
+                    "tooltip": "",
+                    "text_font_family": "default",
+                    "_merged": false,
+                    "_merge_parent": null
+                  }
+                ],
+                [
+                  {
+                    "text": "Realized P/L",
+                    "width": 0,
+                    "height": 0,
+                    "text_color": "#B2B5BE",
+                    "text_halign": "center",
+                    "text_valign": "center",
+                    "text_size": "normal",
+                    "bgcolor": "",
+                    "tooltip": "",
+                    "text_font_family": "default",
+                    "_merged": false,
+                    "_merge_parent": null
+                  },
+                  {
+                    "text": "-",
+                    "width": 0,
+                    "height": 0,
+                    "text_color": "#F23645",
+                    "text_halign": "center",
+                    "text_valign": "center",
+                    "text_size": "normal",
+                    "bgcolor": "",
+                    "tooltip": "",
+                    "text_font_family": "default",
+                    "_merged": false,
+                    "_merge_parent": null
+                  }
+                ],
+                [
+                  {
+                    "text": "Entry",
+                    "width": 0,
+                    "height": 0,
+                    "text_color": "#B2B5BE",
+                    "text_halign": "center",
+                    "text_valign": "center",
+                    "text_size": "normal",
+                    "bgcolor": "",
+                    "tooltip": "",
+                    "text_font_family": "default",
+                    "_merged": false,
+                    "_merge_parent": null
+                  },
+                  {
+                    "text": "NaN-NaN-NaN  NaN:NaN AM",
+                    "width": 0,
+                    "height": 0,
+                    "text_color": "#FFFFFF",
+                    "text_halign": "center",
+                    "text_valign": "center",
+                    "text_size": "normal",
+                    "bgcolor": "",
+                    "tooltip": "",
+                    "text_font_family": "default",
+                    "_merged": false,
+                    "_merge_parent": null
+                  }
+                ],
+                [
+                  {
+                    "text": "Exit",
+                    "width": 0,
+                    "height": 0,
+                    "text_color": "#B2B5BE",
+                    "text_halign": "center",
+                    "text_valign": "center",
+                    "text_size": "normal",
+                    "bgcolor": "",
+                    "tooltip": "",
+                    "text_font_family": "default",
+                    "_merged": false,
+                    "_merge_parent": null
+                  },
+                  {
+                    "text": "-",
+                    "width": 0,
+                    "height": 0,
+                    "text_color": "#FFFFFF",
+                    "text_halign": "center",
+                    "text_valign": "center",
+                    "text_size": "normal",
+                    "bgcolor": "",
+                    "tooltip": "",
+                    "text_font_family": "default",
+                    "_merged": false,
+                    "_merge_parent": null
+                  }
+                ]
+              ],
+              "merges": []
+            }
+          ],
+          "options": {
+            "style": "table"
+          }
+        }
+      ]
+    },
+    "__labels__": {
+      "title": "__labels__",
+      "options": {
+        "style": "label",
+        "overlay": true
+      },
+      "data": [
+        {
+          "time": 0,
+          "value": [],
+          "options": {
+            "style": "label"
+          }
+        }
+      ]
+    },
+    "__lines__": {
+      "title": "__lines__",
+      "options": {
+        "style": "drawing_line",
+        "overlay": true
+      },
+      "data": [
+        {
+          "time": 0,
+          "value": [],
+          "options": {
+            "style": "drawing_line"
+          }
+        }
+      ]
+    },
+    "__boxes__": {
+      "title": "__boxes__",
+      "options": {
+        "style": "drawing_box",
+        "overlay": true
+      },
+      "data": [
+        {
+          "time": 0,
+          "value": [],
+          "options": {
+            "style": "drawing_box"
+          }
+        }
+      ]
+    },
+    "__linefills__": {
+      "title": "__linefills__",
+      "options": {
+        "style": "linefill",
+        "overlay": true
+      },
+      "data": [
+        {
+          "time": 0,
+          "value": [],
+          "options": {
+            "style": "linefill"
+          }
+        }
+      ]
+    },
+    "__polylines__": {
+      "title": "__polylines__",
+      "options": {
+        "style": "drawing_polyline",
+        "overlay": true
+      },
+      "data": [
+        {
+          "time": 0,
+          "value": [],
+          "options": {
+            "style": "drawing_polyline"
+          }
+        }
+      ]
+    }
+  }
+}
