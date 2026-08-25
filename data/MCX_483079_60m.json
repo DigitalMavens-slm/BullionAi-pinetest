@@ -700,10 +700,127 @@
   {
     "open": 163697,
     "high": 163933,
-    "low": 163015,
-    "close": 163137,
-    "volume": 366,
-    "openInterest": 10560,
+    "low": 162919,
+    "close": 162935,
+    "volume": 679,
+    "openInterest": 10609,
     "time": 1787590800000
+  },
+  {
+    "open": 162931,
+    "high": 163249,
+    "low": 162564,
+    "close": 162675,
+    "volume": 1415,
+    "openInterest": 10586,
+    "time": 1787630400000
+  },
+  {
+    "open": 162664,
+    "high": 163617,
+    "low": 162635,
+    "close": 163428,
+    "volume": 2186,
+    "openInterest": 10562,
+    "time": 1787634000000
+  },
+  {
+    "open": 163410,
+    "high": 163800,
+    "low": 163271,
+    "close": 163299,
+    "volume": 2715,
+    "openInterest": 10504,
+    "time": 1787637600000
+  },
+  {
+    "open": 163300,
+    "high": 163447,
+    "low": 162968,
+    "close": 162998,
+    "volume": 3110,
+    "openInterest": 10472,
+    "time": 1787641200000
+  },
+  {
+    "open": 163010,
+    "high": 163421,
+    "low": 162739,
+    "close": 162804,
+    "volume": 3865,
+    "openInterest": 10362,
+    "time": 1787644800000
+  },
+  {
+    "open": 162810,
+    "high": 163079,
+    "low": 162629,
+    "close": 162929,
+    "volume": 4543,
+    "openInterest": 10271,
+    "time": 1787648400000
+  },
+  {
+    "open": 162900,
+    "high": 163078,
+    "low": 162821,
+    "close": 162915,
+    "volume": 4818,
+    "openInterest": 10240,
+    "time": 1787652000000
+  },
+  {
+    "open": 162958,
+    "high": 163287,
+    "low": 162851,
+    "close": 163176,
+    "volume": 5114,
+    "openInterest": 10228,
+    "time": 1787655600000
+  },
+  {
+    "open": 163155,
+    "high": 163159,
+    "low": 162793,
+    "close": 163050,
+    "volume": 5395,
+    "openInterest": 10247,
+    "time": 1787659200000
+  },
+  {
+    "open": 163061,
+    "high": 163061,
+    "low": 161687,
+    "close": 162060,
+    "volume": 6701,
+    "openInterest": 10189,
+    "time": 1787662800000
+  },
+  {
+    "open": 162057,
+    "high": 162600,
+    "low": 161899,
+    "close": 162496,
+    "volume": 7770,
+    "openInterest": 10302,
+    "time": 1787666400000
+  },
+  {
+    "open": 162496,
+    "high": 163350,
+    "low": 162347,
+    "close": 163215,
+    "volume": 8446,
+    "openInterest": 10243,
+    "time": 1787670000000
+  },
+  {
+    "open": 163230,
+    "high": 163289,
+    "low": 163013,
+    "close": 163035,
+    "volume": 8507,
+    "openInterest": 10237,
+    "time": 1787673600000
   }
 ]

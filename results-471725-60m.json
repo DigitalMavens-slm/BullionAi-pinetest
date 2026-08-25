@@ -79,91 +79,6 @@
           "value": false
         },
         {
-          "value": true,
-          "options": {
-            "text": "BUY",
-            "textcolor": "#FFFFFF",
-            "color": "#4CAF50",
-            "shape": "shape_label_up",
-            "location": "BelowBar"
-          }
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
           "value": false
         },
         {
@@ -1554,6 +1469,91 @@
         },
         {
           "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": true,
+          "options": {
+            "text": "SELL",
+            "textcolor": "#FFFFFF",
+            "color": "#F23645",
+            "shape": "shape_label_down",
+            "location": "AboveBar"
+          }
         },
         {
           "value": false
@@ -3388,6 +3388,84 @@
           "options": {
             "color": "#00E676"
           }
+        },
+        {
+          "value": 248879.0695590269,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 244636.8633471848,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": 244636.8633471848,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": 244636.8633471848,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": 244636.8633471848,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": 244636.8633471848,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": 244636.8633471848,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": 244408.907265529,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": 244408.907265529,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": 244408.907265529,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": 243800.2522822038,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": 243800.2522822038,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": 243800.2522822038,
+          "options": {
+            "color": "#F23645"
+          }
         }
       ]
     },
@@ -3460,10 +3538,10 @@
                     "_merge_parent": null
                   },
                   {
-                    "text": "BUY",
+                    "text": "SELL",
                     "width": 0,
                     "height": 0,
-                    "text_color": "#00E676",
+                    "text_color": "#F23645",
                     "text_halign": "center",
                     "text_valign": "center",
                     "text_size": "normal",
@@ -3520,7 +3598,7 @@
                     "_merge_parent": null
                   },
                   {
-                    "text": "238404",
+                    "text": "242201.00",
                     "width": 0,
                     "height": 0,
                     "text_color": "#FFFFFF",
@@ -3550,7 +3628,7 @@
                     "_merge_parent": null
                   },
                   {
-                    "text": "244881",
+                    "text": "243800.25",
                     "width": 0,
                     "height": 0,
                     "text_color": "#FF9800",
@@ -3566,7 +3644,7 @@
                 ],
                 [
                   {
-                    "text": "Highest",
+                    "text": "Lowest",
                     "width": 0,
                     "height": 0,
                     "text_color": "#B2B5BE",
@@ -3580,7 +3658,7 @@
                     "_merge_parent": null
                   },
                   {
-                    "text": "248800",
+                    "text": "240705.00",
                     "width": 0,
                     "height": 0,
                     "text_color": "#00BCD4",
@@ -3610,10 +3688,10 @@
                     "_merge_parent": null
                   },
                   {
-                    "text": "7996",
+                    "text": "-345.00",
                     "width": 0,
                     "height": 0,
-                    "text_color": "#00E676",
+                    "text_color": "#F23645",
                     "text_halign": "center",
                     "text_valign": "center",
                     "text_size": "normal",
@@ -3640,7 +3718,7 @@
                     "_merge_parent": null
                   },
                   {
-                    "text": "10396",
+                    "text": "1496.00",
                     "width": 0,
                     "height": 0,
                     "text_color": "#00E676",

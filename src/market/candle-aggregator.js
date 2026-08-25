@@ -75,6 +75,28 @@ class CandleAggregator {
     }
 
 
+
+    // =========================================================
+    // RUNTIME INSTRUMENT ADDITION (dynamic symbols)
+    // =========================================================
+
+    addInstrument(inst) {
+        this.instruments.set(
+            String(inst.token),
+            inst
+        );
+    }
+
+    // =========================================================
+    // RUNTIME INSTRUMENT ADDITION (dynamic symbols)
+    // =========================================================
+
+    addInstrument(inst) {
+        this.instruments.set(
+            String(inst.token),
+            inst
+        );
+    }
     // =========================================================
     // TICK INLET
     // =========================================================

@@ -6,25 +6,26 @@ import {
 } from "react";
 
 import {
-  ArrowDownRight,
-  ArrowUpRight,
   BarChart3,
-  ChevronDown,
   Circle,
   Clock,
-  History,
   ShieldCheck,
-  Wifi,
+  Trash2,
 } from "lucide-react";
 
 import {
   BullionChart,
 } from "./components/chart/BullionChart";
+import { AuthScreen } from "./components/AuthScreen";
+import { InstrumentPicker, type SelectedSymbol } from "./components/SymbolSearch";
+import { HomePage, TrialExpired, TrialBadge } from "./components/HomePage";
+import { clearAuthSession, getAuthSession, type AuthUser } from "./lib/auth";
 
 import "./App.css";
 
 import {
   createStateStream,
+  subscribeSymbol,
   fetchCandles,
   fetchStrategy,
   fetchWatchlist,
@@ -275,7 +276,7 @@ function CardTitle({
   return (
     <div className="flex items-center justify-between border-b border-slate-100 px-3.5 py-2">
 
-      <span className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-400">
+      <span className="font-display text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-400">
 
         {children}
 
@@ -367,14 +368,145 @@ function App() {
   );
 
   const [
-    streamConnected,
-    setStreamConnected,
-  ] = useState(false);
-
-  const [
     nowMs,
     setNowMs,
   ] = useState(Date.now());
+
+  const [authUser, setAuthUser] =
+    useState<AuthUser | null>(getAuthSession());
+
+/* Custom MCX/NSE/BSE symbol override */
+
+  
+
+  const [selectedSymbol, setSelectedSymbol] =
+    useState<SelectedSymbol | null>(null);
+
+  const latestSelRef =
+    useRef<{
+      tf: string;
+      inst: string;
+      sym: string;
+    }>({ tf: "", inst: "", sym: "" });
+
+  /* User-added scripts (persisted locally) */
+
+  const [customSyms, setCustomSyms] =
+    useState<SelectedSymbol[]>(() => {
+      try {
+        return JSON.parse(
+          localStorage.getItem("bullionai_custom_symbols") ||
+            "[]"
+        );
+      } catch {
+        return [];
+      }
+    });
+
+  useEffect(() => {
+    localStorage.setItem(
+      "bullionai_custom_symbols",
+      JSON.stringify(customSyms)
+    );
+  }, [customSyms]);
+
+  /* Stream live prices for every added script */
+
+  useEffect(() => {
+    customSyms.forEach(sym => {
+      subscribeSymbol(sym);
+    });
+  }, [customSyms]);
+
+  useEffect(() => {
+    if (!selectedSymbol) return;
+
+    subscribeSymbol(selectedSymbol);
+  }, [selectedSymbol]);
+
+  const [customLastCloses, setCustomLastCloses] = useState<
+    Record<string, number>
+  >({});
+
+  const [customPrevCloses, setCustomPrevCloses] = useState<
+    Record<string, number | null>
+  >({});
+
+  useEffect(() => {
+    customSyms.forEach(async sym => {
+      const key = `${sym.exch}:${sym.token}`;
+      if (customLastCloses[key] != null) return;
+      try {
+        const res = await fetchCandles("15m", "gold", sym);
+        const last = res.candles?.[res.candles.length - 1];
+        if (last?.close != null) {
+          setCustomLastCloses(prev => ({ ...prev, [key]: last.close }));
+        }
+        const prevClose = res.dayStats?.prevClose ?? null;
+        if (prevClose != null) {
+          setCustomPrevCloses(prev => ({ ...prev, [key]: prevClose }));
+        }
+      } catch {}
+    });
+  }, [customSyms]);
+
+  // Keep ref in sync synchronously (before effects run)
+  latestSelRef.current = {
+    tf: selectedTimeframe,
+    inst: selectedInstrument,
+    sym: selectedSymbol ? `${selectedSymbol.exch}:${selectedSymbol.token}` : "",
+  };
+
+  function makeLoadGuard() {
+    const snap = `${latestSelRef.current.tf}|${latestSelRef.current.inst}|${latestSelRef.current.sym}`;
+    return () =>
+      `${latestSelRef.current.tf}|${latestSelRef.current.inst}|${latestSelRef.current.sym}` ===
+      snap;
+  }
+
+  function addCustomSym(sym: SelectedSymbol) {
+    setCustomSyms(prev =>
+      prev.some(
+        x =>
+          x.exch === sym.exch &&
+          x.token === sym.token
+      )
+        ? prev
+        : [...prev, sym]
+    );
+  }
+
+  function removeCustomSym(sym: SelectedSymbol) {
+    setCustomSyms(prev =>
+      prev.filter(
+        x =>
+          !(
+            x.exch === sym.exch &&
+            x.token === sym.token
+          )
+      )
+    );
+    setSelectedSymbol(cur =>
+      cur &&
+      cur.exch === sym.exch &&
+      cur.token === sym.token
+        ? null
+        : cur
+    );
+  }
+
+  const [landingView, setLandingView] =
+    useState<"home" | "signin" | "register">(() => {
+      const params =
+        new URLSearchParams(window.location.search);
+      const hash =
+        window.location.hash;
+      return params.get("trial") === "1" ||
+        hash === "#trial" ||
+        hash === "#start-trial"
+        ? "register"
+        : "home";
+    });
 
   /* -------------------------
      DATA EFFECTS
@@ -391,6 +523,8 @@ function App() {
       initial: boolean
     ) {
 
+      const isCurrent = makeLoadGuard();
+
       if (initial) {
 
         setLoadingCandles(
@@ -405,12 +539,25 @@ function App() {
       try {
 
         const result =
-          await fetchCandles(
+          await
+          fetchCandles(
             selectedTimeframe,
-            selectedInstrument
+            selectedInstrument,
+            selectedSymbol
           );
 
-        if (cancelled) return;
+        if (cancelled || !isCurrent()) return;
+
+        if ((result.candles || []).length === 0) {
+          setCandleError(
+            result.notice ||
+              "No historical data available for this script yet."
+          );
+          setDayStats(null);
+          return;
+        }
+
+        setCandleError(null);
 
         setCandles(
           result.candles
@@ -428,7 +575,7 @@ function App() {
 
       } catch (error) {
 
-        if (cancelled) return;
+        if (cancelled || !isCurrent()) return;
 
 
         if (initial) {
@@ -485,6 +632,7 @@ function App() {
   }, [
     selectedTimeframe,
     selectedInstrument,
+    selectedSymbol,
   ]);
 
 
@@ -498,6 +646,8 @@ function App() {
     async function load(
       initial: boolean
     ) {
+
+      const isCurrent = makeLoadGuard();
 
       if (initial) {
 
@@ -513,12 +663,14 @@ function App() {
       try {
 
         const result =
-          await fetchStrategy(
+          await
+          fetchStrategy(
             selectedTimeframe,
-            selectedInstrument
+            selectedInstrument,
+            selectedSymbol
           );
 
-        if (cancelled) return;
+        if (cancelled || !isCurrent()) return;
 
 
         if (
@@ -551,7 +703,7 @@ function App() {
 
       } catch (error) {
 
-        if (cancelled) return;
+        if (cancelled || !isCurrent()) return;
 
 
         if (initial) {
@@ -604,6 +756,7 @@ function App() {
   }, [
     selectedTimeframe,
     selectedInstrument,
+    selectedSymbol,
   ]);
 
 
@@ -658,27 +811,14 @@ function App() {
 
   useEffect(() => {
 
-    const source =
-      createStateStream(
-
-        s => {
-
-          setState(s);
-
-          setStreamConnected(true);
-
-        },
-
-        () => setStreamConnected(false)
-
-      );
+    const source = createStateStream(s => {
+      setState(s);
+    });
 
 
     return () => {
 
       source.close();
-
-      setStreamConnected(false);
 
     };
 
@@ -744,16 +884,18 @@ function App() {
     ] ?? null;
 
 
-  const livePrice =
+  const rawLivePrice = liveRow?.price ?? null;
 
-    liveRow?.price ?? null;
+  const liveTokenPrice =
+    state && selectedSymbol
+      ? ((state as any)?.livePrices?.[selectedSymbol.token]?.price ?? null)
+      : null;
 
-
-  const marketConnected =
-
-    liveRow?.connected ??
-    state?.market?.connected ??
-    false;
+  const livePrice = selectedSymbol
+    ? (liveTokenPrice ??
+      customLastCloses[`${selectedSymbol.exch}:${selectedSymbol.token}`] ??
+      null)
+    : rawLivePrice;
 
 
   /* Current P/L — Pine formula on live tick */
@@ -902,34 +1044,74 @@ function App() {
 
   /* Watchlist active row */
 
-  /* Formatters */
+  /* Formatters — decimals only for instruments that trade with them */
+
+  const currentTickSize =
+    (selectedSymbol as any)?.tickSize ??
+    (selectedInstrument === "gold" ||
+    selectedInstrument === "silver"
+      ? 1
+      : null);
 
   const fmt = (
     v: number | null | undefined
-  ) =>
+  ) => {
+    if (
+      v == null ||
+      !Number.isFinite(v)
+    ) {
+      return "—";
+    }
 
-    v == null ||
-    !Number.isFinite(v)
+    let decimals = 0;
 
-      ? "—"
+    if (currentTickSize != null) {
+      const s = String(currentTickSize);
+      const dot = s.indexOf(".");
+      decimals =
+        dot >= 0 ? s.length - dot - 1 : 0;
+    } else {
+      decimals =
+        Math.abs(v % 1) > 1e-9 ? 2 : 0;
+    }
 
-      : v.toLocaleString("en-IN", {
-          maximumFractionDigits: 0,
-        });
-
+    return v.toLocaleString(
+      "en-IN",
+      {
+        minimumFractionDigits: decimals,
+        maximumFractionDigits: decimals,
+      }
+    );
+  };
 
   const fmtSigned = (
     v: number | null
-  ) =>
+  ) => {
+    if (v == null) {
+      return "—";
+    }
 
-    v == null
+    let decimals = 0;
 
-      ? "—"
+    if (currentTickSize != null) {
+      const s = String(currentTickSize);
+      const dot = s.indexOf(".");
+      decimals =
+        dot >= 0 ? s.length - dot - 1 : 0;
+    } else {
+      decimals =
+        Math.abs(v % 1) > 1e-9 ? 2 : 0;
+    }
 
-      : (v >= 0 ? "+" : "") +
-        v.toLocaleString("en-IN", {
-          maximumFractionDigits: 0,
-        });
+    return (
+      (v >= 0 ? "+" : "") +
+      v.toLocaleString("en-IN", {
+        minimumFractionDigits: decimals,
+
+        maximumFractionDigits: decimals,
+      })
+    );
+  };
 
 
   /* Price tick flash direction */
@@ -985,6 +1167,102 @@ function App() {
   }, [livePrice]);
 
 
+  /* Live day-range endpoints — tick-accurate between polls */
+
+  const liveHigh =
+
+    dayStats && livePrice != null
+      ? Math.max(dayStats.high, livePrice)
+      : dayStats?.high ?? null;
+
+  const liveLow =
+
+    dayStats && livePrice != null
+      ? Math.min(dayStats.low, livePrice)
+      : dayStats?.low ?? null;
+
+  /* Watchlist rows fused with SSE live prices (no poll delay) */
+
+  const watchlistLive =
+    useMemo(() => {
+      return watchlist.map(r => {
+        const lp =
+          state?.livePrices?.[r.instrument];
+        if (!lp || lp.price == null) return r;
+        const price = lp.price;
+        const prev =
+          r.prevClose ?? null;
+        const change =
+          prev != null ? price - prev : r.change;
+        const changePct =
+          prev != null && prev !== 0 && change != null
+            ? (change / prev) * 100
+            : r.changePct;
+        return { ...r, price, change, changePct };
+      });
+    }, [watchlist, state]);
+
+  const importantIndices = useMemo(
+    () => [
+      { tvName: "NIFTY", token: "26000", exchange: "NSE" },
+      { tvName: "SENSEX", token: "1", exchange: "BSE" },
+      { tvName: "BANKNIFTY", token: "26009", exchange: "NSE" },
+      { tvName: "NIFTYIT", token: "26010", exchange: "NSE" },
+    ],
+    []
+  );
+
+  const importantIndicesLive = useMemo(() => {
+    return importantIndices
+      .map(idx => {
+        const lp =
+          (state as any)?.livePrices?.[idx.token] ?? null;
+        if (!lp || lp.price == null) return null;
+        return {
+          tvName: idx.tvName,
+          price: lp.price,
+          change: (lp as any).change ?? null,
+          changePct: (lp as any).changePercent ?? null,
+        };
+      })
+      .filter(Boolean) as typeof watchlistLive;
+  }, [state]);
+
+  useEffect(() => {
+    importantIndices.forEach(idx => {
+      subscribeSymbol({
+        exch: idx.exchange,
+        token: idx.token,
+        tsym: idx.tvName,
+      });
+    });
+  }, []);
+
+  
+  /* ================= AUTH / ACCESS GATES ================= */
+
+  if (!authUser) {
+    if (landingView === "home") {
+      return (
+        <HomePage
+          onStartTrial={() => setLandingView("register")}
+          onSignIn={() => setLandingView("signin")}
+        />
+      );
+    }
+    return (
+      <AuthScreen
+        key={landingView}
+        initialMode={landingView === "register" ? "register" : "login"}
+        onAuthed={u => { setAuthUser(u); setLandingView("home"); }}
+      />
+    );
+  }
+
+  if (authUser.hasAccess === false) {
+    return <TrialExpired user={authUser} />;
+  }
+
   /* -------------------------
      RENDER
      ------------------------- */
@@ -995,22 +1273,22 @@ function App() {
 
       {/* ================= HEADER ================= */}
 
-      <header className="relative flex h-14 shrink-0 items-center justify-between border-b border-slate-200/70 bg-white/90 px-4 backdrop-blur lg:px-5">
+      <header className="relative flex h-16 shrink-0 items-center justify-between border-b border-slate-200/70 bg-white/90 px-4 backdrop-blur-md lg:px-6">
 
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-amber-300/60 to-transparent" />
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-amber-300/70 to-transparent" />
 
         <div className="flex items-center gap-3">
 
-          <div className="brand-gold-dot flex h-8 w-8 items-center justify-center rounded-lg">
+          <div className="brand-gold-dot flex h-9 w-9 items-center justify-center rounded-xl">
 
-            <BarChart3 className="h-4 w-4 text-white" />
+            <BarChart3 className="h-[18px] w-[18px] text-white" />
 
           </div>
 
 
           <div className="leading-tight">
 
-            <div className="text-[14px] font-extrabold tracking-tight text-slate-900">
+            <div className="font-display text-[17px] font-bold tracking-tight text-slate-900">
 
               BULLION
 
@@ -1031,66 +1309,13 @@ function App() {
         </div>
 
 
+        <div className="hidden min-w-[260px] max-w-sm flex-1 px-2 md:block">
+          <InstrumentPicker
+            onAdd={(sym: any) => addCustomSym(sym)}
+          />
+        </div>
+
         <div className="flex items-center gap-2">
-
-          <span
-
-            className={[
-              "hidden items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10px] font-semibold sm:flex",
-
-              marketConnected
-
-                ? "border-emerald-200 bg-emerald-50 text-emerald-600"
-
-                : "border-amber-200 bg-amber-50 text-amber-600",
-            ].join(" ")}
-          >
-
-            <Circle
-
-              className={[
-                "h-1.5 w-1.5",
-
-                marketConnected
-
-                  ? "fill-emerald-500 text-emerald-500"
-
-                  : "fill-amber-500 text-amber-500",
-              ].join(" ")}
-            />
-
-
-            {marketConnected
-
-              ? "FEED LIVE"
-
-              : "FEED WAITING"}
-
-          </span>
-
-
-          <span className="hidden items-center gap-1.5 rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[10px] font-semibold text-slate-500 md:flex">
-
-            <Wifi
-
-              className={[
-                "h-3 w-3",
-
-                streamConnected
-
-                  ? "text-emerald-500"
-
-                  : "text-amber-500",
-              ].join(" ")}
-            />
-
-
-            {streamConnected
-              ? "SSE"
-              : "SSE OFF"}
-
-          </span>
-
 
           {/* IST DATE-TIME */}
 
@@ -1111,42 +1336,14 @@ function App() {
           </span>
 
 
+          <TrialBadge user={authUser} />
+
           <span className="hidden h-5 w-px bg-slate-200 md:block" />
 
 
           {/* ACCOUNT — login-ready slot */}
 
-          <button
-            type="button"
-            title="Sign in"
-            className="flex items-center gap-2 rounded-full border border-slate-200 bg-white py-[3px] pl-1 pr-2 transition hover:border-slate-300 hover:shadow-sm"
-          >
-
-            <span className="brand-gold-dot flex h-6 w-6 items-center justify-center rounded-full text-[10px] font-extrabold text-white">
-
-              G
-
-            </span>
-
-            <span className="hidden flex-col items-start leading-none sm:flex">
-
-              <span className="text-[10px] font-semibold text-slate-700">
-
-                Guest
-
-              </span>
-
-              <span className="text-[8px] font-medium uppercase tracking-wider text-slate-400">
-
-                Sign in
-
-              </span>
-
-            </span>
-
-            <ChevronDown className="h-3 w-3 text-slate-400" />
-
-          </button>
+          <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-white py-[3px] pl-1 pr-1.5"><span className="brand-gold-dot flex h-6 w-6 items-center justify-center rounded-full text-[10px] font-extrabold text-white">{authUser?.email?.[0]?.toUpperCase() ?? "G"}</span><span className="hidden flex-col items-start leading-none sm:flex"><span className="text-[10px] font-semibold text-slate-700">{authUser?.name ?? "Trader"}</span><span className="max-w-[140px] truncate text-[8px] font-medium uppercase tracking-wider text-slate-400">{authUser?.email}</span></span><button type="button" title="Sign out" onClick={() => { clearAuthSession(); setAuthUser(null); }} className="rounded-full px-2 py-1 text-[9px] font-bold uppercase tracking-wider text-slate-400 transition hover:bg-slate-100 hover:text-slate-600">Logout</button></div>
 
         </div>
 
@@ -1155,12 +1352,13 @@ function App() {
 
       {/* ================= LIVE TICKER ================= */}
 
-      {watchlist.length > 0 && (
+      {(watchlistLive.length > 0 ||
+        importantIndicesLive.length > 0) && (
         <div className="ticker-viewport z-10 shrink-0 border-b border-slate-200/60 bg-white/80 py-1">
 
           <div className="ticker-track">
 
-            {[...watchlist, ...watchlist].map(
+            {[...[...watchlistLive, ...importantIndicesLive], ...[...watchlistLive, ...importantIndicesLive]].map(
               (row, i) => {
                 const up =
                   (row.change ?? 0) >= 0;
@@ -1206,7 +1404,206 @@ function App() {
 
         {/* ============ LEFT: CHART ============ */}
 
-        <section className="flex min-w-0 flex-col gap-3 lg:min-h-0 lg:flex-1">
+                <aside className="flex w-full shrink-0 flex-col gap-3 lg:w-[300px] lg:min-h-0 order-2 lg:order-1">
+          {/* BULLIONAI STRATEGY */}
+
+          <Card className="shrink-0">
+
+            <CardTitle
+
+              right={
+
+                strategyLoading ? (
+
+                  <span className="flex items-center gap-1.5 rounded-full bg-blue-50 px-2 py-0.5 text-[9px] font-semibold text-blue-600">
+
+                    <span className="h-2 w-2 animate-spin rounded-full border-[1.5px] border-blue-200 border-t-blue-600" />
+
+                    BullionAI…
+                  </span>
+                ) : strategyError ? (
+
+                  <span className="rounded-full bg-amber-50 px-2 py-0.5 text-[9px] font-semibold text-amber-600">
+
+                    STALE
+
+                  </span>
+                ) : (
+
+                  <span className="flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[9px] font-semibold text-emerald-600">
+
+                    <ShieldCheck className="h-3 w-3" />
+
+                    VERIFIED
+
+                  </span>
+                )
+              }
+            >
+
+              BullionAI
+
+            </CardTitle>
+
+
+            <div className="p-3">
+
+              {/* ============ SIGNAL / STATUS ROW ============ */}
+
+              <div className="flex items-stretch gap-1.5">
+
+                <div
+                  className={[
+                    "flex flex-1 items-center justify-between rounded-lg px-2.5 py-2",
+
+                    signal === "BUY"
+
+                      ? "bg-emerald-50 ring-1 ring-emerald-200"
+
+                      : signal === "SELL"
+
+                        ? "bg-rose-50 ring-1 ring-rose-200"
+
+                        : "bg-slate-50 ring-1 ring-slate-200",
+                  ].join(" ")}
+                >
+
+                  <span className="text-[9px] font-bold uppercase tracking-wider text-slate-400">
+                    Signal
+                  </span>
+
+                  <span
+                    className={[
+                      "text-[16px] font-black tracking-tight",
+
+                      signal === "BUY"
+
+                        ? UP
+
+                        : signal === "SELL"
+
+                          ? DOWN
+
+                          : "text-slate-400",
+                    ].join(" ")}
+                  >
+
+                    {signal ?? "—"}
+
+                  </span>
+                </div>
+
+                <div
+                  className={[
+                    "flex items-center gap-1.5 rounded-lg px-2.5",
+
+                    status === "OPEN"
+
+                      ? "bg-amber-50 ring-1 ring-amber-200"
+
+                      : "bg-slate-50 ring-1 ring-slate-200",
+                  ].join(" ")}
+                >
+
+                  <span className="text-[9px] font-bold uppercase tracking-wider text-slate-400">
+                    {status === "OPEN" ? "LIVE" : "CLOSED"}
+                  </span>
+
+                  {status === "OPEN" && (
+                    <span className="live-dot text-amber-500" />
+                  )}
+                </div>
+
+              </div>
+
+
+              {/* ============ STRATEGY TABLE ============ */}
+
+              <table className="mt-2 w-full border-collapse text-[12px]">
+
+                <tbody>
+
+                  {[[
+                    "Entry price",
+                    fmt(entryPrice),
+                    "",
+                  ],
+                  ["Trail SL", fmt(trailSL), "text-amber-600"],
+                  [extremeLabel, fmt(extremePrice), ""],
+                  [
+                    "Current P/L",
+                    fmtSigned(currentPL),
+                    currentPL == null
+                      ? "text-slate-400"
+                      : currentPL >= 0
+                        ? "text-emerald-600"
+                        : "text-rose-600",
+                  ],
+                  [
+                    "Best P/L",
+                    fmtSigned(bestPL),
+                    bestPL == null
+                      ? "text-slate-400"
+                      : bestPL >= 0
+                        ? "text-emerald-600"
+                        : "text-rose-600",
+                  ],
+                  [
+                    "Realized P/L",
+                    status === "CLOSED"
+                      ? fmtSigned(strategy?.realizedPL ?? null)
+                      : "—",
+                    status !== "CLOSED" || strategy?.realizedPL == null
+                      ? "text-slate-400"
+                      : strategy.realizedPL >= 0
+                        ? "text-emerald-600"
+                        : "text-rose-600",
+                  ]].map(([label, value, tone]) => (
+                    <tr
+                      key={label as string}
+                      className="border-b border-slate-100 last:border-0"
+                    >
+                      <td className="py-[7px] pl-2 font-bold text-slate-700">{label}</td>
+                      <td className="py-[7px] pr-2 text-right">
+                        <span className={`font-mono font-bold tabular-nums ${tone || "text-slate-900"}`}>
+                          {value}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+
+                  <tr className="border-t border-dashed border-slate-200">
+                      <td className="py-[7px] pl-2 font-bold text-slate-700">Entry time</td>
+                      <td className="max-w-[150px] truncate py-[7px] pr-2 text-right font-mono text-[10px] tabular-nums text-slate-700">
+                        {entryTimeLabel ?? "—"}
+                      </td>
+                  </tr>
+                  <tr>
+                      <td className="py-[7px] pl-2 font-bold text-slate-700">Exit time</td>
+                      <td className="max-w-[150px] truncate py-[7px] pr-2 text-right font-mono text-[10px] tabular-nums text-slate-700">
+                        {exitTimeLabel ?? "—"}
+                      </td>
+                  </tr>
+
+                </tbody>
+              </table>
+
+
+              {strategyError && (
+                <div className="mt-2 rounded-lg border border-amber-200 bg-amber-50/70 px-2.5 py-2 text-[10px] font-medium leading-4 text-amber-700">
+
+                  {strategyError}
+
+                </div>
+              )}
+
+            </div>
+
+          </Card>
+
+        </aside>
+
+<section className="flex min-w-0 flex-col gap-3 lg:min-h-0 lg:flex-1 order-1 lg:order-2">
 
           <Card className="flex min-h-[420px] flex-1 flex-col overflow-hidden max-lg:h-[62vh]">
 
@@ -1224,7 +1621,9 @@ function App() {
                     <div className="mt-3 text-[11px] font-medium text-slate-400">
 
                       Loading{" "}
-                      {activeInstrument.label}{" "}
+                      {selectedSymbol
+                        ? selectedSymbol.tsym
+                        : activeInstrument.label}{" "}
                       {selectedTimeframe}
                       …
 
@@ -1270,7 +1669,9 @@ function App() {
                       <div className="mt-2 text-[12px] font-medium text-slate-500">
 
                         No data for{" "}
-                        {activeInstrument.label}{" "}
+                        {selectedSymbol
+                          ? selectedSymbol.tsym
+                          : activeInstrument.label}{" "}
                         {selectedTimeframe} yet
 
                       </div>
@@ -1285,31 +1686,15 @@ function App() {
 
                 candles={candles}
 
-                entryPrice={null}
-
-                entryTime={
-
-                  strategy?.entryTime ??
-                  null
-                }
-
-                exitTime={
-
-                  typeof strategy?.exitTime ===
-                  "number"
-
-                    ? strategy.exitTime
-
-                    : null
-                }
-
                 signal={signal}
 
                 livePrice={livePrice}
 
                 label={
-
-                  activeInstrument.fullName
+                  selectedSymbol
+                    ? selectedSymbol.label ??
+                      selectedSymbol.tsym
+                    : activeInstrument.fullName
                 }
 
                 timeframeLabel={
@@ -1398,12 +1783,15 @@ function App() {
 
           </Card>
 
+
+
+
         </section>
 
 
         {/* ============ RIGHT: SIDEBAR ============ */}
 
-        <aside className="flex w-full shrink-0 flex-col gap-2 lg:w-[320px] lg:min-h-0">
+        <aside className="flex w-full shrink-0 flex-col gap-2 lg:w-[360px] lg:min-h-0 order-3">
 
           {/* MCX SESSION */}
           {/* WATCHLIST */}
@@ -1441,6 +1829,15 @@ function App() {
             </CardTitle>
 
 
+            <div className="flex items-center gap-2 border-b border-slate-100 bg-slate-50/70 px-2.5 py-2 text-[9px] font-semibold uppercase tracking-[0.12em] text-slate-400">
+              <span className="w-6 shrink-0" aria-hidden />
+              <span className="flex-1">Symbol</span>
+              <span className="w-[62px] text-right">LTP</span>
+              <span className="w-[48px] text-right">Chg</span>
+              <span className="w-[48px] text-right">Chg%</span>
+              <span className="hidden w-7 shrink-0 sm:block" aria-hidden />
+            </div>
+
             <div className="p-1">
 
               {watchlist.length ===
@@ -1453,10 +1850,11 @@ function App() {
               )}
 
 
-              {watchlist.map(row => {
+              {watchlistLive.map(row => {
 
                 const active =
 
+                  !selectedSymbol &&
                   row.instrument ===
                   selectedInstrument;
 
@@ -1471,11 +1869,12 @@ function App() {
 
                     key={row.instrument}
 
-                    onClick={() =>
-                      setSelectedInstrument(
-                        row.instrument
-                      )
-                    }
+                    onClick={() => {
+                        setSelectedInstrument(
+                          row.instrument
+                        );
+                        setSelectedSymbol(null);
+                      }}
 
                     className={[
                       "flex w-full items-center gap-2 rounded-xl px-2.5 py-2 text-left transition",
@@ -1516,23 +1915,32 @@ function App() {
 
 
                     <span
-
                       className={[
-                        "w-[76px] text-right font-mono text-[12px] font-semibold tabular-nums",
+                        "w-[62px] text-right font-mono text-[12px] font-semibold tabular-nums",
 
                         up ? UP : DOWN,
                       ].join(" ")}
                     >
-
                       {fmt(row.price)}
+                    </span>
 
+                    <span
+                      className={[
+                        "w-[48px] text-right font-mono text-[10px] font-medium tabular-nums",
+
+                        up ? UP : DOWN,
+                      ].join(" ")}
+                    >
+                      {row.change != null
+                        ? (row.change >= 0 ? "+" : "") + fmt(row.change)
+                        : "—"}
                     </span>
 
 
                     <span
 
                       className={[
-                        "w-[56px] text-right font-mono text-[10px] font-medium tabular-nums",
+                        "w-[48px] text-right font-mono text-[10px] font-medium tabular-nums",
 
                         up ? UP : DOWN,
                       ].join(" ")}
@@ -1553,209 +1961,117 @@ function App() {
 
                     </span>
 
+                    <span className="hidden w-7 shrink-0 sm:block" aria-hidden />
+
                   </button>
                 );
 
               })}
 
-            </div>
+                          {/* CUSTOM SYMBOL ROWS */}
 
-          </Card>
+              {customSyms.map(sym => {
+                const lp =
+                  state &&
+                  (state as any)?.livePrices ?
+                      (state as any).livePrices[sym.token] ?? null :
+                      null;
+                const price =
+                  lp?.price ??
+                  customLastCloses[`${sym.exch}:${sym.token}`] ??
+                  null;
+                const prevClose =
+                  customPrevCloses[`${sym.exch}:${sym.token}`] ?? null;
+                const change =
+                  price != null && prevClose != null
+                    ? price - prevClose
+                    : null;
+                const changePct =
+                  change != null && prevClose
+                    ? (change / prevClose) * 100
+                    : null;
+                const up = (change ?? 0) >= 0;
+                const active =
+                  selectedSymbol?.token ===
+                    sym.token &&
+                  selectedSymbol?.exch ===
+                    sym.exch;
 
-
-          {/* BULLIONAI STRATEGY */}
-
-          <Card className="shrink-0">
-
-            <CardTitle
-
-              right={
-
-                strategyLoading ? (
-
-                  <span className="flex items-center gap-1.5 rounded-full bg-blue-50 px-2 py-0.5 text-[9px] font-semibold text-blue-600">
-
-                    <span className="h-2 w-2 animate-spin rounded-full border-[1.5px] border-blue-200 border-t-blue-600" />
-
-                    BullionAI…
-                  </span>
-                ) : strategyError ? (
-
-                  <span className="rounded-full bg-amber-50 px-2 py-0.5 text-[9px] font-semibold text-amber-600">
-
-                    STALE
-
-                  </span>
-                ) : (
-
-                  <span className="flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[9px] font-semibold text-emerald-600">
-
-                    <ShieldCheck className="h-3 w-3" />
-
-                    VERIFIED
-
-                  </span>
-                )
-              }
-            >
-
-              BullionAI
-
-            </CardTitle>
-
-
-            <div className="p-2">
-
-              {/* ============ SIGNAL / STATUS ROW ============ */}
-
-              <div className="flex items-stretch gap-1.5">
-
-                <div
-                  className={[
-                    "flex flex-1 items-center justify-between rounded-lg px-2.5 py-2",
-
-                    signal === "BUY"
-
-                      ? "bg-emerald-50 ring-1 ring-emerald-200"
-
-                      : signal === "SELL"
-
-                        ? "bg-rose-50 ring-1 ring-rose-200"
-
-                        : "bg-slate-50 ring-1 ring-slate-200",
-                  ].join(" ")}
-                >
-
-                  <span className="text-[9px] font-bold uppercase tracking-wider text-slate-400">
-                    Signal
-                  </span>
-
-                  <span
+                return (
+                  <div
+                    key={sym.exch + sym.token}
+                    role="button"
+                    tabIndex={0}
+                    onClick={() =>
+                      setSelectedSymbol(sym)
+                    }
                     className={[
-                      "text-[15px] font-extrabold tracking-tight",
-
-                      signal === "BUY"
-
-                        ? UP
-
-                        : signal === "SELL"
-
-                          ? DOWN
-
-                          : "text-slate-400",
+                      "group flex w-full cursor-pointer items-center gap-2 rounded-xl px-2.5 py-2 text-left transition",
+                      active
+                        ? "bg-blue-50 ring-1 ring-blue-200"
+                        : "hover:bg-slate-50",
                     ].join(" ")}
                   >
+                    <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-slate-200 text-[10px] font-bold text-slate-600">
+                      {sym.tsym[0]}
+                    </span>
 
-                    {signal ?? "—"}
+                    <span className="min-w-0 flex-1 leading-tight">
+                      <span className="block truncate text-[12px] font-semibold text-slate-800">
+                        {sym.label ?? sym.tsym}
+                      </span>
+                      <span className="block text-[9px] font-medium uppercase tracking-wider text-slate-400">
+                        {sym.exch} · {sym.token}
+                      </span>
+                    </span>
 
-                  </span>
-                </div>
+                    <span
+                      className={[
+                        "w-[62px] text-right font-mono text-[12px] font-semibold tabular-nums",
 
-                <div
-                  className={[
-                    "flex items-center gap-1.5 rounded-lg px-2.5",
-
-                    status === "OPEN"
-
-                      ? "bg-amber-50 ring-1 ring-amber-200"
-
-                      : "bg-slate-50 ring-1 ring-slate-200",
-                  ].join(" ")}
-                >
-
-                  <span className="text-[9px] font-bold uppercase tracking-wider text-slate-400">
-                    {status === "OPEN" ? "LIVE" : "CLOSED"}
-                  </span>
-
-                  {status === "OPEN" && (
-                    <span className="live-dot text-amber-500" />
-                  )}
-                </div>
-
-              </div>
-
-
-              {/* ============ STRATEGY TABLE ============ */}
-
-              <table className="mt-1.5 w-full border-collapse text-[11px]">
-
-                <tbody>
-
-                  {[[
-                    "Entry price",
-                    fmt(entryPrice),
-                    "",
-                  ],
-                  ["Trail SL", fmt(trailSL), "text-amber-600"],
-                  [extremeLabel, fmt(extremePrice), ""],
-                  [
-                    "Current P/L",
-                    fmtSigned(currentPL),
-                    currentPL == null
-                      ? "text-slate-400"
-                      : currentPL >= 0
-                        ? "text-emerald-600"
-                        : "text-rose-600",
-                  ],
-                  [
-                    "Best P/L",
-                    fmtSigned(bestPL),
-                    bestPL == null
-                      ? "text-slate-400"
-                      : bestPL >= 0
-                        ? "text-emerald-600"
-                        : "text-rose-600",
-                  ],
-                  [
-                    "Realized P/L",
-                    status === "CLOSED"
-                      ? fmtSigned(strategy?.realizedPL ?? null)
-                      : "—",
-                    status !== "CLOSED" || strategy?.realizedPL == null
-                      ? "text-slate-400"
-                      : strategy.realizedPL >= 0
-                        ? "text-emerald-600"
-                        : "text-rose-600",
-                  ]].map(([label, value, tone]) => (
-                    <tr
-                      key={label as string}
-                      className="border-b border-slate-100 last:border-0"
+                        up ? UP : DOWN,
+                      ].join(" ")}
                     >
-                      <td className="py-[5px] pl-1 font-medium text-slate-500">{label}</td>
-                      <td className="py-[5px] pr-1 text-right">
-                        <span className={`font-mono font-semibold tabular-nums ${tone}`}>
-                          {value}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
+                      {fmt(price)}
+                    </span>
 
-                  <tr className="border-t border-dashed border-slate-200">
-                      <td className="py-[5px] pl-1 font-medium text-slate-500">Entry time</td>
-                      <td className="max-w-[150px] truncate py-[5px] pr-1 text-right font-mono text-[10px] tabular-nums text-slate-700">
-                        {entryTimeLabel ?? "—"}
-                      </td>
-                  </tr>
-                  <tr>
-                      <td className="py-[5px] pl-1 font-medium text-slate-500">Exit time</td>
-                      <td className="max-w-[150px] truncate py-[5px] pr-1 text-right font-mono text-[10px] tabular-nums text-slate-700">
-                        {exitTimeLabel ?? "—"}
-                      </td>
-                  </tr>
+                    <span
+                      className={[
+                        "w-[48px] text-right font-mono text-[10px] font-medium tabular-nums",
 
-                </tbody>
-              </table>
+                        up ? UP : DOWN,
+                      ].join(" ")}
+                    >
+                      {change != null
+                        ? (change >= 0 ? "+" : "") + fmt(change)
+                        : "—"}
+                    </span>
 
+                    <span
+                      className={[
+                        "w-[48px] text-right font-mono text-[10px] font-medium tabular-nums",
+                        up ? UP : DOWN,
+                      ].join(" ")}
+                    >
+                      {changePct != null
+                        ? (up ? "+" : "") + changePct.toFixed(2) + "%"
+                        : "—"}
+                    </span>
 
-              {strategyError && (
-                <div className="mt-2 rounded-lg border border-amber-200 bg-amber-50/70 px-2.5 py-2 text-[10px] font-medium leading-4 text-amber-700">
-
-                  {strategyError}
-
-                </div>
-              )}
-
-            </div>
+                    <button
+                      title="Remove"
+                      onClick={e => {
+                        e.stopPropagation();
+                        removeCustomSym(sym);
+                      }}
+                      className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-slate-400 transition hover:bg-rose-50 hover:text-rose-500 sm:opacity-0 sm:group-hover:opacity-100"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                );
+              })}
+</div>
 
           </Card>
 
@@ -1779,21 +2095,23 @@ function App() {
 
                 <div className="text-[14px] font-bold tracking-tight text-slate-900">
 
-                  {activeInstrument.tvName}
+                  {selectedSymbol ? selectedSymbol.tsym : activeInstrument.tvName}
 
                 </div>
 
                 <div className="truncate text-[11px] font-medium text-slate-500">
 
-                  {activeInstrument.fullName}{" "}
-                  · MCX
+                  {selectedSymbol
+                    ? `${selectedSymbol.exch} · ${selectedSymbol.tsym}`
+                    : `${activeInstrument.fullName} · MCX`}
 
                 </div>
 
                 <div className="text-[10px] text-slate-400">
 
-                  Futures ·{" "}
-                  {activeInstrument.sub}
+                  {selectedSymbol
+                    ? `${selectedSymbol.exch} · ${selectedSymbol.token}`
+                    : `Futures · ${activeInstrument.sub}`}
 
                 </div>
 
@@ -1829,7 +2147,9 @@ function App() {
 
               <span className="text-[10px] font-medium text-slate-400">
 
-                {activeInstrument.unit}
+                {selectedSymbol
+                  ? `${selectedSymbol.exch}`
+                  : activeInstrument.unit}
 
               </span>
 
@@ -1926,9 +2246,9 @@ function App() {
 
                   label="DAY'S RANGE"
 
-                  low={dayStats.low}
+                  low={liveLow ?? dayStats.low}
 
-                  high={dayStats.high}
+                  high={liveHigh ?? dayStats.high}
 
                   value={
 
@@ -1945,9 +2265,9 @@ function App() {
 
                     ["O", dayStats.open],
 
-                    ["H", dayStats.high],
+                    ["H", liveHigh],
 
-                    ["L", dayStats.low],
+                    ["L", liveLow],
 
                     [
 
@@ -1990,137 +2310,6 @@ function App() {
 
           </Card>
 
-
-          {/* RECENT SIGNALS */}
-
-          {(strategy?.signalHistory?.length ??
-            0) > 0 && (
-            <Card className="flex min-h-[180px] flex-1 flex-col overflow-hidden">
-
-              <CardTitle
-                right={
-                  <span className="flex items-center gap-1 text-[10px] font-medium text-slate-400">
-                    <History className="h-3.5 w-3.5" />
-                    {selectedTimeframe}
-                  </span>
-                }
-              >
-                Recent signals
-              </CardTitle>
-
-              <div className="slim-scroll min-h-0 flex-1 overflow-y-auto p-2">
-                {[
-                  ...(strategy?.signalHistory ?? []),
-                ]
-                  .slice(-5)
-                  .reverse()
-                  .map((ev, idx) => {
-                    const isBuy =
-                      ev.signal === "BUY";
-
-                    const latest =
-                      idx === 0;
-                    return (
-                      <div
-                        key={`${ev.time}-${ev.signal}`}
-                        className={[
-                          "flex items-center gap-2.5 rounded-xl px-2.5 py-2",
-                          latest ? "signal-latest" : "",
-                        ].join(" ")}
-                      >
-                        <span
-                          className={[
-                            "flex h-7 w-7 shrink-0 items-center justify-center rounded-full ring-1",
-                            isBuy
-                              ? "bg-emerald-50 text-emerald-600 ring-emerald-200"
-                              : "bg-rose-50 text-rose-600 ring-rose-200",
-                          ].join(" ")}
-                        >
-                          {isBuy ? (
-                            <ArrowUpRight className="h-3.5 w-3.5" />
-                          ) : (
-                            <ArrowDownRight className="h-3.5 w-3.5" />
-                          )}
-                        </span>
-
-                        <span className="min-w-0 flex-1 leading-tight">
-                          <span className="flex items-center gap-1.5">
-                            <span
-                              className={[
-                                "text-[11px] font-bold",
-                                isBuy
-                                  ? "text-emerald-600"
-                                  : "text-rose-600",
-                              ].join(" ")}
-                            >
-                              {ev.signal}
-                            </span>
-
-                            {latest && (
-                              <span className="rounded bg-blue-50 px-1 py-px text-[8px] font-bold uppercase tracking-wider text-blue-600">
-                                Latest
-                              </span>
-                            )}
-                          </span>
-
-                          <span className="block truncate text-[9px] font-medium text-slate-400">
-                            {formatISTShortDateTime(
-                              ev.time
-                            )}
-                          </span>
-                        </span>
-
-                        <span className="flex flex-col items-end leading-tight">
-                          <span className="font-mono text-[11px] font-semibold tabular-nums text-slate-700">
-                            {fmt(ev.price)}
-                          </span>
-
-                          {ev.realizedPL != null ? (
-                            <span
-                              className={[
-                                "font-mono text-[10px] font-bold tabular-nums",
-                                ev.realizedPL >= 0
-                                  ? "text-emerald-600"
-                                  : "text-rose-600",
-                              ].join(" ")}
-                            >
-                              {fmtSigned(ev.realizedPL)}
-                            </span>
-                          ) : ev.exitTime == null && latest ? (
-                            <span className="text-[9px] font-bold uppercase tracking-wider text-amber-500">
-                              Open
-                            </span>
-                          ) : null}
-                        </span>
-                      </div>
-                    );
-                  })}
-              </div>
-
-            </Card>
-          )}
-
-          {/* INTEGRITY NOTE */}
-
-          <div className="shrink-0 rounded-2xl border border-blue-100 bg-gradient-to-br from-blue-50/80 to-indigo-50/60 p-2.5">
-
-            <div className="flex items-start gap-2.5">
-
-              <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-blue-500" />
-
-
-              <p className="text-[10px] font-medium leading-4 text-blue-700/80">
-
-                BullionAI.pine executes
-                verified (SHA-256) on every
-                run — display never modifies
-                strategy state.
-
-              </p>
-
-            </div>
-
-          </div>
 
         </aside>
 

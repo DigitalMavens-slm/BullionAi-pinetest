@@ -1128,6 +1128,151 @@
         },
         {
           "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": true,
+          "options": {
+            "text": "SELL",
+            "textcolor": "#FFFFFF",
+            "color": "#F23645",
+            "shape": "shape_label_down",
+            "location": "AboveBar"
+          }
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
         }
       ]
     },
@@ -2184,7 +2329,145 @@
           }
         },
         {
-          "value": 244500.4323103791,
+          "value": 244631.4323103791,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": 244346.5442882091,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": 243869.3268390514,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": 243869.3268390514,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": 244788.4884479576,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": 244788.4884479576,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": 244788.4884479576,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": 244788.4884479576,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": 244788.4884479576,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": 244788.4884479576,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": 244244.2772611085,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": 243571.9360281721,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": 243571.9360281721,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": 243571.9360281721,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": 243571.9360281721,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": 243571.9360281721,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": 243571.9360281721,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": 243571.9360281721,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": 243571.9360281721,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": 242558.8065399075,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": 242558.8065399075,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": 242558.8065399075,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": 242558.8065399075,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": 242558.8065399075,
           "options": {
             "color": "#F23645"
           }
@@ -2320,7 +2603,7 @@
                     "_merge_parent": null
                   },
                   {
-                    "text": "244063",
+                    "text": "243021.00",
                     "width": 0,
                     "height": 0,
                     "text_color": "#FFFFFF",
@@ -2350,7 +2633,7 @@
                     "_merge_parent": null
                   },
                   {
-                    "text": "244500",
+                    "text": "242558.81",
                     "width": 0,
                     "height": 0,
                     "text_color": "#FF9800",
@@ -2380,7 +2663,7 @@
                     "_merge_parent": null
                   },
                   {
-                    "text": "242299",
+                    "text": "240705.00",
                     "width": 0,
                     "height": 0,
                     "text_color": "#00BCD4",
@@ -2410,7 +2693,7 @@
                     "_merge_parent": null
                   },
                   {
-                    "text": "1306",
+                    "text": "475.00",
                     "width": 0,
                     "height": 0,
                     "text_color": "#00E676",
@@ -2440,7 +2723,7 @@
                     "_merge_parent": null
                   },
                   {
-                    "text": "1764",
+                    "text": "2316.00",
                     "width": 0,
                     "height": 0,
                     "text_color": "#00E676",

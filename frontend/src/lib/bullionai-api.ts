@@ -23,6 +23,7 @@ export type DayStats = {
 };
 
 export type CandleResponse = {
+  notice?: string | null;
   instrument: Instrument;
   symbol: string;
   name: string;
@@ -151,16 +152,15 @@ export type BullionState = {
   } | null;
 };
 
-const API_BASE =
-  import.meta.env.VITE_BULLIONAI_API_URL ||
-  "http://localhost:8787";
+import { API_BASE } from "./api-base";
 
 export async function fetchCandles(
   timeframe: string,
-  instrument: Instrument = "gold"
+  instrument: Instrument = "gold",
+  sym?: { exch: string; token: string; tsym: string } | null
 ): Promise<CandleResponse> {
   const response = await fetch(
-    `${API_BASE}/api/candles?timeframe=${encodeURIComponent(timeframe)}&instrument=${encodeURIComponent(instrument)}`
+    `${API_BASE}/api/candles?timeframe=${encodeURIComponent(timeframe)}&instrument=${encodeURIComponent(instrument)}${sym ? `&exchange=${encodeURIComponent(sym.exch)}&token=${encodeURIComponent(sym.token)}&tsym=${encodeURIComponent(sym.tsym)}` : ''}`
   );
 
   if (!response.ok) {
@@ -188,10 +188,11 @@ export async function fetchState(): Promise<BullionState> {
 
 export async function fetchStrategy(
   timeframe: string,
-  instrument: Instrument = "gold"
+  instrument: Instrument = "gold",
+  sym?: { exch: string; token: string; tsym: string } | null
 ): Promise<StrategyRunResponse> {
   const response = await fetch(
-    `${API_BASE}/api/strategy?timeframe=${encodeURIComponent(timeframe)}&instrument=${encodeURIComponent(instrument)}`
+    `${API_BASE}/api/strategy?timeframe=${encodeURIComponent(timeframe)}&instrument=${encodeURIComponent(instrument)}${sym ? `&exchange=${encodeURIComponent(sym.exch)}&token=${encodeURIComponent(sym.token)}&tsym=${encodeURIComponent(sym.tsym)}` : ''}`
   );
 
   if (!response.ok) {
@@ -235,4 +236,65 @@ export function createStateStream(
   };
 
   return source;
+}
+/* =========================================================
+   SYMBOL SEARCH — typeahead over /api/symbols
+   ========================================================= */
+
+export type SymbolRow = {
+  exch: string;
+  token: string;
+  symbol: string;
+  tsym: string;
+  lotSize: number | null;
+};
+
+export async function searchSymbols(
+  q: string,
+  exchange: string | null,
+  limit = 20
+): Promise<SymbolRow[]> {
+  const u = new URL(API_BASE + "/api/symbols");
+  u.searchParams.set("q", q);
+  if (exchange) u.searchParams.set("exchange", exchange);
+  u.searchParams.set("limit", String(limit));
+  const r = await fetch(u);
+  const d = await r.json();
+  return (d.symbols || []) as SymbolRow[];
+}
+export async function subscribeSymbol(
+  sym: { exch: string; token: string; tsym: string },
+  unsubscribe?: Array<{ exch: string; token: string }>
+) {
+  await fetch(API_BASE + "/api/subscribe", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      ...sym,
+      unsubscribe: unsubscribe || [],
+    }),
+  }).catch(() => {});
+}
+
+export type InstrumentEntry = {
+  exchange: string;
+  token: string;
+  symbol: string;
+  tradingSymbol: string;
+  instrumentType: string;
+  expiry: number | null;
+  lotSize: number | null;
+  tickSize: number | null;
+};
+
+export async function getInstruments(
+  exchange: string,
+  q = ""
+): Promise<InstrumentEntry[]> {
+  const u = new URL(API_BASE + "/api/instruments");
+  u.searchParams.set("exchange", exchange);
+  if (q) u.searchParams.set("q", q);
+  const r = await fetch(u);
+  const d = await r.json();
+  return (d.instruments || []) as InstrumentEntry[];
 }

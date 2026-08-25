@@ -22,6 +22,9 @@ import {
   type Time,
 } from "lightweight-charts";
 
+import { ChevronsRight } from "lucide-react";
+
+
 import {
   IST_TIME_ZONE,
   formatISTShortDateTime,
@@ -39,11 +42,8 @@ type Candle = {
 type BullionChartProps = {
   candles?: Candle[];
 
-  entryPrice?: number | null;
-
   entryTime?: number | null;
 
-  exitTime?: number | null;
 
   signal?: string | null;
 
@@ -71,8 +71,6 @@ const UP = "#089981";
 
 const DOWN = "#f23645";
 
-const ACCENT = "#2962FF";
-
 type LegendValues = {
   time: number;
 
@@ -91,10 +89,16 @@ type LegendValues = {
 function fmt(
   value: number
 ) {
+  const hasFraction =
+    Math.abs(value % 1) > 1e-9;
+
   return value.toLocaleString(
     "en-IN",
     {
-      maximumFractionDigits: 0,
+      minimumFractionDigits:
+        hasFraction ? 2 : 0,
+
+      maximumFractionDigits: 2,
     }
   );
 }
@@ -229,9 +233,7 @@ function fmtCrosshairIST(
 
 export function BullionChart({
   candles = [],
-  entryPrice = null,
   entryTime = null,
-  exitTime = null,
   signal = null,
   livePrice = null,
   label = "MCX Gold",
@@ -458,14 +460,24 @@ export function BullionChart({
             priceFormatter:
               (
                 price: number
-              ) =>
-                price.toLocaleString(
+              ) => {
+                const hasFraction =
+                  Math.abs(
+                    price % 1
+                  ) > 1e-9;
+
+                return price.toLocaleString(
                   "en-IN",
                   {
-                    maximumFractionDigits:
-                      0,
+                    minimumFractionDigits:
+                      hasFraction
+                        ? 2
+                        : 0,
+
+                    maximumFractionDigits: 2,
                   }
-                ),
+                );
+              },
 
             timeFormatter:
               (time: Time) =>
@@ -785,15 +797,17 @@ export function BullionChart({
 
           c.close >= c.open
 
-            ? "rgba(8,153,129,0.35)"
+            ? "rgba(8,153,129,0.28)"
 
-            : "rgba(242,54,69,0.35)",
+            : "rgba(242,54,69,0.28)",
       }));
 
 
     series.setData(
       formatted
     );
+
+    dataCountRef.current = formatted.length;
 
     volume.setData(
       volumes
@@ -1115,48 +1129,7 @@ export function BullionChart({
      * Pine doesn't draw.
      */
 
-    if (
-
-      exitTime &&
-
-      times.has(
-
-        Math.floor(
-          exitTime / 1000
-        )
-
-      ) &&
-      !markers.some(
-        m =>
-          m.time ===
-          Math.floor(
-            exitTime / 1000
-          )
-      )
-    ) {
-
-      markers.push({
-
-        time:
-
-          Math.floor(
-            exitTime / 1000
-          ) as Time,
-
-        position:
-          "aboveBar" as const,
-
-        color:
-          "rgba(15,23,42,0.45)",
-
-        shape:
-          "circle" as const,
-
-        text: "EXIT",
-
-      });
-
-    }
+    
 
 
     try {
@@ -1188,8 +1161,6 @@ export function BullionChart({
   }, [
     candles,
     signals,
-    entryTime,
-    exitTime,
     signal,
   ]);
 
@@ -1327,7 +1298,7 @@ export function BullionChart({
         value: 0,
 
         color:
-          "rgba(8,153,129,0.35)",
+          "rgba(8,153,129,0.28)",
       });
 
 
@@ -1338,102 +1309,9 @@ export function BullionChart({
   }, [livePrice, timeframeSeconds]);
 
 
-  // =========================================================
-  // ENTRY PRICE LINE
-  // =========================================================
-
-  useEffect(() => {
-
-    const series =
-      entrySeriesRef.current;
 
 
-    if (
-      !series ||
-      entryPrice === null ||
-      entryPrice === undefined ||
-      candles.length === 0
-    ) {
-      return;
-    }
 
-
-    series.setData(
-
-      candles.map(c => ({
-        time:
-
-          Math.floor(
-            c.time / 1000
-          ) as Time,
-
-        value: entryPrice,
-      }))
-
-    );
-
-  }, [entryPrice, candles]);
-
-
-  // =========================================================
-  // LIVE PRICE LINE — TV BLUE
-  // =========================================================
-
-  useEffect(() => {
-
-    const series =
-      candleSeriesRef.current;
-
-
-    if (!series) {
-      return;
-    }
-
-
-    const existingLines =
-      series.priceLines();
-
-
-    existingLines.forEach(
-      line => {
-
-        series.removePriceLine(
-          line
-        );
-
-      }
-    );
-
-
-    if (
-
-      livePrice === null ||
-      livePrice === undefined
-
-    ) {
-      return;
-    }
-
-
-    series.createPriceLine({
-
-      price: livePrice,
-
-      color: ACCENT,
-
-      lineWidth: 1,
-
-      lineStyle:
-        LineStyle.Dashed,
-
-      axisLabelVisible:
-        true,
-
-      title: "LIVE",
-
-    });
-
-  }, [livePrice]);
 
 
   // =========================================================
@@ -1470,6 +1348,36 @@ export function BullionChart({
     change >= 0;
 
 
+  /* Jump-to-latest visibility */
+
+  const [showJumpLatest, setShowJumpLatest] =
+    useState(false);
+
+  const dataCountRef =
+    useRef(0);
+
+  useEffect(() => {
+    const chart = chartRef.current;
+    if (!chart) return;
+
+    function handler(range: any) {
+      const total = dataCountRef.current;
+      if (!range || total === 0) {
+        setShowJumpLatest(false);
+        return;
+      }
+      setShowJumpLatest(range.to < total - 1);
+    }
+
+    const ts = chart.timeScale();
+    ts.subscribeVisibleLogicalRangeChange(handler);
+
+    return () =>
+      ts.unsubscribeVisibleLogicalRangeChange(handler);
+  }, []);
+
+
+
   // =========================================================
   // RENDER
   // =========================================================
@@ -1491,6 +1399,23 @@ export function BullionChart({
         </span>
 
       </div>
+
+
+      {/* JUMP TO LATEST */}
+
+      {showJumpLatest && (
+        <button
+          onClick={() =>
+            chartRef.current
+              ?.timeScale()
+              ?.scrollToRealTime()
+          }
+          className="absolute bottom-4 right-4 z-20 flex items-center gap-1 rounded-full border border-slate-200 bg-white/95 px-3 py-1.5 text-[11px] font-bold text-slate-700 shadow-md transition hover:border-amber-300 hover:text-amber-600"
+        >
+          Latest
+          <ChevronsRight className="h-3.5 w-3.5" />
+        </button>
+      )}
 
 
       {/* CHART CANVAS */}
@@ -1653,10 +1578,16 @@ export function BullionChart({
 
 
 function fmtSigned(v: number) {
+  const hasFraction =
+    Math.abs(v % 1) > 1e-9;
+
   return (
     (v >= 0 ? "+" : "") +
     v.toLocaleString("en-IN", {
-      maximumFractionDigits: 0,
+      minimumFractionDigits:
+        hasFraction ? 2 : 0,
+
+      maximumFractionDigits: 2,
     })
   );
 }

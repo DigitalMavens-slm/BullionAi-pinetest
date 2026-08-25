@@ -44,30 +44,7 @@
         }
       ]
     },
-    "Signal": {
-      "title": "Signal",
-      "options": {
-        "display": "data_window",
-        "overlay": true
-      },
-      "data": [
-        {
-          "title": "Signal",
-          "value": 0,
-          "options": {
-            "color": "#2962ff"
-          }
-        },
-        {
-          "title": "Signal",
-          "value": 0,
-          "options": {
-            "color": "#2962ff"
-          }
-        }
-      ]
-    },
-    "#1": {
+    "#0": {
       "options": {
         "color": "#F23645",
         "linewidth": 3,

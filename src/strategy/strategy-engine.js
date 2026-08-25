@@ -1061,6 +1061,20 @@ class StrategyEngine {
         }
 
 
+        /*
+         * The table prints a ROUNDED
+         * entry (math.round), so the
+         * true close may differ by a
+         * fraction. Prefer an exact
+         * match; otherwise accept the
+         * closest bar within ±1.
+         */
+
+        let bestIdx = null;
+
+        let bestDiff =
+            Infinity;
+
         for (
             let i =
                 candles.length - 1;
@@ -1076,18 +1090,35 @@ class StrategyEngine {
                 );
 
 
-            if (
-                close === roundedEntry
-            ) {
+            const diff =
+                Math.abs(
+                    close -
+                        roundedEntry
+                );
+
+
+            if (diff === 0) {
 
                 return i;
+
+            }
+
+
+            if (
+                diff <= 1 &&
+                diff < bestDiff
+            ) {
+
+                bestDiff = diff;
+
+                bestIdx = i;
 
             }
 
         }
 
 
-        return null;
+        return bestIdx;
 
     }
 
@@ -1326,8 +1357,6 @@ class StrategyEngine {
                 }
 
             }
-
-
             for (
                 let i =
                     entryIndex + 1;
@@ -1375,8 +1404,10 @@ class StrategyEngine {
 
 
                 if (
+
                     hitBuy ||
                     hitSell
+
                 ) {
 
                     exitTimestamp =
@@ -1387,6 +1418,23 @@ class StrategyEngine {
                     break;
 
                 }
+
+            }
+
+            /* Fallback for CLOSED trades where trail scan
+             * didn't find an exit (e.g., PineTS NaN gap):
+             * use the last candle's time as exit. */
+
+            if (
+                exitTimestamp === null &&
+                table.Status === "CLOSED" &&
+                candles.length > 0
+            ) {
+
+                exitTimestamp =
+                    candles[
+                        candles.length - 1
+                    ].time;
 
             }
 
@@ -1638,6 +1686,74 @@ class StrategyEngine {
 
             }
 
+
+            /* Fallback for historical trades where trail scan
+             * didn't find a cross (e.g., PineTS gap):
+             * use next signal - 1 bar as exit proxy. */
+
+            if (
+                exitIdx === null &&
+                m < signalHistory.length - 1
+            ) {
+
+                const nextIdx =
+                    signalHistory[m + 1].index;
+
+                if (
+                    Number.isFinite(nextIdx) &&
+                    candles[nextIdx - 1]
+                ) {
+
+                    exitIdx = nextIdx - 1;
+
+                    const tv2 =
+                        trailPlot[exitIdx]?.value;
+
+                    if (
+                        typeof tv2 ===
+                            "number" &&
+                        Number.isFinite(tv2)
+                    ) {
+
+                        pl =
+                            side === "BUY"
+                                ? tv2 -
+                                  Number(ev.price)
+                                : Number(ev.price) -
+                                  tv2;
+
+                    } else {
+
+                        pl = null;
+
+                    }
+
+                }
+
+            } else if (
+                exitIdx === null &&
+                m === signalHistory.length - 1 &&
+                table.Status === "CLOSED"
+            ) {
+
+                exitIdx = candles.length - 1;
+
+                const tv2 =
+                    trailPlot[exitIdx]?.value;
+
+                if (
+                    typeof tv2 === "number" &&
+                    Number.isFinite(tv2)
+                ) {
+
+                    pl =
+                        side === "BUY"
+                            ? tv2 - Number(ev.price)
+                            : Number(ev.price) - tv2;
+
+                }
+
+            }
 
             ev.realizedPL =
                 typeof pl ===

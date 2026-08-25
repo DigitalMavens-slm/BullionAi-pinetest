@@ -1,0 +1,1360 @@
+{
+  "indicator": {
+    "title": "BullionAI",
+    "shorttitle": "",
+    "overlay": true,
+    "format": "inherit",
+    "precision": 10,
+    "scale": "points",
+    "max_bars_back": 0,
+    "timeframe": "",
+    "timeframe_gaps": true,
+    "explicit_plot_zorder": false,
+    "max_lines_count": 50,
+    "max_labels_count": 50,
+    "max_boxes_count": 50,
+    "calc_bars_count": 0,
+    "max_polylines_count": 50,
+    "dynamic_requests": false,
+    "behind_chart": true
+  },
+  "plots": {
+    "plot": {
+      "options": {
+        "location": "BelowBar",
+        "style": "shape",
+        "color": "#4CAF50",
+        "text": "BUY",
+        "textcolor": "#FFFFFF",
+        "shape": "shape_label_up",
+        "overlay": true
+      },
+      "data": [
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": true,
+          "options": {
+            "text": "BUY",
+            "textcolor": "#FFFFFF",
+            "color": "#4CAF50",
+            "shape": "shape_label_up",
+            "location": "BelowBar"
+          }
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        }
+      ]
+    },
+    "#0": {
+      "options": {
+        "color": "#F23645",
+        "linewidth": 3,
+        "style": "style_linebr",
+        "overlay": true
+      },
+      "data": [
+        {
+          "value": null,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": null,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": null,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": null,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": null,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": null,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": null,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": null,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": null,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": null,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": null,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": null,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": null,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": null,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": null,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": null,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": null,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": null,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": null,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": null,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": null,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": null,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": null,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": null,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": null,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": null,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": null,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": null,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": null,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": null,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": null,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": null,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": null,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": null,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": null,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": 72622.9456226537,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 72952.1477210355,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 73444.2818123902,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 73502.0688257908,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 73618.0621239486,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 73618.0621239486,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 73761.9377497312,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 73761.9377497312,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 73828.7868862479,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 73843.7288943731,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 74001.3929019178,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 74001.3929019178,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 74093.5691348169,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 74093.5691348169,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 74093.5691348169,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 74093.5691348169,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 74093.5691348169,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 74093.5691348169,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 74093.5691348169,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 74093.5691348169,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 74093.5691348169,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 74093.5691348169,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 74093.5691348169,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 74093.5691348169,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 74093.5691348169,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 74093.5691348169,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 74093.5691348169,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 74093.5691348169,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 74093.5691348169,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 74093.5691348169,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 74093.5691348169,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 74093.5691348169,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 74093.5691348169,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 74093.5691348169,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 74093.5691348169,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 74093.5691348169,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 74093.5691348169,
+          "options": {
+            "color": "#00E676"
+          }
+        }
+      ]
+    },
+    "__tables__": {
+      "title": "__tables__",
+      "options": {
+        "style": "table",
+        "overlay": true
+      },
+      "data": [
+        {
+          "time": 0,
+          "value": [
+            {
+              "id": 0,
+              "position": "bottom_right",
+              "columns": 2,
+              "rows": 11,
+              "bgcolor": "rgb(15, 15, 18)",
+              "frame_color": "rgb(120, 120, 120)",
+              "frame_width": 2,
+              "border_color": "",
+              "border_width": 1,
+              "force_overlay": false,
+              "_deleted": false,
+              "cells": [
+                [
+                  {
+                    "text": "BULLIONAI PRO",
+                    "width": 0,
+                    "height": 0,
+                    "text_color": "#363A45",
+                    "text_halign": "center",
+                    "text_valign": "center",
+                    "text_size": "normal",
+                    "bgcolor": "rgb(190, 150, 25)",
+                    "tooltip": "",
+                    "text_font_family": "default",
+                    "_merged": false,
+                    "_merge_parent": null
+                  },
+                  {
+                    "text": "",
+                    "width": 0,
+                    "height": 0,
+                    "text_color": "#363A45",
+                    "text_halign": "center",
+                    "text_valign": "center",
+                    "text_size": "normal",
+                    "bgcolor": "rgb(190, 150, 25)",
+                    "tooltip": "",
+                    "text_font_family": "default",
+                    "_merged": false,
+                    "_merge_parent": null
+                  }
+                ],
+                [
+                  {
+                    "text": "Trade",
+                    "width": 0,
+                    "height": 0,
+                    "text_color": "#B2B5BE",
+                    "text_halign": "center",
+                    "text_valign": "center",
+                    "text_size": "normal",
+                    "bgcolor": "",
+                    "tooltip": "",
+                    "text_font_family": "default",
+                    "_merged": false,
+                    "_merge_parent": null
+                  },
+                  {
+                    "text": "BUY",
+                    "width": 0,
+                    "height": 0,
+                    "text_color": "#00E676",
+                    "text_halign": "center",
+                    "text_valign": "center",
+                    "text_size": "normal",
+                    "bgcolor": "",
+                    "tooltip": "",
+                    "text_font_family": "default",
+                    "_merged": false,
+                    "_merge_parent": null
+                  }
+                ],
+                [
+                  {
+                    "text": "Status",
+                    "width": 0,
+                    "height": 0,
+                    "text_color": "#B2B5BE",
+                    "text_halign": "center",
+                    "text_valign": "center",
+                    "text_size": "normal",
+                    "bgcolor": "",
+                    "tooltip": "",
+                    "text_font_family": "default",
+                    "_merged": false,
+                    "_merge_parent": null
+                  },
+                  {
+                    "text": "CLOSED",
+                    "width": 0,
+                    "height": 0,
+                    "text_color": "#FFFFFF",
+                    "text_halign": "center",
+                    "text_valign": "center",
+                    "text_size": "normal",
+                    "bgcolor": "",
+                    "tooltip": "",
+                    "text_font_family": "default",
+                    "_merged": false,
+                    "_merge_parent": null
+                  }
+                ],
+                [
+                  {
+                    "text": "Entry Price",
+                    "width": 0,
+                    "height": 0,
+                    "text_color": "#B2B5BE",
+                    "text_halign": "center",
+                    "text_valign": "center",
+                    "text_size": "normal",
+                    "bgcolor": "",
+                    "tooltip": "",
+                    "text_font_family": "default",
+                    "_merged": false,
+                    "_merge_parent": null
+                  },
+                  {
+                    "text": "73460",
+                    "width": 0,
+                    "height": 0,
+                    "text_color": "#FFFFFF",
+                    "text_halign": "center",
+                    "text_valign": "center",
+                    "text_size": "normal",
+                    "bgcolor": "",
+                    "tooltip": "",
+                    "text_font_family": "default",
+                    "_merged": false,
+                    "_merge_parent": null
+                  }
+                ],
+                [
+                  {
+                    "text": "Trail SL",
+                    "width": 0,
+                    "height": 0,
+                    "text_color": "#B2B5BE",
+                    "text_halign": "center",
+                    "text_valign": "center",
+                    "text_size": "normal",
+                    "bgcolor": "",
+                    "tooltip": "",
+                    "text_font_family": "default",
+                    "_merged": false,
+                    "_merge_parent": null
+                  },
+                  {
+                    "text": "74094",
+                    "width": 0,
+                    "height": 0,
+                    "text_color": "#FF9800",
+                    "text_halign": "center",
+                    "text_valign": "center",
+                    "text_size": "normal",
+                    "bgcolor": "",
+                    "tooltip": "",
+                    "text_font_family": "default",
+                    "_merged": false,
+                    "_merge_parent": null
+                  }
+                ],
+                [
+                  {
+                    "text": "Highest",
+                    "width": 0,
+                    "height": 0,
+                    "text_color": "#B2B5BE",
+                    "text_halign": "center",
+                    "text_valign": "center",
+                    "text_size": "normal",
+                    "bgcolor": "",
+                    "tooltip": "",
+                    "text_font_family": "default",
+                    "_merged": false,
+                    "_merge_parent": null
+                  },
+                  {
+                    "text": "74878",
+                    "width": 0,
+                    "height": 0,
+                    "text_color": "#00BCD4",
+                    "text_halign": "center",
+                    "text_valign": "center",
+                    "text_size": "normal",
+                    "bgcolor": "",
+                    "tooltip": "",
+                    "text_font_family": "default",
+                    "_merged": false,
+                    "_merge_parent": null
+                  }
+                ],
+                [
+                  {
+                    "text": "Current P/L",
+                    "width": 0,
+                    "height": 0,
+                    "text_color": "#B2B5BE",
+                    "text_halign": "center",
+                    "text_valign": "center",
+                    "text_size": "normal",
+                    "bgcolor": "",
+                    "tooltip": "",
+                    "text_font_family": "default",
+                    "_merged": false,
+                    "_merge_parent": null
+                  },
+                  {
+                    "text": "-",
+                    "width": 0,
+                    "height": 0,
+                    "text_color": "#FFFFFF",
+                    "text_halign": "center",
+                    "text_valign": "center",
+                    "text_size": "normal",
+                    "bgcolor": "",
+                    "tooltip": "",
+                    "text_font_family": "default",
+                    "_merged": false,
+                    "_merge_parent": null
+                  }
+                ],
+                [
+                  {
+                    "text": "Best P/L",
+                    "width": 0,
+                    "height": 0,
+                    "text_color": "#B2B5BE",
+                    "text_halign": "center",
+                    "text_valign": "center",
+                    "text_size": "normal",
+                    "bgcolor": "",
+                    "tooltip": "",
+                    "text_font_family": "default",
+                    "_merged": false,
+                    "_merge_parent": null
+                  },
+                  {
+                    "text": "1419",
+                    "width": 0,
+                    "height": 0,
+                    "text_color": "#00E676",
+                    "text_halign": "center",
+                    "text_valign": "center",
+                    "text_size": "normal",
+                    "bgcolor": "",
+                    "tooltip": "",
+                    "text_font_family": "default",
+                    "_merged": false,
+                    "_merge_parent": null
+                  }
+                ],
+                [
+                  {
+                    "text": "Realized P/L",
+                    "width": 0,
+                    "height": 0,
+                    "text_color": "#B2B5BE",
+                    "text_halign": "center",
+                    "text_valign": "center",
+                    "text_size": "normal",
+                    "bgcolor": "",
+                    "tooltip": "",
+                    "text_font_family": "default",
+                    "_merged": false,
+                    "_merge_parent": null
+                  },
+                  {
+                    "text": "634",
+                    "width": 0,
+                    "height": 0,
+                    "text_color": "#00E676",
+                    "text_halign": "center",
+                    "text_valign": "center",
+                    "text_size": "normal",
+                    "bgcolor": "",
+                    "tooltip": "",
+                    "text_font_family": "default",
+                    "_merged": false,
+                    "_merge_parent": null
+                  }
+                ],
+                [
+                  {
+                    "text": "Entry",
+                    "width": 0,
+                    "height": 0,
+                    "text_color": "#B2B5BE",
+                    "text_halign": "center",
+                    "text_valign": "center",
+                    "text_size": "normal",
+                    "bgcolor": "",
+                    "tooltip": "",
+                    "text_font_family": "default",
+                    "_merged": false,
+                    "_merge_parent": null
+                  },
+                  {
+                    "text": "NaN-NaN-NaN  NaN:NaN AM",
+                    "width": 0,
+                    "height": 0,
+                    "text_color": "#FFFFFF",
+                    "text_halign": "center",
+                    "text_valign": "center",
+                    "text_size": "normal",
+                    "bgcolor": "",
+                    "tooltip": "",
+                    "text_font_family": "default",
+                    "_merged": false,
+                    "_merge_parent": null
+                  }
+                ],
+                [
+                  {
+                    "text": "Exit",
+                    "width": 0,
+                    "height": 0,
+                    "text_color": "#B2B5BE",
+                    "text_halign": "center",
+                    "text_valign": "center",
+                    "text_size": "normal",
+                    "bgcolor": "",
+                    "tooltip": "",
+                    "text_font_family": "default",
+                    "_merged": false,
+                    "_merge_parent": null
+                  },
+                  {
+                    "text": "NaN-NaN-NaN  NaN:NaN AM",
+                    "width": 0,
+                    "height": 0,
+                    "text_color": "#FFFFFF",
+                    "text_halign": "center",
+                    "text_valign": "center",
+                    "text_size": "normal",
+                    "bgcolor": "",
+                    "tooltip": "",
+                    "text_font_family": "default",
+                    "_merged": false,
+                    "_merge_parent": null
+                  }
+                ]
+              ],
+              "merges": []
+            }
+          ],
+          "options": {
+            "style": "table"
+          }
+        }
+      ]
+    },
+    "__labels__": {
+      "title": "__labels__",
+      "options": {
+        "style": "label",
+        "overlay": true
+      },
+      "data": [
+        {
+          "time": 0,
+          "value": [],
+          "options": {
+            "style": "label"
+          }
+        }
+      ]
+    },
+    "__lines__": {
+      "title": "__lines__",
+      "options": {
+        "style": "drawing_line",
+        "overlay": true
+      },
+      "data": [
+        {
+          "time": 0,
+          "value": [],
+          "options": {
+            "style": "drawing_line"
+          }
+        }
+      ]
+    },
+    "__boxes__": {
+      "title": "__boxes__",
+      "options": {
+        "style": "drawing_box",
+        "overlay": true
+      },
+      "data": [
+        {
+          "time": 0,
+          "value": [],
+          "options": {
+            "style": "drawing_box"
+          }
+        }
+      ]
+    },
+    "__linefills__": {
+      "title": "__linefills__",
+      "options": {
+        "style": "linefill",
+        "overlay": true
+      },
+      "data": [
+        {
+          "time": 0,
+          "value": [],
+          "options": {
+            "style": "linefill"
+          }
+        }
+      ]
+    },
+    "__polylines__": {
+      "title": "__polylines__",
+      "options": {
+        "style": "drawing_polyline",
+        "overlay": true
+      },
+      "data": [
+        {
+          "time": 0,
+          "value": [],
+          "options": {
+            "style": "drawing_polyline"
+          }
+        }
+      ]
+    }
+  }
+}

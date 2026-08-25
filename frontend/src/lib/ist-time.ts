@@ -39,6 +39,7 @@ export function formatISTShortDateTime(
   return formatISTDateTime(value, {
     year: undefined,
     second: undefined,
+    hour12: true,
   });
 }
 

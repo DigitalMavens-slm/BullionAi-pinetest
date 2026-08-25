@@ -560,6 +560,12 @@
         },
         {
           "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
         }
       ]
     },
@@ -1080,6 +1086,12 @@
           "options": {
             "color": "#00E676"
           }
+        },
+        {
+          "value": 163544.6348827019,
+          "options": {
+            "color": "#00E676"
+          }
         }
       ]
     },
@@ -1182,10 +1194,10 @@
                     "_merge_parent": null
                   },
                   {
-                    "text": "OPEN",
+                    "text": "CLOSED",
                     "width": 0,
                     "height": 0,
-                    "text_color": "#FDD835",
+                    "text_color": "#FFFFFF",
                     "text_halign": "center",
                     "text_valign": "center",
                     "text_size": "normal",
@@ -1302,10 +1314,10 @@
                     "_merge_parent": null
                   },
                   {
-                    "text": "4733",
+                    "text": "-",
                     "width": 0,
                     "height": 0,
-                    "text_color": "#00E676",
+                    "text_color": "#FFFFFF",
                     "text_halign": "center",
                     "text_valign": "center",
                     "text_size": "normal",
@@ -1362,10 +1374,10 @@
                     "_merge_parent": null
                   },
                   {
-                    "text": "-",
+                    "text": "4257",
                     "width": 0,
                     "height": 0,
-                    "text_color": "#F23645",
+                    "text_color": "#00E676",
                     "text_halign": "center",
                     "text_valign": "center",
                     "text_size": "normal",
@@ -1422,7 +1434,7 @@
                     "_merge_parent": null
                   },
                   {
-                    "text": "-",
+                    "text": "NaN-NaN-NaN  NaN:NaN AM",
                     "width": 0,
                     "height": 0,
                     "text_color": "#FFFFFF",

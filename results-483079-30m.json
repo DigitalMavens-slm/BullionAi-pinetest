@@ -1107,6 +1107,12 @@
         },
         {
           "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
         }
       ]
     },
@@ -2163,7 +2169,13 @@
           }
         },
         {
-          "value": 163852.6856749791,
+          "value": 163704.6856749791,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": 163689.6724124806,
           "options": {
             "color": "#F23645"
           }
@@ -2329,7 +2341,7 @@
                     "_merge_parent": null
                   },
                   {
-                    "text": "163853",
+                    "text": "163690",
                     "width": 0,
                     "height": 0,
                     "text_color": "#FF9800",
@@ -2359,7 +2371,7 @@
                     "_merge_parent": null
                   },
                   {
-                    "text": "162919",
+                    "text": "162876",
                     "width": 0,
                     "height": 0,
                     "text_color": "#00BCD4",
@@ -2389,7 +2401,7 @@
                     "_merge_parent": null
                   },
                   {
-                    "text": "17",
+                    "text": "165",
                     "width": 0,
                     "height": 0,
                     "text_color": "#00E676",
@@ -2419,7 +2431,7 @@
                     "_merge_parent": null
                   },
                   {
-                    "text": "181",
+                    "text": "224",
                     "width": 0,
                     "height": 0,
                     "text_color": "#00E676",

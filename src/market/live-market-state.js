@@ -263,6 +263,67 @@ class LiveMarketState extends EventEmitter {
 
 
     // =========================================================
+    // RUNTIME SUBSCRIBE (dynamic symbols)
+    // =========================================================
+
+    subscribeTokens(pairs) {
+
+        const subs = [];
+
+        pairs.forEach(({ exch, token }) => {
+
+            const EX = String(exch || this.exchange).toUpperCase();
+
+            if (!this.priceStates.has(token)) {
+                this.priceStates.set(
+                    token,
+                    new LivePriceState({
+                        exchange: EX,
+                        token,
+                    })
+                );
+            }
+
+            subs.push(EX + "|" + token);
+        });
+
+        try {
+            this.feed.subscribeTouchline(subs);
+        } catch (error) {
+            console.error(
+                "Runtime subscribe failed:",
+                error?.message || error
+            );
+        }
+
+        this.emitUpdate();
+    }
+
+    unsubscribeTokens(pairs) {
+
+        const subs = [];
+
+        pairs.forEach(({ exch, token }) => {
+
+            const EX = String(exch || this.exchange).toUpperCase();
+
+            subs.push(EX + "|" + token);
+
+            /* keep price state; stop is feed-level only */
+        });
+
+        try {
+            this.feed.unsubscribeTouchline(subs);
+        } catch (error) {
+            console.error(
+                "Runtime unsubscribe failed:",
+                error?.message || error
+            );
+        }
+    }
+
+
+    // =========================================================
     // START
     // =========================================================
 

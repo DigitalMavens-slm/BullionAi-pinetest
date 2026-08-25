@@ -26,6 +26,18 @@ const {
 } = require("../market/candle-aggregator");
 
 const {
+    registerUser,
+    loginUser,
+    signToken,
+    verifyToken,
+    readBody,
+} = require("../auth/users");
+
+const {
+    searchSymbols,
+} = require("../market/symbol-master");
+
+const {
     CandleDataManager,
 } = require("../market/candle-data-manager");
 
@@ -199,6 +211,8 @@ class BullionAIApi {
         }
 
 
+        this.dynStores = new Map();
+
         this.reconcileTimer =
             null;
 
@@ -235,10 +249,10 @@ class BullionAIApi {
                     "*",
 
                 "Access-Control-Allow-Methods":
-                    "GET, OPTIONS",
+                    "GET, POST, OPTIONS",
 
                 "Access-Control-Allow-Headers":
-                    "Content-Type",
+                    "Content-Type, Authorization",
             }
         );
 
@@ -409,15 +423,30 @@ class BullionAIApi {
     // data is never destroyed on failure.
     // =========================================================
 
-    getStore(token) {
-        return String(token) === "471725"
-            ? SILVER_STORE
-            : GOLD_STORE;
+    getStore(exchange, token) {
+
+        if (String(token) === "483079") return GOLD_STORE;
+        if (String(token) === "471725") return SILVER_STORE;
+
+        const key = `${exchange}_${token}`;
+
+        if (!this.dynStores.has(key)) {
+            this.dynStores.set(
+                key,
+                new CandleDataManager({
+                    dataDirectory: "./data",
+                    exchange,
+                    token: String(token),
+                })
+            );
+        }
+
+        return this.dynStores.get(key);
     }
 
     getMarketService() {
         return (
-            this.coordinator?.market?.market
+            this.coordinator?.market
         ) ?? null;
     }
 
@@ -434,7 +463,10 @@ class BullionAIApi {
             return { ok: false, reason: "non-minute" };
         }
 
-        const store = this.getStore(inst.token);
+        const store = this.getStore(
+                inst.exchange ?? "MCX",
+                inst.token
+            );
         const existing = store.load(tf.key);
 
         try {
@@ -638,6 +670,8 @@ const allowedTimeframes =
             process.env.SHOONYA_EXCHANGE ||
             "MCX";
 
+        let notice = null;
+
 
         const token =
             resolved.token;
@@ -744,11 +778,12 @@ const allowedTimeframes =
 
     async ensureCandles(
         instrumentKey,
-        timeframeKey
+        timeframeKey,
+        instOverride
     ) {
 
         const inst =
-
+            instOverride ??
             this.resolveInstrument(
                 instrumentKey
             );
@@ -760,6 +795,7 @@ const allowedTimeframes =
 
 
         const exchange =
+            inst.exchange ||
             process.env.SHOONYA_EXCHANGE ||
             "MCX";
 
@@ -1060,6 +1096,53 @@ const allowedTimeframes =
 
             }
 
+            /* EMPTY DATASET BACKFILL
+             *
+             * Brand-new symbol: pull initial history
+             * from Shoonya before serving.
+             */
+
+            if (
+                candles.length === 0 &&
+                market &&
+                market.isAuthenticated() &&
+                Number.isFinite(Number(tf.interval))
+            ) {
+                try {
+                    const upd = await market.updateCandles([], {
+                        interval: tf.interval,
+                        exchange: inst.exchange || "MCX",
+                        token: inst.token,
+                        lookbackSeconds:
+                            tf.seconds > 3600
+                                ? 30 * 86400
+                                : 7 * 86400,
+                    });
+
+                    if (upd.candles.length > 0) {
+                        fs.writeFileSync(
+                            filePath,
+                            JSON.stringify(upd.candles, null, 2),
+                            "utf8"
+                        );
+
+                        console.log(
+                            "[ensure] backfilled " +
+                                inst.symbol +
+                                " " + tf.key +
+                                " -> " + upd.candles.length + " candles"
+                        );
+
+                        candles = upd.candles;
+                    }
+                } catch (error) {
+                    console.error(
+                        "[ensure] backfill failed " + fileName + ":",
+                        error?.message || error
+                    );
+                }
+            }
+
             return {
                 inst,
                 tf,
@@ -1069,6 +1152,18 @@ const allowedTimeframes =
                 fetched:
                     false,
             };
+
+            /* Tell the UI why nothing rendered */
+            if (
+                candles.length === 0 &&
+                market &&
+                market.isAuthenticated()
+            ) {
+                notice =
+                    "No historical data returned by Shoonya for " +
+                    (inst.symbol || inst.token) +
+                    " (" + tf.key + "). This script may be illiquid or unsupported.";
+            }
 
         }
 
@@ -1095,7 +1190,9 @@ const allowedTimeframes =
             return {
                 inst,
                 tf,
-                exchange,
+                exchange:
+                    inst.exchange ||
+                    "MCX",
                 filePath,
                 candles,
                 fetched:
@@ -1143,7 +1240,9 @@ const allowedTimeframes =
 
                         endSeconds,
 
-                        exchange,
+                        exchange:
+                            inst.exchange ||
+                            "MCX",
 
                         token:
                             inst.token,
@@ -1261,13 +1360,15 @@ const allowedTimeframes =
 
     async runStrategyFor(
         instrumentKey,
-        timeframeKey
+        timeframeKey,
+        instOverride
     ) {
 
         const ensured =
             await this.ensureCandles(
                 instrumentKey,
-                timeframeKey
+                timeframeKey,
+                instOverride
             );
 
         const { inst, tf } =
@@ -2046,6 +2147,10 @@ const allowedTimeframes =
                     state.connected
                 ),
 
+            /* every subscribed token, keyed by token */
+
+            ...prices,
+
             gold:
 
                 prices[goldToken] ??
@@ -2388,10 +2493,174 @@ const allowedTimeframes =
             );
 
             return;
+        }        if (
+            url.pathname === "/api/subscribe" &&
+            request.method === "POST"
+        ) {
+            try {
+                const body = await readBody(request);
+                const exch = String(body.exchange || body.exch || "MCX").toUpperCase();
+                const token = String(body.token || body.Token || "");
+                if (!token) throw new Error("token required");
+
+                /* Feed subscription */
+                const live = this.coordinator?.liveMarket;
+                if (live?.subscribeTokens) {
+                    live.subscribeTokens([{ exch, token }]);
+                }
+
+                /* Aggregation bucket routing */
+                this.aggregator.addInstrument({
+                    key: body.tsym || body.tradingSymbol || token,
+                    token,
+                    exchange: exch,
+                });
+
+                this.sendJson(response, 200, { ok: true });
+            } catch (error) {
+                this.sendJson(response, 400, {
+                    ok: false,
+                    error: error?.message || String(error),
+                });
+            }
+            return;
         }
 
 
+        if (
+            url.pathname === "/api/instruments"
+        ) {
+
+            const exch =
+                url.searchParams.get("exchange") || "MCX";
+
+            const q =
+                url.searchParams.get("q") || "";
+
+            const limit =
+                Math.min(200, Number(url.searchParams.get("limit")) || 100);
+
+            try {
+
+                const rows = await searchSymbols({
+                    query: q,
+                    exchange: exch,
+                    limit,
+                });
+
+                this.sendJson(response, 200, {
+                    ok: true,
+                    exchange: exch.toUpperCase(),
+                    count: rows.length,
+                    instruments: rows.map(r => ({
+                        exchange: r.exchange,
+                        token: r.token,
+                        symbol: r.symbol,
+                        tradingSymbol: r.tsym || r.tradingSymbol,
+                        instrumentType: r.instrumentType,
+                        name: r.name || "",
+                        expiry: r.expiry ?? null,
+                        lotSize: r.lotSize,
+                        tickSize: r.tickSize,
+                    })),
+                });
+
+            } catch (error) {
+                this.sendJson(response, 500, {
+                    ok: false,
+                    error: error?.message || String(error),
+                });
+            }
+            return;
+        }
+
+        if (
+            url.pathname === "/api/symbols"
+        ) {
+            const q = url.searchParams.get("q") || "";
+            const exch = url.searchParams.get("exchange") || null;
+            const limit = Math.min(60, Number(url.searchParams.get("limit")) || 30);
+            try {
+                const rows = await searchSymbols({ query: q, exchange: exch, limit });
+                this.sendJson(response, 200, { ok: true, count: rows.length, symbols: rows });
+            } catch (error) {
+                this.sendJson(response, 500, { ok: false, error: error?.message || String(error) });
+            }
+            return;
+        }
+
+
+
         // -----------------------------------------------------
+        // -----------------------------------------------------
+        // EMAIL AUTH
+        // -----------------------------------------------------
+
+        if (
+            url.pathname === "/api/auth/register" &&
+            request.method === "POST"
+        ) {
+            try {
+                const body = await readBody(request);
+                const user = registerUser(body);
+                this.sendJson(response, 200, {
+                    ok: true,
+                    token: signToken(user.email),
+                    user,
+                });
+            } catch (error) {
+                this.sendJson(response, 400, {
+                    ok: false,
+                    error: error?.message || String(error),
+                });
+            }
+            return;
+        }
+
+        if (
+            url.pathname === "/api/auth/login" &&
+            request.method === "POST"
+        ) {
+            try {
+                const body = await readBody(request);
+                const user = loginUser(body);
+                this.sendJson(response, 200, {
+                    ok: true,
+                    token: signToken(user.email),
+                    user,
+                });
+            } catch (error) {
+                this.sendJson(response, 401, {
+                    ok: false,
+                    error: error?.message || String(error),
+                });
+            }
+            return;
+        }
+
+        if (
+            url.pathname === "/api/auth/me"
+        ) {
+            const header =
+                request.headers.authorization || "";
+            const token = header.startsWith("Bearer ")
+                ? header.slice(7)
+                : null;
+            const data = verifyToken(token);
+            if (!data) {
+                this.sendJson(response, 401, {
+                    ok: false,
+                    error: "Invalid or expired session.",
+                });
+                return;
+            }
+            this.sendJson(response, 200, {
+                ok: true,
+                email: data.email,
+            });
+            return;
+        }
+
         // HISTORICAL CANDLES
         // -----------------------------------------------------
 
@@ -2415,11 +2684,32 @@ const allowedTimeframes =
                     ) ||
                     "gold";
 
+                const reqExch =
+                    url.searchParams.get("exchange");
+
+                const reqToken =
+                    url.searchParams.get("token");
+
+                const reqTsym =
+                    url.searchParams.get("tsym");
+
+                const instOverride =
+                    reqExch && reqToken
+                        ? {
+                              key: reqTsym || (reqExch + "_" + reqToken),
+                              token: String(reqToken),
+                              symbol: reqTsym || String(reqToken),
+                              name: reqTsym || String(reqToken),
+                              exchange: reqExch.toUpperCase(),
+                          }
+                        : undefined;
+
 
                 const ensured =
                     await this.ensureCandles(
                         requestedInstrument,
-                        requestedTimeframe
+                        requestedTimeframe,
+                        instOverride
                     );
 
 
@@ -2484,6 +2774,9 @@ const allowedTimeframes =
                             outCandles
                                 .length,
 
+                        notice:
+                            ensured.notice ?? null,
+
                         candles:
 
                             outCandles,
@@ -2540,11 +2833,28 @@ const allowedTimeframes =
                     ) ||
                     "gold";
 
+                const _ex =
+                    url.searchParams.get("exchange");
+
+                const _tk =
+                    url.searchParams.get("token");
+
+                const _ts =
+                    url.searchParams.get("tsym");
+
+                const instOverride = _ex && _tk ? {
+                    key: _ts || (_ex + "_" + _tk),
+                    token: String(_tk),
+                    symbol: _ts || String(_tk),
+                    name: _ts || String(_tk),
+                    exchange: _ex.toUpperCase(),
+                } : undefined;
 
                 const result =
                     await this.runStrategyFor(
                         requestedInstrument,
-                        requestedTimeframe
+                        requestedTimeframe,
+                        instOverride
                     );
 
 

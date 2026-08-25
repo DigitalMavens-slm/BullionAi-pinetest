@@ -356,6 +356,49 @@ class ShoonyaLiveFeed extends EventEmitter {
     // SUBSCRIBE
     // =========================================================
 
+    subscribeTouchline(tokens) {
+
+        if (!this.socket) {
+            throw new Error(
+                "Shoonya WebSocket is not initialized."
+            );
+        }
+
+        // Merge into persistent subscription list for reconnects
+        const toAdd = Array.isArray(tokens) ? tokens : [tokens];
+        for (const t of toAdd) {
+            if (!this.subscriptions.includes(t)) {
+                this.subscriptions.push(t);
+            }
+        }
+
+        this.socket.subscribeTouchline(toAdd);
+
+        console.log(
+            "Live touchline subscribe (dynamic):",
+            toAdd.join(", ")
+        );
+    }
+
+    unsubscribeTouchline(tokens) {
+
+        if (!this.socket) return;
+
+        const toRemove = Array.isArray(tokens) ? tokens : [tokens];
+        this.subscriptions = this.subscriptions.filter(
+            s => !toRemove.includes(s)
+        );
+
+        try {
+            this.socket.unsubscribeTouchline(toRemove);
+        } catch {}
+
+        console.log(
+            "Live touchline unsubscribe (dynamic):",
+            toRemove.join(", ")
+        );
+    }
+
     subscribe() {
 
         if (!this.socket) {

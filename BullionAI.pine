@@ -190,35 +190,35 @@ exitTime =
 // ===== POINT TEXT =====
 pointsText =
  tradeStatus=="CLOSED"
- ? str.tostring(math.round(points))
- : "-"
+  ? str.tostring(points, format.mintick)
+  : "-"
 
 // ===== ANALYTICS =====
 maxPriceText =
  lastSignal=="BUY"
- ? str.tostring(math.round(maxHigh))
- : str.tostring(math.round(maxLow))
+  ? str.tostring(maxHigh, format.mintick)
+  : str.tostring(maxLow, format.mintick)
 
 maxProfitText =
  not na(maxProfit)
- ? str.tostring(math.round(maxProfit))
- : "-"
+  ? str.tostring(maxProfit, format.mintick)
+  : "-"
 
 
 // ===== CURRENT P/L =====
 currentPL =
  tradeStatus=="OPEN"
- ? (
-     lastSignal=="BUY"
-     ? close - entryPrice
-     : entryPrice - close
-   )
- : na
+  ? (
+      lastSignal=="BUY"
+      ? close - entryPrice
+      : entryPrice - close
+    )
+  : na
 
 currentPLText =
  tradeStatus=="OPEN"
- ? str.tostring(math.round(currentPL))
- : "-"
+  ? str.tostring(currentPL, format.mintick)
+  : "-"
 
 // ===== SIGNAL LABELS =====
 plotshape(newBuy,
@@ -273,10 +273,10 @@ if barstate.islast
 
     // Execution
     table.cell(panel,0,3,"Entry Price",text_color=color.silver)
-    table.cell(panel,1,3,str.tostring(math.round(entryPrice)),text_color=color.white)
+    table.cell(panel,1,3,str.tostring(entryPrice, format.mintick),text_color=color.white)
 
     table.cell(panel,0,4,"Trail SL",text_color=color.silver)
-    table.cell(panel,1,4,str.tostring(math.round(trailSL)),text_color=color.orange)
+    table.cell(panel,1,4,str.tostring(trailSL, format.mintick),text_color=color.orange)
 
     // Performance
     table.cell(panel,0,5,lastSignal=="BUY"?"Highest":"Lowest",text_color=color.silver)

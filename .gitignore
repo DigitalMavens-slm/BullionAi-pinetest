@@ -28,3 +28,9 @@ Thumbs.db
 
 data/shoonya-session.json
 shoonya-auth.txt
+
+
+# BullionAI authentication secrets
+data/bullionai-auth-secret.txt
+data/bullionai-users.json
+src/auth/users.js
