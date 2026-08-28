@@ -88,15 +88,49 @@ class CandleAggregator {
     }
 
     // =========================================================
-    // RUNTIME INSTRUMENT ADDITION (dynamic symbols)
+    // RUNTIME INSTRUMENT REMOVAL (dynamic symbols)
     // =========================================================
 
-    addInstrument(inst) {
-        this.instruments.set(
-            String(inst.token),
-            inst
+    removeInstrument(exchOrInst, maybeToken) {
+
+        const token =
+            String(
+                typeof exchOrInst === "object" &&
+                exchOrInst !== null
+                    ? exchOrInst.token
+                    : (maybeToken ?? exchOrInst)
+            );
+
+        if (!token) return;
+
+        this.instruments.delete(
+            token
         );
+
+        this.lastCumVolume.delete(
+            token
+        );
+
+        const prefix =
+            token + "|";
+
+        for (
+            const key of
+                [...this.forming.keys()]
+        ) {
+
+            if (
+                String(key).startsWith(
+                    prefix
+                )
+            ) {
+                this.forming.delete(key);
+            }
+
+        }
+
     }
+
     // =========================================================
     // TICK INLET
     // =========================================================

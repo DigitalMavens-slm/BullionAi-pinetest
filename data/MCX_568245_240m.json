@@ -1659,9 +1659,27 @@
     "open": 267.2,
     "high": 268.2,
     "low": 264,
-    "close": 266.7,
-    "volume": 79135,
-    "openInterest": 50891,
+    "close": 267.7,
+    "volume": 87141,
+    "openInterest": 49555,
     "time": 1787659200000
+  },
+  {
+    "open": 267.8,
+    "high": 273.5,
+    "low": 267.6,
+    "close": 273.3,
+    "volume": 5789,
+    "openInterest": 41771,
+    "time": 1787673600000
+  },
+  {
+    "open": 273.4,
+    "high": 274.3,
+    "low": 273.1,
+    "close": 273.8,
+    "volume": 14972,
+    "openInterest": 40486,
+    "time": 1787716800000
   }
 ]

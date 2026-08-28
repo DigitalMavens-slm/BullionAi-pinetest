@@ -44,13 +44,16 @@ class ShoonyaLiveFeed extends EventEmitter {
 
         /*
          * One WebSocket can subscribe
-         * to many touchlines.
+         * to many touchlines. An explicit
+         * empty array is allowed: scripts
+         * are added at runtime via the
+         * search box.
          */
 
         this.tokens =
             Array.isArray(
                 tokens
-            ) && tokens.length
+            )
                 ? tokens.map(t =>
                       String(t)
                   )
@@ -63,7 +66,8 @@ class ShoonyaLiveFeed extends EventEmitter {
             );
 
         this.subscription =
-            this.subscriptions[0];
+            this.subscriptions[0] ??
+            null;
 
         this.reconnect =
             reconnect;
@@ -82,6 +86,15 @@ class ShoonyaLiveFeed extends EventEmitter {
 
         this.lastTick =
             null;
+
+        /*
+         * Set when Shoonya rejects our
+         * credentials; blocks auto-reconnect
+         * until a fresh session is installed.
+         */
+
+        this.authFailed =
+            false;
     }
 
 
@@ -107,6 +120,17 @@ class ShoonyaLiveFeed extends EventEmitter {
 
             throw new Error(
                 "Shoonya authentication is required before starting live feed."
+            );
+
+        }
+
+
+        if (
+            this.authFailed
+        ) {
+
+            throw new Error(
+                "Shoonya rejected the current session; re-authentication is required before connecting."
             );
 
         }
@@ -175,10 +199,16 @@ class ShoonyaLiveFeed extends EventEmitter {
                     "Shoonya WebSocket connected."
                 );
 
-                console.log(
-                    "Subscribing:",
+                if (
                     this.subscription
-                );
+                ) {
+
+                    console.log(
+                        "Subscribing:",
+                        this.subscription
+                    );
+
+                }
 
                 try {
 
@@ -259,6 +289,24 @@ class ShoonyaLiveFeed extends EventEmitter {
         this.socket.on(
             "error",
             error => {
+
+                const message =
+                    error?.message ||
+                    String(error);
+
+                if (
+                    this.isAuthFailureMessage(
+                        message
+                    )
+                ) {
+
+                    this.handleSocketAuthFailure(
+                        error
+                    );
+
+                    return;
+
+                }
 
                 console.error(
                     "Shoonya WebSocket error:",
@@ -353,16 +401,102 @@ class ShoonyaLiveFeed extends EventEmitter {
 
 
     // =========================================================
+    // AUTH FAILURE DETECTION
+    // =========================================================
+
+    isAuthFailureMessage(message) {
+
+        return /websocket auth failed|not_?ok|http 40[13]|unauthorized/i.test(
+            String(message || "")
+        );
+
+    }
+
+
+    // =========================================================
+    // SOCKET AUTH FAILURE
+    //
+    // Shoonya rejected our token. Tear the
+    // socket down (which also stops the SDK's
+    // internal reconnect timer) and surface an
+    // "auth-failed" event so the app can run
+    // one shared re-authentication flow instead
+    // of looping on a dead session.
+    // =========================================================
+
+    handleSocketAuthFailure(error) {
+
+        if (
+            this.authFailed
+        ) {
+            return;
+        }
+
+        this.authFailed =
+            true;
+
+        console.log("");
+
+        console.log(
+            "Shoonya WebSocket authentication failed:",
+            error?.message || error
+        );
+
+        console.log(
+            "Stopping live feed reconnect attempts for the invalid session."
+        );
+
+        this.disconnect()
+            .catch(() => {});
+
+        this.emit(
+            "auth-failed",
+            error
+        );
+
+    }
+
+
+    // =========================================================
+    // RECONNECT WITH CURRENT SESSION
+    //
+    // Used after successful re-authentication.
+    // The SDK reads the session from the client
+    // on every socket open, so once the fresh
+    // token is applied this reconnects with it.
+    //
+    // NOTE: deliberately NOT named "reconnect()"
+    // — the constructor stores its SDK auto-
+    // reconnect flag under that exact name.
+    // =========================================================
+
+    async reconnectWithCurrentSession() {
+
+        if (
+            !this.market.isAuthenticated()
+        ) {
+
+            throw new Error(
+                "Shoonya authentication is required before reconnecting the live feed."
+            );
+
+        }
+
+        this.authFailed =
+            false;
+
+        await this.disconnect();
+
+        await this.connect();
+
+    }
+
+
+    // =========================================================
     // SUBSCRIBE
     // =========================================================
 
     subscribeTouchline(tokens) {
-
-        if (!this.socket) {
-            throw new Error(
-                "Shoonya WebSocket is not initialized."
-            );
-        }
 
         // Merge into persistent subscription list for reconnects
         const toAdd = Array.isArray(tokens) ? tokens : [tokens];
@@ -370,6 +504,17 @@ class ShoonyaLiveFeed extends EventEmitter {
             if (!this.subscriptions.includes(t)) {
                 this.subscriptions.push(t);
             }
+        }
+
+        /*
+         * Socket may not exist yet (script added
+         * before the WebSocket connects): the
+         * merged list above is replayed on
+         * connect, so just skip the live send.
+         */
+
+        if (!this.socket) {
+            return;
         }
 
         this.socket.subscribeTouchline(toAdd);
@@ -407,6 +552,21 @@ class ShoonyaLiveFeed extends EventEmitter {
                 "Shoonya WebSocket is not initialized."
             );
 
+        }
+
+
+        /*
+         * Nothing subscribed yet (search-box-only
+         * flow): skip sending an empty subscribe
+         * frame; dynamic adds arrive via
+         * subscribeTouchline().
+         */
+
+        if (
+            this.subscriptions.length ===
+            0
+        ) {
+            return;
         }
 
 

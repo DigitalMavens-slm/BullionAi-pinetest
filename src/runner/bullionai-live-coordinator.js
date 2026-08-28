@@ -154,6 +154,12 @@ class BullionAILiveCoordinator extends EventEmitter {
         this.strategyState =
             null;
 
+        this.reauthenticating =
+            false;
+
+        this.initializingPromise =
+            null;
+
 
         this.bindDisplayEvents();
     }
@@ -362,7 +368,9 @@ class BullionAILiveCoordinator extends EventEmitter {
          *
          * 0. Persisted session from an
          *    earlier login today —
-         *    survives restarts.
+         *    restored, then VERIFIED
+         *    against Shoonya before it
+         *    is trusted.
          *
          * 1. Drop file  data/shoonya-auth.txt
          *
@@ -372,15 +380,37 @@ class BullionAILiveCoordinator extends EventEmitter {
          *    the drop file until it appears.
          */
 
+        await this.ensureFreshSession();
+
+        console.log("");
+
+        console.log(
+            "Session ready:",
+            this.session.isAuthenticated()
+        );
+    }
+
+
+    // =========================================================
+    // ENSURE A FRESH, SERVER-VERIFIED SESSION
+    //
+    // Single source of truth for authentication.
+    // Every consumer (historical API, WebSocket,
+    // live feed, reconciliation, coordinator)
+    // shares this one state.
+    //
+    // A stored session file is only a hint:
+    // it is validated with a real Shoonya call
+    // and discarded immediately if rejected.
+    // =========================================================
+
+    async ensureFreshSession() {
+
         if (
-
-            !this.session
-                .isAuthenticated()
-
+            !this.session.isAuthenticated()
         ) {
 
-            let restored =
-                false;
+            let restored = false;
 
             try {
 
@@ -403,12 +433,46 @@ class BullionAILiveCoordinator extends EventEmitter {
 
             if (restored) {
 
+                console.log("");
+
                 console.log(
-                    "Session restored from data/shoonya-session.json"
+                    "Stored Shoonya session found."
                 );
+
+                const verdict =
+
+                    await this.session
+                        .validateStoredSession();
+
+                if (
+                    verdict === "invalid"
+                ) {
+
+                    console.log(
+                        "Shoonya re-authentication required."
+                    );
+
+                    this.session.invalidateSession();
+
+                }
+
+                /*
+                 * "inconclusive" (network error):
+                 * keep the session and let the
+                 * runtime auth-failure handler deal
+                 * with it if Shoonya really does
+                 * reject it later.
+                 */
 
             }
 
+        }
+
+
+        if (
+            this.session.isAuthenticated()
+        ) {
+            return;
         }
 
 
@@ -416,17 +480,12 @@ class BullionAILiveCoordinator extends EventEmitter {
             "data/shoonya-auth.txt";
 
 
-        let viaFile =
-            false;
-
-
         try {
 
-            viaFile =
-                await this.session
-                    .authenticateFromDropFile(
-                        dropFile
-                    );
+            await this.session
+                .authenticateFromDropFile(
+                    dropFile
+                );
 
         } catch (
             error
@@ -441,90 +500,102 @@ class BullionAILiveCoordinator extends EventEmitter {
         }
 
 
-        const isAuthenticated =
+        if (
+            this.session.isAuthenticated()
+        ) {
+            return;
+        }
 
-            this.session
-                .isAuthenticated();
 
+        const isInteractive =
 
-        if (isAuthenticated) {
+            Boolean(
+                process.stdin &&
+                process.stdin.isTTY
+            );
+
+        if (isInteractive) {
 
             /*
-             * Already logged in — either
-             * restored from disk or via
-             * drop file. Skip login flow.
+             * A single bad paste must never kill
+             * startup: keep offering the prompt
+             * until a valid session exists. If
+             * the console turns out to be unusable
+             * (stdin EOF resolves the question
+             * instantly), stop prompting and let
+             * the drop-file watcher take over.
              */
 
-        } else {
+            let instantFailures =
+                0;
 
-            const isInteractive =
+            while (
+                !this.session
+                    .isAuthenticated()
+            ) {
 
-                Boolean(
-                    process.stdin &&
-                    process.stdin.isTTY
-                );
+                const attemptStartedAt =
+                    Date.now();
 
-            if (isInteractive) {
+                try {
 
-                await this.session
-                    .authenticateFromConsole();
+                    await this.session
+                        .authenticateFromConsole();
 
-            } else {
-
-                console.log(
-                    "Non-interactive session detected."
-                );
-
-                console.log(
-                    "Waiting for auth drop file:",
-                    dropFile
-                );
-
-                while (
-                    !this.session
-                        .isAuthenticated()
+                } catch (
+                    error
                 ) {
 
-                    let consumed =
-                        false;
+                    console.log("");
 
-                    try {
-
-                        consumed =
-                            await this.session
-                                .authenticateFromDropFile(
-                                    dropFile
-                                );
-
-                    } catch (
+                    console.error(
+                        "Shoonya login failed:",
+                        error?.message ||
                         error
-                    ) {
+                    );
 
-                        console.error(
-                            "Drop-file auth failed, still waiting:",
-                            error?.message ||
-                            error
-                        );
-
-                    }
 
                     if (
 
-                        consumed &&
-                        this.session
-                            .isAuthenticated()
+                        Date.now() -
+                            attemptStartedAt <
+                        250
 
                     ) {
+
+                        instantFailures++;
+
+                    } else {
+
+                        instantFailures =
+                            0;
+
+                    }
+
+
+                    if (
+                        instantFailures >= 2
+                    ) {
+
+                        console.log(
+                            "Console input unavailable."
+                        );
+
+                        console.log(
+                            "Falling back to auth drop file:",
+                            dropFile
+                        );
 
                         break;
 
                     }
 
+
                     await new Promise(
                         resolve =>
                             setTimeout(
                                 resolve,
-                                2000
+                                300
                             )
                     );
 
@@ -532,15 +603,261 @@ class BullionAILiveCoordinator extends EventEmitter {
 
             }
 
+
+            if (
+                this.session.isAuthenticated()
+            ) {
+                return;
+            }
+
         }
 
+
+        if (
+            !isInteractive
+        ) {
+
+            console.log(
+                "Non-interactive session detected."
+            );
+
+        }
+
+        this.printManualLoginHint();
+
+        console.log(
+            "Waiting for auth drop file:",
+            dropFile
+        );
+
+        while (
+            !this.session
+                .isAuthenticated()
+        ) {
+
+            let consumed = false;
+
+            try {
+
+                consumed =
+                    await this.session
+                        .authenticateFromDropFile(
+                            dropFile
+                        );
+
+            } catch (
+                error
+            ) {
+
+                console.error(
+                    "Drop-file auth failed, still waiting:",
+                    error?.message ||
+                    error
+                );
+
+            }
+
+            if (
+
+                consumed &&
+                this.session
+                    .isAuthenticated()
+
+            ) {
+
+                break;
+
+            }
+
+            await new Promise(
+                resolve =>
+                    setTimeout(
+                        resolve,
+                        2000
+                    )
+            );
+
+        }
+
+    }
+
+
+    // =========================================================
+    // MANUAL LOGIN HINT
+    //
+    // Shown whenever the console prompt cannot be
+    // used. The HTTP login endpoint is served by
+    // the API server, which starts independently
+    // of authentication.
+    // =========================================================
+
+    printManualLoginHint() {
+
+        const port =
+
+            Number(
+                process.env.BULLIONAI_API_PORT
+            ) || 8787;
 
         console.log("");
 
         console.log(
-            "Session ready:",
-            this.session.isAuthenticated()
+            "To log in without this console:"
         );
+
+        console.log(
+            `  1. Open  http://localhost:${port}/api/shoonya/login  in a browser`
+        );
+
+        console.log(
+            "  2. Paste the fresh Shoonya redirect URL and submit"
+        );
+
+        console.log("");
+
+    }
+
+    // =========================================================
+    // LOGIN VIA REDIRECT URL (browser / HTTP / drop file)
+    //
+    // Reliable fallback for machines where the
+    // interactive console prompt cannot read stdin
+    // (the question resolves instantly with empty
+    // input). Completes exactly what a console
+    // login would: fresh session -> saved ->
+    // finish startup OR reconnect the live feed.
+    // =========================================================
+
+    async loginWithRedirectUrl(
+        redirectUrl
+    ) {
+
+        await this.session.authenticateFromRedirect(
+            redirectUrl
+        );
+
+
+        if (
+            !this.initialized
+        ) {
+
+            /*
+             * Boot-time login: complete the normal
+             * startup sequence that was left
+             * pending.
+             */
+
+            this.running =
+                true;
+
+            await this.initialize();
+
+        } else if (
+
+            this.liveMarket &&
+            !this.reauthenticating
+
+        ) {
+
+            /*
+             * Runtime refresh: if a shared
+             * re-auth cycle is already running it
+             * will pick up the fresh session on
+             * its next check — avoid double
+             * reconnects here.
+             */
+
+            await this.liveMarket.feed.reconnectWithCurrentSession();
+
+        }
+
+
+        return this.session.getState();
+
+    }
+
+
+    // =========================================================
+    // RUNTIME RE-AUTHENTICATION
+    //
+    // Invoked when Shoonya rejects the session
+    // at runtime (WebSocket NOT_OK / 401 /
+    // historical API 401). Invalidates the dead
+    // session exactly once, falls back to the
+    // normal login flow, then reconnects the
+    // live feed using the fresh session.
+    // =========================================================
+
+    async handleAuthFailure() {
+
+        if (
+            this.reauthenticating
+        ) {
+            return;
+        }
+
+        this.reauthenticating =
+            true;
+
+        try {
+
+            console.log("");
+
+            console.log(
+                "Shoonya session is no longer valid. Re-authentication required."
+            );
+
+            this.session.invalidateSession();
+
+            await this.ensureFreshSession();
+
+
+            if (
+                !this.session.isAuthenticated()
+            ) {
+
+                console.log(
+                    "Re-authentication incomplete; live feed stays paused until a valid session exists."
+                );
+
+                return;
+
+            }
+
+
+            if (
+                this.liveMarket
+            ) {
+
+                console.log(
+                    "Reconnecting live feed with fresh Shoonya session..."
+                );
+
+                await this.liveMarket.feed.reconnectWithCurrentSession();
+
+                console.log(
+                    "Live feed reconnected using the current authenticated session."
+                );
+
+            }
+
+        } catch (
+            error
+        ) {
+
+            console.error(
+                "Shoonya re-authentication failed:",
+                error?.message ||
+                error
+            );
+
+        } finally {
+
+            this.reauthenticating =
+                false;
+
+        }
+
     }
 
 
@@ -551,45 +868,12 @@ class BullionAILiveCoordinator extends EventEmitter {
     async startLiveMarket() {
 
         /*
-         * Subscribe to BOTH instruments
-         * over a single WebSocket:
-         *
-         * gold   -> SHOONYA_GOLD_TOKEN
-         * silver -> SHOONYA_SILVER_TOKEN
+         * No default scripts: the WebSocket
+         * connects with ZERO subscriptions.
+         * Scripts enter only through the
+         * search box -> /api/subscribe ->
+         * subscribeTokens().
          */
-
-        const goldToken =
-            process.env
-                .SHOONYA_GOLD_TOKEN ||
-            this.token;
-
-        const silverToken =
-            process.env
-                .SHOONYA_SILVER_TOKEN;
-
-        const tokens = [
-
-            String(
-                goldToken
-            ),
-
-        ];
-
-
-        if (
-            silverToken &&
-            String(silverToken) !==
-                String(goldToken)
-        ) {
-
-            tokens.push(
-                String(
-                    silverToken
-                )
-            );
-
-        }
-
 
         this.liveMarket =
             new LiveMarketState({
@@ -603,7 +887,9 @@ class BullionAILiveCoordinator extends EventEmitter {
                 token:
                     this.token,
 
-                tokens,
+                tokens:
+                    [],
+
             });
 
 
@@ -718,6 +1004,26 @@ class BullionAILiveCoordinator extends EventEmitter {
         );
 
 
+        // -----------------------------------------------------
+        // AUTH FAILURE (invalid session)
+        //
+        // One shared re-authentication flow for the
+        // whole app; the feed must never keep
+        // reconnecting with a token Shoonya
+        // rejected.
+        // -----------------------------------------------------
+
+        this.liveMarket.on(
+            "auth-failed",
+            () => {
+
+                this.handleAuthFailure()
+                    .catch(() => {});
+
+            }
+        );
+
+
         await this.liveMarket.start();
     }
 
@@ -767,8 +1073,14 @@ class BullionAILiveCoordinator extends EventEmitter {
     // =========================================================
     // INITIALIZE
     // =========================================================
-
     async initialize() {
+
+        /*
+         * Join-safe: concurrent callers (background
+         * boot + HTTP login) share ONE startup so
+         * the feed/strategy can never be started
+         * twice.
+         */
 
         if (
             this.initialized
@@ -778,79 +1090,117 @@ class BullionAILiveCoordinator extends EventEmitter {
 
         }
 
+        if (
+            !this.initializingPromise
+        ) {
 
-        await this.authenticate();
+            this.initializingPromise =
+
+                this.doInitialize()
+
+                    .finally(
+                        () => {
+
+                            this.initializingPromise =
+                                null;
+
+                        }
+                    );
+
+        }
+
+        return this.initializingPromise;
+
+    }
 
 
-        console.log("");
+    async doInitialize() {
 
-        console.log(
-            "Starting live market feed..."
-        );
-
-
-        await this.startLiveMarket();
-
-
-        console.log("");
-
-        console.log(
-            "Executing initial Pine strategy state..."
-        );
-
-
-        this.runStrategy();
-
-
-        this.initialized =
+        this.initializing =
             true;
 
+        try {
 
-        console.log("");
-
-        console.log(
-            "===================================="
-        );
-
-        console.log(
-            "       BULLIONAI LIVE READY"
-        );
-
-        console.log(
-            "===================================="
-        );
-
-        console.log(
-            "Timeframe:",
-            this.timeframe
-        );
-
-        console.log(
-            "Strategy:",
-            this.strategyState?.signal
-        );
-
-        console.log(
-            "Status:",
-            this.strategyState?.status
-        );
-
-        console.log(
-            "Entry:",
-            this.strategyState?.entryPrice
-        );
-
-        console.log(
-            "Trail SL:",
-            this.strategyState?.trailSL
-        );
-
-        console.log(
-            "===================================="
-        );
+            await this.authenticate();
 
 
-        return this.display.getState();
+            console.log("");
+
+            console.log(
+                "Starting live market feed..."
+            );
+
+
+            await this.startLiveMarket();
+
+
+            console.log("");
+
+            console.log(
+                "Executing initial Pine strategy state..."
+            );
+
+
+            this.runStrategy();
+
+
+            this.initialized =
+                true;
+
+
+            console.log("");
+
+            console.log(
+                "===================================="
+            );
+
+            console.log(
+                "       BULLIONAI LIVE READY"
+            );
+
+            console.log(
+                "===================================="
+            );
+
+            console.log(
+                "Timeframe:",
+                this.timeframe
+            );
+
+            console.log(
+                "Strategy:",
+                this.strategyState?.signal
+            );
+
+            console.log(
+                "Status:",
+                this.strategyState?.status
+            );
+
+            console.log(
+                "Entry:",
+                this.strategyState?.entryPrice
+            );
+
+            console.log(
+                "Trail SL:",
+                this.strategyState?.trailSL
+            );
+
+            console.log(
+                "===================================="
+            );
+
+
+            return this.display.getState();
+
+        } finally {
+
+            this.initializing =
+                false;
+
+        }
+
     }
 
 

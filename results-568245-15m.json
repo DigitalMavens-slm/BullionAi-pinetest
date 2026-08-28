@@ -43,146 +43,6 @@
           "value": false
         },
         {
-          "value": true,
-          "options": {
-            "text": "BUY",
-            "textcolor": "#FFFFFF",
-            "color": "#4CAF50",
-            "shape": "shape_label_up",
-            "location": "BelowBar"
-          }
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": true,
-          "options": {
-            "text": "SELL",
-            "textcolor": "#FFFFFF",
-            "color": "#F23645",
-            "shape": "shape_label_down",
-            "location": "AboveBar"
-          }
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
           "value": false
         },
         {
@@ -1549,6 +1409,139 @@
             "shape": "shape_label_down",
             "location": "AboveBar"
           }
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": true,
+          "options": {
+            "text": "BUY",
+            "textcolor": "#FFFFFF",
+            "color": "#4CAF50",
+            "shape": "shape_label_up",
+            "location": "BelowBar"
+          }
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
         },
         {
           "value": false
@@ -3443,6 +3436,132 @@
           "options": {
             "color": "#F23645"
           }
+        },
+        {
+          "value": 266.1689391045,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": 266.1689391045,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": 266.1689391045,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": 267.6372076243,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 268.7166927938,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 268.7166927938,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 268.7166927938,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 268.7166927938,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 268.8722605916,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 268.8722605916,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 271.4046532652,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 271.5686066034,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 272.0065632747,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 272.0065632747,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 272.4564244561,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 272.4564244561,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 272.4564244561,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 272.4564244561,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 272.4721727637,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 272.4721727637,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 272.4721727637,
+          "options": {
+            "color": "#00E676"
+          }
         }
       ]
     },
@@ -3515,10 +3634,10 @@
                     "_merge_parent": null
                   },
                   {
-                    "text": "SELL",
+                    "text": "BUY",
                     "width": 0,
                     "height": 0,
-                    "text_color": "#F23645",
+                    "text_color": "#00E676",
                     "text_halign": "center",
                     "text_valign": "center",
                     "text_size": "normal",
@@ -3545,10 +3664,10 @@
                     "_merge_parent": null
                   },
                   {
-                    "text": "CLOSED",
+                    "text": "OPEN",
                     "width": 0,
                     "height": 0,
-                    "text_color": "#FFFFFF",
+                    "text_color": "#FDD835",
                     "text_halign": "center",
                     "text_valign": "center",
                     "text_size": "normal",
@@ -3575,7 +3694,7 @@
                     "_merge_parent": null
                   },
                   {
-                    "text": "267.00",
+                    "text": "269.30",
                     "width": 0,
                     "height": 0,
                     "text_color": "#FFFFFF",
@@ -3605,7 +3724,7 @@
                     "_merge_parent": null
                   },
                   {
-                    "text": "266.17",
+                    "text": "272.47",
                     "width": 0,
                     "height": 0,
                     "text_color": "#FF9800",
@@ -3621,7 +3740,7 @@
                 ],
                 [
                   {
-                    "text": "Lowest",
+                    "text": "Highest",
                     "width": 0,
                     "height": 0,
                     "text_color": "#B2B5BE",
@@ -3635,7 +3754,7 @@
                     "_merge_parent": null
                   },
                   {
-                    "text": "264.00",
+                    "text": "274.30",
                     "width": 0,
                     "height": 0,
                     "text_color": "#00BCD4",
@@ -3665,10 +3784,10 @@
                     "_merge_parent": null
                   },
                   {
-                    "text": "-",
+                    "text": "4.40",
                     "width": 0,
                     "height": 0,
-                    "text_color": "#FFFFFF",
+                    "text_color": "#00E676",
                     "text_halign": "center",
                     "text_valign": "center",
                     "text_size": "normal",
@@ -3695,7 +3814,7 @@
                     "_merge_parent": null
                   },
                   {
-                    "text": "3.00",
+                    "text": "5.00",
                     "width": 0,
                     "height": 0,
                     "text_color": "#00E676",
@@ -3725,10 +3844,10 @@
                     "_merge_parent": null
                   },
                   {
-                    "text": "0.83",
+                    "text": "-",
                     "width": 0,
                     "height": 0,
-                    "text_color": "#00E676",
+                    "text_color": "#F23645",
                     "text_halign": "center",
                     "text_valign": "center",
                     "text_size": "normal",
@@ -3785,7 +3904,7 @@
                     "_merge_parent": null
                   },
                   {
-                    "text": "NaN-NaN-NaN  NaN:NaN AM",
+                    "text": "-",
                     "width": 0,
                     "height": 0,
                     "text_color": "#FFFFFF",

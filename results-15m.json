@@ -214,174 +214,6 @@
           "value": false
         },
         {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
           "value": true,
           "options": {
             "text": "SELL",
@@ -1625,6 +1457,188 @@
             "shape": "shape_label_up",
             "location": "BelowBar"
           }
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": true,
+          "options": {
+            "text": "BUY",
+            "textcolor": "#FFFFFF",
+            "color": "#4CAF50",
+            "shape": "shape_label_up",
+            "location": "BelowBar"
+          }
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": true,
+          "options": {
+            "text": "SELL",
+            "textcolor": "#FFFFFF",
+            "color": "#F23645",
+            "shape": "shape_label_down",
+            "location": "AboveBar"
+          }
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
         },
         {
           "value": false
@@ -1645,174 +1659,6 @@
         "overlay": true
       },
       "data": [
-        {
-          "value": 154023.5811691881,
-          "options": {
-            "color": "#F23645"
-          }
-        },
-        {
-          "value": 154023.5811691881,
-          "options": {
-            "color": "#F23645"
-          }
-        },
-        {
-          "value": 153959.5750897592,
-          "options": {
-            "color": "#F23645"
-          }
-        },
-        {
-          "value": 153808.3911547765,
-          "options": {
-            "color": "#F23645"
-          }
-        },
-        {
-          "value": 153808.3911547765,
-          "options": {
-            "color": "#F23645"
-          }
-        },
-        {
-          "value": 153808.3911547765,
-          "options": {
-            "color": "#F23645"
-          }
-        },
-        {
-          "value": 153808.3911547765,
-          "options": {
-            "color": "#F23645"
-          }
-        },
-        {
-          "value": 153808.3911547765,
-          "options": {
-            "color": "#F23645"
-          }
-        },
-        {
-          "value": 153808.3911547765,
-          "options": {
-            "color": "#F23645"
-          }
-        },
-        {
-          "value": 153808.3911547765,
-          "options": {
-            "color": "#F23645"
-          }
-        },
-        {
-          "value": 153808.3911547765,
-          "options": {
-            "color": "#F23645"
-          }
-        },
-        {
-          "value": 153808.3911547765,
-          "options": {
-            "color": "#F23645"
-          }
-        },
-        {
-          "value": 153887.7652661958,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 154001.3534614675,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 154046.2210713628,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 154052.848137694,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 154052.848137694,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 154052.848137694,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 154052.848137694,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 154052.848137694,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 154052.848137694,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 154052.848137694,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 154198.0144031689,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 154198.0144031689,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 154198.0144031689,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 154198.0144031689,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 154198.0144031689,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 154116.6240762856,
-          "options": {
-            "color": "#F23645"
-          }
-        },
         {
           "value": 154061.579499408,
           "options": {
@@ -4640,9 +4486,177 @@
           }
         },
         {
-          "value": 162719.6505178094,
+          "value": 162687.700557641,
           "options": {
             "color": "#00E676"
+          }
+        },
+        {
+          "value": 162687.700557641,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 162687.700557641,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 162687.700557641,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 162687.700557641,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 162687.700557641,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 162361.1440499174,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 162556.0623320661,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 162556.0623320661,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 162556.0623320661,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 162556.0623320661,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 162556.0623320661,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 162573.1168429818,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 162573.1168429818,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 162636.207890122,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 162636.207890122,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 162636.207890122,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 162636.207890122,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 162636.207890122,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 163285.7034078268,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 163044.1620621892,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": 162993.2576291757,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": 162993.2576291757,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": 162850.1966292383,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": 162850.1966292383,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": 162850.1966292383,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": 162743.5501073019,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": 162731.7608139232,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": 162668.5993272144,
+          "options": {
+            "color": "#F23645"
           }
         }
       ]
@@ -4716,10 +4730,10 @@
                     "_merge_parent": null
                   },
                   {
-                    "text": "BUY",
+                    "text": "SELL",
                     "width": 0,
                     "height": 0,
-                    "text_color": "#00E676",
+                    "text_color": "#F23645",
                     "text_halign": "center",
                     "text_valign": "center",
                     "text_size": "normal",
@@ -4776,7 +4790,7 @@
                     "_merge_parent": null
                   },
                   {
-                    "text": "163215.00",
+                    "text": "162641.00",
                     "width": 0,
                     "height": 0,
                     "text_color": "#FFFFFF",
@@ -4806,7 +4820,7 @@
                     "_merge_parent": null
                   },
                   {
-                    "text": "162719.65",
+                    "text": "162668.60",
                     "width": 0,
                     "height": 0,
                     "text_color": "#FF9800",
@@ -4822,7 +4836,7 @@
                 ],
                 [
                   {
-                    "text": "Highest",
+                    "text": "Lowest",
                     "width": 0,
                     "height": 0,
                     "text_color": "#B2B5BE",
@@ -4836,7 +4850,7 @@
                     "_merge_parent": null
                   },
                   {
-                    "text": "163339.00",
+                    "text": "162224.00",
                     "width": 0,
                     "height": 0,
                     "text_color": "#00BCD4",
@@ -4866,7 +4880,7 @@
                     "_merge_parent": null
                   },
                   {
-                    "text": "2.00",
+                    "text": "320.00",
                     "width": 0,
                     "height": 0,
                     "text_color": "#00E676",
@@ -4896,7 +4910,7 @@
                     "_merge_parent": null
                   },
                   {
-                    "text": "124.00",
+                    "text": "417.00",
                     "width": 0,
                     "height": 0,
                     "text_color": "#00E676",

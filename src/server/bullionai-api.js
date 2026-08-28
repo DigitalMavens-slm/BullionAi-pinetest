@@ -41,6 +41,10 @@ const {
     CandleDataManager,
 } = require("../market/candle-data-manager");
 
+const {
+    isShoonyaAuthFailure,
+} = require("../market/market-data-service");
+
 const GOLD_STORE = new CandleDataManager({
     dataDirectory: "./data",
     exchange: "MCX",
@@ -153,21 +157,16 @@ class BullionAIApi {
                 ? silverStore
                 : goldStore;
 
+        /*
+         * No default instruments: every script
+         * enters the system through the search
+         * box (/api/symbols -> /api/subscribe).
+         */
+
         this.aggregator =
             new CandleAggregator({
 
-                instruments: [
-                    {
-                        key: "gold",
-                        token: "483079",
-                        exchange: "MCX",
-                    },
-                    {
-                        key: "silver",
-                        token: "471725",
-                        exchange: "MCX",
-                    },
-                ],
+                instruments: [],
 
                 timeframes: aggTfs,
 
@@ -187,6 +186,17 @@ class BullionAIApi {
                 },
 
             });
+
+
+        /*
+         * Instruments explicitly added by the
+         * user (search box). Drives live
+         * reconciliation — nothing is
+         * reconciled until it is added here.
+         */
+
+        this.activeInstruments =
+            new Map();
 
 
         /*
@@ -217,6 +227,16 @@ class BullionAIApi {
             null;
 
         this.reconcileRetryMs = 30_000;
+
+        /*
+         * Set when Shoonya rejects the session
+         * during reconciliation; blocks further
+         * historical calls until a valid
+         * session exists again.
+         */
+
+        this.reconcilePaused =
+            false;
 
     }
 
@@ -456,7 +476,29 @@ class BullionAIApi {
             return { ok: false, reason: "no-session" };
         }
 
-        const inst = this.resolveInstrument(instrumentKey);
+        /*
+         * Accept either a resolved instrument object
+         * (user-added scripts) or a legacy key.
+         */
+
+        const inst =
+            typeof instrumentKey === "object" &&
+            instrumentKey !== null
+                ? {
+                      key:
+                          instrumentKey.key ??
+                          String(instrumentKey.token),
+
+                      symbol: instrumentKey.symbol ?? null,
+
+                      exchange: instrumentKey.exchange,
+
+                      token: instrumentKey.token,
+                  }
+                : this.resolveInstrument(
+                      instrumentKey
+                  );
+
         const tf = getTimeframe(timeframeKey);
 
         if (!Number.isFinite(Number(tf.interval))) {
@@ -493,6 +535,26 @@ class BullionAIApi {
             }
             return { ok: true, changed: false };
         } catch (error) {
+
+            if (
+                isShoonyaAuthFailure(
+                    error
+                )
+            ) {
+
+                console.error(
+                    "[reconcile] Shoonya rejected the session (" +
+                        (error?.message || error) +
+                        ") - pausing reconciliation."
+                );
+
+                return {
+                    ok: false,
+                    authRejected: true,
+                };
+
+            }
+
             console.error(
                 "[reconcile] " +
                     String(inst.symbol ?? inst.token) +
@@ -502,7 +564,48 @@ class BullionAIApi {
             return { ok: false, error: String(error?.message || error) };
         }
     }
-    async reconcileAll(label) {
+async reconcileAll(label) {
+
+        const market =
+            this.getMarketService();
+
+        /*
+         * Never hammer Shoonya with a session
+         * it has already rejected. Resume only
+         * once the shared session state is
+         * authenticated again.
+         */
+
+        if (
+            this.reconcilePaused &&
+            !market?.isAuthenticated()
+        ) {
+
+            console.log(
+                "[reconcile:" +
+                    label +
+                    "] skipped - waiting for a valid Shoonya session."
+            );
+
+            return false;
+
+        }
+
+        if (
+            this.reconcilePaused &&
+            market?.isAuthenticated()
+        ) {
+
+            this.reconcilePaused =
+                false;
+
+            console.log(
+                "[reconcile:" +
+                    label +
+                    "] session restored - resuming reconciliation."
+            );
+
+        }
 
         console.log(
             "[reconcile:" +
@@ -513,9 +616,55 @@ class BullionAIApi {
         try {
 
             let changedAny = false;
-        for (const inst of [{ key: "gold" }, { key: "silver" }]) {
+
+        /*
+         * Only user-added scripts are reconciled.
+         * Nothing is pre-seeded by default.
+         */
+
+        const actives =
+            [
+                ...(this.activeInstruments?.values() || []),
+            ];
+
+        if (
+            actives.length === 0
+        ) {
+
+            console.log(
+                "[reconcile:" +
+                    label +
+                    "] no scripts added yet - nothing to reconcile"
+            );
+
+            return true;
+
+        }
+
+        outer:
+        for (const inst of actives) {
             for (const tf of ["15m", "30m", "45m", "60m", "120m", "240m"]) {
-                const r = await this.reconcileTimeframe(inst.key, tf).catch(() => ({ ok: false }));
+                const r = await this.reconcileTimeframe(inst, tf).catch(() => ({ ok: false }));
+
+                if (r.authRejected) {
+
+                    this.reconcilePaused = true;
+
+                    /*
+                     * Route through the coordinator so the SAME
+                     * invalidation + re-login flow used by the
+                     * WebSocket also runs here — exactly one
+                     * authentication state for everything.
+                     */
+
+                    this.coordinator
+                        .handleAuthFailure()
+                        .catch(() => {});
+
+                    break outer;
+
+                }
+
                 if (r.changed) changedAny = true;
                 await new Promise(res => setTimeout(res, 200));
             }
@@ -552,7 +701,7 @@ class BullionAIApi {
         this.periodicTimer.unref?.();
     }
 
-    // =========================================================
+// =========================================================
     // INSTRUMENT RESOLUTION
     // =========================================================
 
@@ -568,31 +717,54 @@ class BullionAIApi {
                 .trim()
                 .toLowerCase();
 
+        const instrumentConfigs = {
+            silver: {
+                key: "silver",
+                name: "Silver Mega",
+                symbol: process.env.SHOONYA_SILVER_SYMBOL || "SILVER04SEP26",
+                token: process.env.SHOONYA_SILVER_TOKEN || "471725",
+            },
+            copper: {
+                key: "copper",
+                name: "Copper Mega",
+                symbol: process.env.SHOONYA_COPPER_SYMBOL || "COPPER30SEP26",
+                token: process.env.SHOONYA_COPPER_TOKEN || "483080",
+            },
+            lead: {
+                key: "lead",
+                name: "Lead Mega",
+                symbol: process.env.SHOONYA_LEAD_SYMBOL || "LEAD30SEP26",
+                token: process.env.SHOONYA_LEAD_TOKEN || "483081",
+            },
+            natural_gas: {
+                key: "natural_gas",
+                name: "Natural Gas Mega",
+                symbol: process.env.SHOONYA_NATURAL_GAS_SYMBOL || "NATURALGAS28SEP26",
+                token: process.env.SHOONYA_NATURAL_GAS_TOKEN || "483082",
+            },
+            zinc: {
+                key: "zinc",
+                name: "Zinc Mega",
+                symbol: process.env.SHOONYA_ZINC_SYMBOL || "ZINC30SEP26",
+                token: process.env.SHOONYA_ZINC_TOKEN || "483083",
+            },
+            nickel: {
+                key: "nickel",
+                name: "Nickel Mega",
+                symbol: process.env.SHOONYA_NICKEL_SYMBOL || "NICKEL30SEP26",
+                token: process.env.SHOONYA_NICKEL_TOKEN || "483084",
+            },
+            crude_oil: {
+                key: "crude_oil",
+                name: "Crude Oil Mega",
+                symbol: process.env.SHOONYA_CRUDE_OIL_SYMBOL || "CRUDEOIL19SEP26",
+                token: process.env.SHOONYA_CRUDE_OIL_TOKEN || "483085",
+            },
+        };
 
-        if (
-            key === "silver"
-        ) {
-
-            return {
-
-                key:
-                    "silver",
-
-                name:
-                    "Silver Mega",
-
-                symbol:
-                    process.env.SHOONYA_SILVER_SYMBOL ||
-                    "SILVER04SEP26",
-
-                token:
-                    process.env.SHOONYA_SILVER_TOKEN ||
-                    "471725",
-
-            };
-
+        if (instrumentConfigs[key]) {
+            return instrumentConfigs[key];
         }
-
 
         return {
 
@@ -2493,7 +2665,138 @@ const allowedTimeframes =
             );
 
             return;
-        }        if (
+        }        // -----------------------------------------------------
+        // SHOONYA LOGIN (redirect URL via browser/HTTP)
+        //
+        // Fallback for hosts where the interactive
+        // console prompt cannot read stdin.
+        //
+        //   GET  /api/shoonya/login              -> HTML form
+        //   GET  /api/shoonya/login?url=<enc>    -> login
+        //   POST /api/shoonya/login              -> {"redirectUrl": "..."}
+        // -----------------------------------------------------
+
+        if (
+            url.pathname ===
+            "/api/shoonya/login"
+        ) {
+
+            try {
+
+                let redirectUrl =
+                    url.searchParams.get(
+                        "url"
+                    ) || "";
+
+
+                if (
+                    !redirectUrl &&
+                    request.method === "POST"
+                ) {
+
+                    const body =
+                        await readBody(request);
+
+                    redirectUrl =
+                        String(
+                            body?.redirectUrl ||
+                            body?.url ||
+                            ""
+                        );
+
+                }
+
+
+                if (
+                    !redirectUrl
+                ) {
+
+                    /*
+                     * No URL supplied: serve a minimal
+                     * paste form so this can be used
+                     * directly from a browser.
+                     */
+
+                    const html =
+                        "<!doctype html>" +
+                        '<html><head><meta charset="utf-8">' +
+                        "<title>Shoonya Login</title></head>" +
+                        '<body style="font-family:sans-serif;max-width:720px;margin:48px auto">' +
+                        "<h2>Shoonya Login</h2>" +
+                        "<p>Paste the fresh Shoonya redirect URL below.</p>" +
+                        '<form method="GET" action="/api/shoonya/login">' +
+                        '<input name="url" style="width:80%;padding:8px" ' +
+                        'placeholder="https://...?code=..." autofocus>' +
+                        ' <button style="padding:8px 16px">Login</button>' +
+                        "</form></body></html>";
+
+                    response.writeHead(
+                        200,
+                        {
+                            "Content-Type":
+                                "text/html; charset=utf-8",
+
+                            "Cache-Control":
+                                "no-cache",
+                        }
+                    );
+
+                    response.end(html);
+
+                    return;
+
+                }
+
+
+                const sessionState =
+
+                    await this.coordinator.loginWithRedirectUrl(
+                        redirectUrl
+                    );
+
+
+                this.sendJson(
+                    response,
+                    200,
+                    {
+                        ok:
+                            true,
+
+                        session:
+                            sessionState,
+                    }
+                );
+
+            } catch (
+                error
+            ) {
+
+                console.error(
+                    "HTTP Shoonya login failed:",
+                    error?.message ||
+                    error
+                );
+
+                this.sendJson(
+                    response,
+                    400,
+                    {
+                        ok:
+                            false,
+
+                        error:
+
+                            error?.message ||
+                            String(error),
+                    }
+                );
+
+            }
+
+            return;
+        }
+
+        if (
             url.pathname === "/api/subscribe" &&
             request.method === "POST"
         ) {
@@ -2502,6 +2805,18 @@ const allowedTimeframes =
                 const exch = String(body.exchange || body.exch || "MCX").toUpperCase();
                 const token = String(body.token || body.Token || "");
                 if (!token) throw new Error("token required");
+
+                const key = `${exch}_${token}`;
+
+                /* Removals first */
+                for (const rm of body.unsubscribe || []) {
+                    const rmExch = String(rm.exchange || rm.exch || "MCX").toUpperCase();
+                    this.activeInstruments.delete(`${rmExch}_${String(rm.token)}`);
+                    this.aggregator.removeInstrument?.(
+                        String(rm.exchange || rm.exch || "MCX").toUpperCase(),
+                        String(rm.token)
+                    );
+                }
 
                 /* Feed subscription */
                 const live = this.coordinator?.liveMarket;
@@ -2515,6 +2830,9 @@ const allowedTimeframes =
                     token,
                     exchange: exch,
                 });
+
+                /* Reconciliation tracking (search-box additions only) */
+                this.activeInstruments.set(key, { exchange: exch, token });
 
                 this.sendJson(response, 200, { ok: true });
             } catch (error) {
@@ -2885,188 +3203,13 @@ const allowedTimeframes =
 
 
         // -----------------------------------------------------
-        // WATCHLIST (BOTH INSTRUMENTS)
+        // WATCHLIST ROUTE REMOVED
+        //
+        // There are no default scripts anymore.
+        // The UI watchlist is built exclusively from
+        // user-added scripts (search box ->
+        // /api/subscribe) and live SSE prices.
         // -----------------------------------------------------
-
-        if (
-            url.pathname ===
-            "/api/watchlist"
-        ) {
-
-            try {
-
-                const rows = [];
-
-
-                for (
-                    const key of [
-                        "gold",
-                        "silver",
-                    ]
-                ) {
-
-                    const inst =
-
-                        this.resolveInstrument(
-                            key
-                        );
-
-
-                    const liveMarket =
-
-                        this.coordinator
-                            ?.liveMarket;
-
-
-                    let price =
-                        null;
-
-
-                    if (
-                        liveMarket
-                    ) {
-
-                        const st =
-                            liveMarket.getState();
-
-
-                        const p =
-
-                            st.prices?.[
-                                String(
-                                    inst.token
-                                )
-                            ];
-
-
-                        if (
-                            p?.price !=
-                            null
-                        ) {
-
-                            price =
-                                p.price;
-
-                        }
-
-                    }
-
-
-                    const ds =
-                        await this.computeDayStats(
-                            inst
-                        );
-
-
-                    const prevClose =
-
-                        ds?.prevClose ??
-                        null;
-
-
-                    const change =
-
-                        price != null &&
-                        prevClose !=
-                            null
-
-                            ? price -
-                              prevClose
-
-                            : null;
-
-
-                    const changePct =
-
-                        change !=
-                            null &&
-                        prevClose
-
-                            ? (change /
-                                prevClose) *
-
-                              100
-
-                            : null;
-
-
-                    rows.push({
-
-                        instrument:
-                            inst.key,
-
-                        tvName:
-
-                            key ===
-                            "gold"
-
-                                ? "GOLD1!"
-
-                                : "SILVER1!",
-
-                        symbol:
-                            inst.symbol,
-
-                        name:
-                            inst.name,
-
-                        price,
-
-                        open:
-
-                            ds?.open ??
-                            null,
-
-                        dayHigh:
-
-                            ds?.high ??
-                            null,
-
-                        dayLow:
-
-                            ds?.low ??
-                            null,
-
-                        prevClose,
-
-                        change,
-
-                        changePct,
-
-                    });
-
-                }
-
-
-                this.sendJson(
-                    response,
-                    200,
-                    { rows }
-                );
-
-            } catch (
-                error
-            ) {
-
-                this.sendJson(
-                    response,
-                    500,
-                    {
-                        ok: false,
-
-                        error:
-
-                            error?.message ||
-                            String(
-                                error
-                            ),
-                    }
-                );
-
-            }
-
-            return;
-        }
 
 
         // -----------------------------------------------------

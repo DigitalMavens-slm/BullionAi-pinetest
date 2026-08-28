@@ -28,13 +28,10 @@ import {
   subscribeSymbol,
   fetchCandles,
   fetchStrategy,
-  fetchWatchlist,
   type BullionState,
   type Candle,
   type DayStats,
-  type Instrument,
   type StrategyState,
-  type WatchlistRow,
 } from "./lib/bullionai-api";
 
 import {
@@ -47,28 +44,11 @@ import {
    CONSTANTS
    ============================================================= */
 
-const INSTRUMENTS = [
-  {
-    key: "gold" as Instrument,
-    label: "Gold",
-    tvName: "GOLD1!",
-    fullName: "Gold Futures",
-    sub: "GOLD05OCT26 · MCX",
-    overlay: "GOLD · MCX",
-    unit: "INR / DAG (10g)",
-    element: "Au",
-  },
-  {
-    key: "silver" as Instrument,
-    label: "Silver",
-    tvName: "SILVER1!",
-    fullName: "Silver Futures",
-    sub: "SILVER04SEP26 · MCX",
-    overlay: "SILVER · MCX",
-    unit: "INR / KG",
-    element: "Ag",
-  },
-];
+/*
+ * No default scripts. Every script in the app is
+ * user-added via the search box (SymbolSearch ->
+ * /api/subscribe) and persisted locally.
+ */
 
 const TIMEFRAMES = [
   { label: "15m", value: "15m" },
@@ -105,39 +85,6 @@ const DOWN = "text-[#f23645]";
 /* =============================================================
    SMALL COMPONENTS
    ============================================================= */
-
-function MetalIcon({
-  instrument,
-  size = "md",
-}: {
-  instrument: Instrument;
-  size?: "sm" | "md";
-}) {
-
-  const isGold =
-    instrument === "gold";
-
-  return (
-    <span
-      className={[
-        "flex shrink-0 items-center justify-center rounded-full font-bold ring-1",
-
-        size === "sm"
-          ? "h-6 w-6 text-[10px]"
-
-          : "h-9 w-9 text-[12px]",
-
-        isGold
-
-          ? "icon-gold ring-amber-200/70"
-
-          : "icon-silver ring-slate-300/80",
-      ].join(" ")}
-    >
-      {isGold ? "Au" : "Ag"}
-    </span>
-  );
-}
 
 
 function RangeBar({
@@ -301,11 +248,6 @@ function App() {
      ------------------------- */
 
   const [
-    selectedInstrument,
-    setSelectedInstrument,
-  ] = useState<Instrument>("gold");
-
-  const [
     selectedTimeframe,
     setSelectedTimeframe,
   ] = useState("15m");
@@ -345,7 +287,6 @@ function App() {
     strategyLoading,
     setStrategyLoading,
   ] = useState(false);
-
   const [
     strategyError,
     setStrategyError,
@@ -354,19 +295,11 @@ function App() {
   );
 
   const [
-    watchlist,
-    setWatchlist,
-  ] = useState<WatchlistRow[]>(
-    []
-  );
-
-  const [
     state,
     setState,
   ] = useState<BullionState | null>(
     null
   );
-
   const [
     nowMs,
     setNowMs,
@@ -453,7 +386,7 @@ function App() {
   // Keep ref in sync synchronously (before effects run)
   latestSelRef.current = {
     tf: selectedTimeframe,
-    inst: selectedInstrument,
+    inst: selectedSymbol ? `${selectedSymbol.exch}` : "",
     sym: selectedSymbol ? `${selectedSymbol.exch}:${selectedSymbol.token}` : "",
   };
 
@@ -512,11 +445,27 @@ function App() {
      DATA EFFECTS
      ------------------------- */
 
-  // Candles + day stats (45s poll)
+  // Candles + day stats (45s poll) — only for a selected script
 
   useEffect(() => {
 
     let cancelled = false;
+
+    /* No script selected -> no default data */
+
+    if (!selectedSymbol) {
+
+      setLoadingCandles(false);
+
+      setCandleError(null);
+
+      setCandles([]);
+
+      setDayStats(null);
+
+      return;
+
+    }
 
 
     async function load(
@@ -542,7 +491,7 @@ function App() {
           await
           fetchCandles(
             selectedTimeframe,
-            selectedInstrument,
+            undefined,
             selectedSymbol
           );
 
@@ -631,7 +580,6 @@ function App() {
 
   }, [
     selectedTimeframe,
-    selectedInstrument,
     selectedSymbol,
   ]);
 
@@ -641,6 +589,20 @@ function App() {
   useEffect(() => {
 
     let cancelled = false;
+
+    /* No script selected -> no default strategy */
+
+    if (!selectedSymbol) {
+
+      setViewStrategy(null);
+
+      setStrategyLoading(false);
+
+      setStrategyError(null);
+
+      return;
+
+    }
 
 
     async function load(
@@ -666,7 +628,7 @@ function App() {
           await
           fetchStrategy(
             selectedTimeframe,
-            selectedInstrument,
+            undefined,
             selectedSymbol
           );
 
@@ -755,56 +717,8 @@ function App() {
 
   }, [
     selectedTimeframe,
-    selectedInstrument,
     selectedSymbol,
   ]);
-
-
-  // Watchlist (30s poll)
-
-  useEffect(() => {
-
-    let cancelled = false;
-
-
-    async function load() {
-
-      try {
-
-        const rows =
-          await fetchWatchlist();
-
-        if (!cancelled) {
-
-          setWatchlist(rows);
-
-        }
-
-      } catch {
-        /* keep last */
-      }
-
-    }
-
-
-    load();
-
-
-    const poll = setInterval(
-      load,
-      30_000
-    );
-
-
-    return () => {
-
-      cancelled = true;
-
-      clearInterval(poll);
-
-    };
-
-  }, []);
 
 
   // SSE stream (live ticks + state)
@@ -846,13 +760,6 @@ function App() {
      DERIVED
      ------------------------- */
 
-  const activeInstrument =
-
-    INSTRUMENTS.find(
-      i => i.key === selectedInstrument
-    ) ?? INSTRUMENTS[0];
-
-
   const strategy = viewStrategy;
 
   const signal =
@@ -877,14 +784,22 @@ function App() {
     status === "OPEN";
 
 
-  const liveRow =
+  /* Last 5 signals, newest first —
+     straight from the Pine engine's
+     own plotshape() emissions. */
 
-    state?.livePrices?.[
-      selectedInstrument
-    ] ?? null;
+  const recentSignals =
+    useMemo(() => {
 
+      const history =
+        strategy?.signalHistory ?? [];
 
-  const rawLivePrice = liveRow?.price ?? null;
+      return history
+        .slice(-5)
+        .reverse();
+
+    }, [strategy]);
+
 
   const liveTokenPrice =
     state && selectedSymbol
@@ -895,7 +810,7 @@ function App() {
     ? (liveTokenPrice ??
       customLastCloses[`${selectedSymbol.exch}:${selectedSymbol.token}`] ??
       null)
-    : rawLivePrice;
+    : null;
 
 
   /* Current P/L — Pine formula on live tick */
@@ -1044,14 +959,20 @@ function App() {
 
   /* Watchlist active row */
 
-  /* Formatters — decimals only for instruments that trade with them */
+  /* Formatters — decimals only for scripts that trade with them */
 
   const currentTickSize =
     (selectedSymbol as any)?.tickSize ??
-    (selectedInstrument === "gold" ||
-    selectedInstrument === "silver"
-      ? 1
-      : null);
+    null;
+
+  const currentDecimals = (() => {
+    if (currentTickSize != null) {
+      const s = String(currentTickSize);
+      const dot = s.indexOf(".");
+      return dot >= 0 ? s.length - dot - 1 : 0;
+    }
+    return null;
+  })();
 
   const fmt = (
     v: number | null | undefined
@@ -1063,17 +984,7 @@ function App() {
       return "—";
     }
 
-    let decimals = 0;
-
-    if (currentTickSize != null) {
-      const s = String(currentTickSize);
-      const dot = s.indexOf(".");
-      decimals =
-        dot >= 0 ? s.length - dot - 1 : 0;
-    } else {
-      decimals =
-        Math.abs(v % 1) > 1e-9 ? 2 : 0;
-    }
+    let decimals = currentDecimals ?? (Math.abs(v % 1) > 1e-9 ? 2 : 0);
 
     return v.toLocaleString(
       "en-IN",
@@ -1091,17 +1002,7 @@ function App() {
       return "—";
     }
 
-    let decimals = 0;
-
-    if (currentTickSize != null) {
-      const s = String(currentTickSize);
-      const dot = s.indexOf(".");
-      decimals =
-        dot >= 0 ? s.length - dot - 1 : 0;
-    } else {
-      decimals =
-        Math.abs(v % 1) > 1e-9 ? 2 : 0;
-    }
+    let decimals = currentDecimals ?? (Math.abs(v % 1) > 1e-9 ? 2 : 0);
 
     return (
       (v >= 0 ? "+" : "") +
@@ -1181,26 +1082,36 @@ function App() {
       ? Math.min(dayStats.low, livePrice)
       : dayStats?.low ?? null;
 
-  /* Watchlist rows fused with SSE live prices (no poll delay) */
+  /* Ticker rows fused with SSE live prices — user-added scripts only */
 
-  const watchlistLive =
+  const customTickerRows =
     useMemo(() => {
-      return watchlist.map(r => {
+      return customSyms.map(sym => {
         const lp =
-          state?.livePrices?.[r.instrument];
-        if (!lp || lp.price == null) return r;
-        const price = lp.price;
-        const prev =
-          r.prevClose ?? null;
+          (state as any)?.livePrices?.[sym.token] ?? null;
+        const price =
+          lp?.price ??
+          customLastCloses[`${sym.exch}:${sym.token}`] ??
+          null;
+        const prevClose =
+          customPrevCloses[`${sym.exch}:${sym.token}`] ?? null;
         const change =
-          prev != null ? price - prev : r.change;
+          price != null && prevClose != null
+            ? price - prevClose
+            : null;
         const changePct =
-          prev != null && prev !== 0 && change != null
-            ? (change / prev) * 100
-            : r.changePct;
-        return { ...r, price, change, changePct };
+          change != null && prevClose
+            ? (change / prevClose) * 100
+            : null;
+        return {
+          instrument: `${sym.exch}:${sym.token}` as string,
+          tvName: (sym.label ?? sym.tsym) as string,
+          price,
+          change,
+          changePct,
+        };
       });
-    }, [watchlist, state]);
+    }, [customSyms, state, customLastCloses, customPrevCloses]);
 
   const importantIndices = useMemo(
     () => [
@@ -1219,13 +1130,14 @@ function App() {
           (state as any)?.livePrices?.[idx.token] ?? null;
         if (!lp || lp.price == null) return null;
         return {
+          instrument: idx.tvName,
           tvName: idx.tvName,
           price: lp.price,
           change: (lp as any).change ?? null,
           changePct: (lp as any).changePercent ?? null,
         };
       })
-      .filter(Boolean) as typeof watchlistLive;
+      .filter((row): row is NonNullable<typeof row> => row !== null);
   }, [state]);
 
   useEffect(() => {
@@ -1352,13 +1264,13 @@ function App() {
 
       {/* ================= LIVE TICKER ================= */}
 
-      {(watchlistLive.length > 0 ||
+      {(customTickerRows.length > 0 ||
         importantIndicesLive.length > 0) && (
         <div className="ticker-viewport z-10 shrink-0 border-b border-slate-200/60 bg-white/80 py-1">
 
           <div className="ticker-track">
 
-            {[...[...watchlistLive, ...importantIndicesLive], ...[...watchlistLive, ...importantIndicesLive]].map(
+            {[...[...customTickerRows, ...importantIndicesLive], ...[...customTickerRows, ...importantIndicesLive]].map(
               (row, i) => {
                 const up =
                   (row.change ?? 0) >= 0;
@@ -1601,6 +1513,103 @@ function App() {
 
           </Card>
 
+
+          {/* RECENT SIGNALS */}
+
+          <Card className="shrink-0">
+
+            <CardTitle
+
+              right={
+
+                <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[9px] font-semibold text-slate-500">
+                  last 5
+                </span>
+
+              }
+            >
+
+              Recent Signals
+
+            </CardTitle>
+
+
+            <div className="p-1">
+
+              {recentSignals.length ===
+                0 && (
+                <div className="px-3 py-4 text-center text-[11px] text-slate-400">
+
+                  No signals yet.
+
+                </div>
+              )}
+
+
+              {recentSignals.map(ev => {
+
+                const buy =
+                  ev.signal === "BUY";
+
+                return (
+
+                  <div
+                    key={`${ev.index}-${ev.signal}`}
+
+                    className="flex items-center gap-2 rounded-xl px-2 py-1.5 transition hover:bg-slate-50"
+                  >
+
+                    <span
+                      className={[
+                        "flex h-5 w-[44px] shrink-0 items-center justify-center rounded-md text-[9px] font-black tracking-wider",
+
+                        buy
+                          ? "bg-emerald-50 text-emerald-600 ring-1 ring-emerald-200"
+
+                          : "bg-rose-50 text-rose-600 ring-1 ring-rose-200",
+                      ].join(" ")}
+                    >
+
+                      {ev.signal}
+
+                    </span>
+
+
+                    <span className="min-w-0 flex-1 leading-tight">
+
+                      <span
+                        className={[
+                          "block font-mono text-[11px] font-bold tabular-nums",
+
+                          buy ? "text-emerald-600" : "text-rose-600",
+                        ].join(" ")}
+                      >
+
+                        {fmt(ev.price)}
+
+                      </span>
+
+                      <span className="block truncate text-[9px] font-medium text-slate-400">
+
+                        {ev.time
+                          ? formatISTShortDateTime(
+                              ev.time
+                            )
+                          : "—"}
+
+                      </span>
+
+                    </span>
+
+                  </div>
+                );
+
+              })}
+
+            </div>
+
+          </Card>
+
         </aside>
 
 <section className="flex min-w-0 flex-col gap-3 lg:min-h-0 lg:flex-1 order-1 lg:order-2">
@@ -1610,6 +1619,31 @@ function App() {
             {/* Chart canvas */}
 
             <div className="relative min-h-0 flex-1">
+
+              {!selectedSymbol && (
+                <div className="absolute inset-0 z-10 flex items-center justify-center">
+
+                  <div className="rounded-xl border border-slate-200 bg-slate-50 px-6 py-5 text-center shadow-sm">
+
+                    <BarChart3 className="mx-auto h-5 w-5 text-slate-300" />
+
+                    <div className="mt-2 text-[12px] font-medium text-slate-500">
+
+                      No script selected
+
+                    </div>
+
+                    <div className="mt-1 text-[10px] text-slate-400">
+
+                      Search above and add a script
+                      to begin
+
+                    </div>
+
+                  </div>
+
+                </div>
+              )}
 
               {loadingCandles && (
                 <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/75 backdrop-blur-sm">
@@ -1621,9 +1655,7 @@ function App() {
                     <div className="mt-3 text-[11px] font-medium text-slate-400">
 
                       Loading{" "}
-                      {selectedSymbol
-                        ? selectedSymbol.tsym
-                        : activeInstrument.label}{" "}
+                      {selectedSymbol?.tsym}{" "}
                       {selectedTimeframe}
                       …
 
@@ -1658,6 +1690,7 @@ function App() {
 
               {!loadingCandles &&
                 !candleError &&
+                selectedSymbol &&
                 candles.length ===
                   0 && (
                   <div className="absolute inset-0 z-10 flex items-center justify-center">
@@ -1669,9 +1702,7 @@ function App() {
                       <div className="mt-2 text-[12px] font-medium text-slate-500">
 
                         No data for{" "}
-                        {selectedSymbol
-                          ? selectedSymbol.tsym
-                          : activeInstrument.label}{" "}
+                        {selectedSymbol.tsym}{" "}
                         {selectedTimeframe} yet
 
                       </div>
@@ -1694,7 +1725,7 @@ function App() {
                   selectedSymbol
                     ? selectedSymbol.label ??
                       selectedSymbol.tsym
-                    : activeInstrument.fullName
+                    : "No script added"
                 }
 
                 timeframeLabel={
@@ -1710,6 +1741,11 @@ function App() {
 
 
                 timeframeSeconds={tfSec}
+
+                instrumentConfig={{
+                  tickSize: currentTickSize ?? 1,
+                  decimals: currentDecimals ?? 0,
+                }}
 
               />
 
@@ -1840,133 +1876,19 @@ function App() {
 
             <div className="p-1">
 
-              {watchlist.length ===
+              {customSyms.length ===
                 0 && (
-                <div className="px-3 py-4 text-center text-[11px] text-slate-400">
+                <div className="px-3 py-6 text-center text-[11px] leading-relaxed text-slate-400">
 
-                  Loading quotes…
+                  No scripts added yet.
+
+                  <br />
+
+                  Use the search box above to
+                  add one.
 
                 </div>
               )}
-
-
-              {watchlistLive.map(row => {
-
-                const active =
-
-                  !selectedSymbol &&
-                  row.instrument ===
-                  selectedInstrument;
-
-                const up =
-
-                  (row.change ?? 0) >=
-                  0;
-
-
-                return (
-                  <button
-
-                    key={row.instrument}
-
-                    onClick={() => {
-                        setSelectedInstrument(
-                          row.instrument
-                        );
-                        setSelectedSymbol(null);
-                      }}
-
-                    className={[
-                      "flex w-full items-center gap-2 rounded-xl px-2.5 py-2 text-left transition",
-
-                      active
-
-                        ? "bg-blue-50 ring-1 ring-blue-200"
-
-                        : "hover:bg-slate-50",
-                    ].join(" ")}
-                  >
-
-                    <MetalIcon
-
-                      instrument={
-                        row.instrument
-                      }
-
-                      size="sm"
-                    />
-
-
-                    <span className="min-w-0 flex-1">
-
-                      <span className="block truncate text-[12px] font-semibold text-slate-800">
-
-                        {row.tvName}
-
-                      </span>
-
-                      <span className="block truncate text-[9px] font-medium text-slate-400">
-
-                        {row.symbol}
-
-                      </span>
-
-                    </span>
-
-
-                    <span
-                      className={[
-                        "w-[62px] text-right font-mono text-[12px] font-semibold tabular-nums",
-
-                        up ? UP : DOWN,
-                      ].join(" ")}
-                    >
-                      {fmt(row.price)}
-                    </span>
-
-                    <span
-                      className={[
-                        "w-[48px] text-right font-mono text-[10px] font-medium tabular-nums",
-
-                        up ? UP : DOWN,
-                      ].join(" ")}
-                    >
-                      {row.change != null
-                        ? (row.change >= 0 ? "+" : "") + fmt(row.change)
-                        : "—"}
-                    </span>
-
-
-                    <span
-
-                      className={[
-                        "w-[48px] text-right font-mono text-[10px] font-medium tabular-nums",
-
-                        up ? UP : DOWN,
-                      ].join(" ")}
-                    >
-
-                      {row.changePct !=
-                      null
-
-                        ? (up ? "+" : "") +
-
-                          row.changePct.toFixed(
-                            2
-                          ) +
-
-                          "%"
-
-                        : "—"}
-
-                    </span>
-
-                    <span className="hidden w-7 shrink-0 sm:block" aria-hidden />
-
-                  </button>
-                );
-
-              })}
 
                           {/* CUSTOM SYMBOL ROWS */}
 
@@ -2082,20 +2004,18 @@ function App() {
 
             <div className="flex items-center gap-3">
 
-              <MetalIcon
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-slate-200 text-[12px] font-bold text-slate-600">
 
-                instrument={
-                  selectedInstrument
-                }
+                {selectedSymbol?.tsym?.[0] ?? "?"}
 
-              />
+              </span>
 
 
               <div className="min-w-0 leading-tight">
 
                 <div className="text-[14px] font-bold tracking-tight text-slate-900">
 
-                  {selectedSymbol ? selectedSymbol.tsym : activeInstrument.tvName}
+                  {selectedSymbol ? selectedSymbol.tsym : "No script"}
 
                 </div>
 
@@ -2103,7 +2023,7 @@ function App() {
 
                   {selectedSymbol
                     ? `${selectedSymbol.exch} · ${selectedSymbol.tsym}`
-                    : `${activeInstrument.fullName} · MCX`}
+                    : "Add from the search box"}
 
                 </div>
 
@@ -2111,7 +2031,7 @@ function App() {
 
                   {selectedSymbol
                     ? `${selectedSymbol.exch} · ${selectedSymbol.token}`
-                    : `Futures · ${activeInstrument.sub}`}
+                    : "—"}
 
                 </div>
 
@@ -2149,7 +2069,7 @@ function App() {
 
                 {selectedSymbol
                   ? `${selectedSymbol.exch}`
-                  : activeInstrument.unit}
+                  : ""}
 
               </span>
 

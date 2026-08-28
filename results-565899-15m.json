@@ -52,37 +52,6 @@
           "value": false
         },
         {
-          "value": true,
-          "options": {
-            "text": "SELL",
-            "textcolor": "#FFFFFF",
-            "color": "#F23645",
-            "shape": "shape_label_down",
-            "location": "AboveBar"
-          }
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
           "value": false
         },
         {
@@ -1376,6 +1345,30 @@
             "shape": "shape_label_down",
             "location": "AboveBar"
           }
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
         },
         {
           "value": false
@@ -3540,6 +3533,30 @@
           "options": {
             "color": "#F23645"
           }
+        },
+        {
+          "value": 7851.7178908081,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": 7851.7178908081,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": 7851.7178908081,
+          "options": {
+            "color": "#F23645"
+          }
+        },
+        {
+          "value": 7851.7178908081,
+          "options": {
+            "color": "#F23645"
+          }
         }
       ]
     },
@@ -3762,7 +3779,7 @@
                     "_merge_parent": null
                   },
                   {
-                    "text": "307.00",
+                    "text": "312.00",
                     "width": 0,
                     "height": 0,
                     "text_color": "#00E676",

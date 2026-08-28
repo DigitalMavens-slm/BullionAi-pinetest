@@ -2837,10 +2837,46 @@
   {
     "open": 7833,
     "high": 7844,
-    "low": 7831,
-    "close": 7837,
-    "volume": 49488,
-    "openInterest": 11828,
+    "low": 7825,
+    "close": 7834,
+    "volume": 49852,
+    "openInterest": 11852,
     "time": 1787673600000
+  },
+  {
+    "open": 7835,
+    "high": 7851,
+    "low": 7824,
+    "close": 7850,
+    "volume": 51376,
+    "openInterest": 11581,
+    "time": 1787674500000
+  },
+  {
+    "open": 7849,
+    "high": 7854,
+    "low": 7838,
+    "close": 7843,
+    "volume": 51590,
+    "openInterest": 11555,
+    "time": 1787675400000
+  },
+  {
+    "open": 7848,
+    "high": 7858,
+    "low": 7832,
+    "close": 7835,
+    "volume": 52126,
+    "openInterest": 11537,
+    "time": 1787676300000
+  },
+  {
+    "open": 7833,
+    "high": 7837,
+    "low": 7828,
+    "close": 7832,
+    "volume": 52249,
+    "openInterest": 11513,
+    "time": 1787677200000
   }
 ]

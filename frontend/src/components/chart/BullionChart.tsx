@@ -22,7 +22,15 @@ import {
   type Time,
 } from "lightweight-charts";
 
-import { ChevronsRight } from "lucide-react";
+import { 
+  ChevronsRight, 
+  ZoomIn, 
+  ZoomOut, 
+  Move, 
+  RotateCcw, 
+  Maximize2,
+  Minimize2
+} from "lucide-react";
 
 
 import {
@@ -59,17 +67,12 @@ type BullionChartProps = {
   }[] | null;
 
   timeframeSeconds?: number;
+
+  instrumentConfig?: {
+    tickSize: number;
+    decimals: number;
+  };
 };
-
-/*
- * =========================================================
- * TRADINGVIEW PALETTE
- * =========================================================
- */
-
-const UP = "#089981";
-
-const DOWN = "#f23645";
 
 type LegendValues = {
   time: number;
@@ -85,20 +88,33 @@ type LegendValues = {
   volume?: number;
 } | null;
 
+/*
+ * =========================================================
+ * TRADINGVIEW PALETTE
+ * =========================================================
+ */
+
+const UP = "#089981";
+
+const DOWN = "#f23645";
+
+function getDecimals(instrumentConfig?: { tickSize: number; decimals: number }): number {
+  if (!instrumentConfig) return 2;
+  return instrumentConfig.decimals ?? 2;
+}
 
 function fmt(
-  value: number
+  value: number,
+  instrumentConfig?: { tickSize: number; decimals: number }
 ) {
-  const hasFraction =
-    Math.abs(value % 1) > 1e-9;
+  const decimals = getDecimals(instrumentConfig);
 
   return value.toLocaleString(
     "en-IN",
     {
-      minimumFractionDigits:
-        hasFraction ? 2 : 0,
+      minimumFractionDigits: decimals,
 
-      maximumFractionDigits: 2,
+      maximumFractionDigits: decimals,
     }
   );
 }
@@ -240,6 +256,7 @@ export function BullionChart({
   timeframeLabel = "",
   signals = null,
   timeframeSeconds = 0,
+  instrumentConfig,
 }: BullionChartProps) {
 
   const wrapperRef =
@@ -426,7 +443,7 @@ export function BullionChart({
             },
           },
 
-          timeScale: {
+timeScale: {
             borderVisible:
               false,
 
@@ -456,25 +473,31 @@ export function BullionChart({
                 ),
           },
 
-          localization: {
+          handleScroll: {
+            mouseWheel: true,
+            pressedMouseMove: true,
+            horzTouchDrag: true,
+            vertTouchDrag: true,
+          },
+
+          handleScale: {
+            mouseWheel: true,
+            pinch: true,
+            axisDoubleClickReset: true,
+          },
+
+localization: {
             priceFormatter:
               (
                 price: number
               ) => {
-                const hasFraction =
-                  Math.abs(
-                    price % 1
-                  ) > 1e-9;
+                const decimals = getDecimals(instrumentConfig);
 
                 return price.toLocaleString(
                   "en-IN",
                   {
-                    minimumFractionDigits:
-                      hasFraction
-                        ? 2
-                        : 0,
-
-                    maximumFractionDigits: 2,
+                    minimumFractionDigits: decimals,
+                    maximumFractionDigits: decimals,
                   }
                 );
               },
@@ -683,12 +706,39 @@ export function BullionChart({
       entrySeriesRef.current =
         null;
 
-      markersRef.current =
+markersRef.current =
         null;
 
     };
 
   }, []);
+
+
+  // =========================================================
+  // UPDATE PRICE FORMATTER WHEN INSTRUMENT CONFIG CHANGES
+  // =========================================================
+
+  useEffect(() => {
+    const chart = chartRef.current;
+    const candleSeries = candleSeriesRef.current;
+    if (!chart || !candleSeries) return;
+
+    // Update candle series price format (right price scale)
+
+    const decimals = getDecimals(instrumentConfig);
+
+    candleSeries.applyOptions({
+      priceFormat: {
+        type: 'custom',
+        formatter: (price: number) => {
+          return price.toLocaleString("en-IN", {
+            minimumFractionDigits: decimals,
+            maximumFractionDigits: decimals,
+          });
+        },
+      },
+    });
+  }, [instrumentConfig]);
 
 
   // =========================================================
@@ -1353,6 +1403,9 @@ export function BullionChart({
   const [showJumpLatest, setShowJumpLatest] =
     useState(false);
 
+  const [isFullscreen, setIsFullscreen] =
+    useState(false);
+
   const dataCountRef =
     useRef(0);
 
@@ -1372,8 +1425,16 @@ export function BullionChart({
     const ts = chart.timeScale();
     ts.subscribeVisibleLogicalRangeChange(handler);
 
-    return () =>
+    // Fullscreen change listener
+    function onFullscreenChange() {
+      setIsFullscreen(!!document.fullscreenElement);
+    }
+    document.addEventListener("fullscreenchange", onFullscreenChange);
+
+    return () => {
       ts.unsubscribeVisibleLogicalRangeChange(handler);
+      document.removeEventListener("fullscreenchange", onFullscreenChange);
+    };
   }, []);
 
 
@@ -1401,7 +1462,7 @@ export function BullionChart({
       </div>
 
 
-      {/* JUMP TO LATEST */}
+{/* JUMP TO LATEST */}
 
       {showJumpLatest && (
         <button
@@ -1416,6 +1477,122 @@ export function BullionChart({
           <ChevronsRight className="h-3.5 w-3.5" />
         </button>
       )}
+
+      {/* TRADINGVIEW-LIKE CHART TOOLBAR */}
+
+      <div className="absolute top-4 right-4 z-20 flex items-center gap-1 bg-white/95 rounded-lg border border-slate-200 p-1 shadow-md">
+        <button
+          onClick={() => chartRef.current?.timeScale()?.scrollToRealTime()}
+          title="Jump to latest"
+          className="p-1.5 rounded hover:bg-slate-100 transition"
+        >
+          <RotateCcw className="h-4 w-4 text-slate-600" />
+        </button>
+        <button
+          onClick={() => {
+            const chart = chartRef.current;
+            if (chart) {
+              const timeScale = chart.timeScale();
+              const range = timeScale.getVisibleLogicalRange();
+              if (range) {
+                const center = (range.from + range.to) / 2;
+                const length = (range.to - range.from) / 1.3;
+                timeScale.setVisibleLogicalRange({
+                  from: center - length / 2,
+                  to: center + length / 2,
+                });
+              }
+            }
+          }}
+          title="Zoom in"
+          className="p-1.5 rounded hover:bg-slate-100 transition"
+        >
+          <ZoomIn className="h-4 w-4 text-slate-600" />
+        </button>
+        <button
+          onClick={() => {
+            const chart = chartRef.current;
+            if (chart) {
+              const timeScale = chart.timeScale();
+              const range = timeScale.getVisibleLogicalRange();
+              if (range) {
+                const center = (range.from + range.to) / 2;
+                const length = (range.to - range.from) * 1.3;
+                timeScale.setVisibleLogicalRange({
+                  from: center - length / 2,
+                  to: center + length / 2,
+                });
+              }
+            }
+          }}
+          title="Zoom out"
+          className="p-1.5 rounded hover:bg-slate-100 transition"
+        >
+          <ZoomOut className="h-4 w-4 text-slate-600" />
+        </button>
+        <button
+          onClick={() => {
+            const chart = chartRef.current;
+            if (chart) {
+              const timeScale = chart.timeScale();
+              timeScale.setVisibleLogicalRange({
+                from: 0,
+                to: (dataCountRef.current || 100) + 10,
+              });
+            }
+          }}
+          title="Reset zoom"
+          className="p-1.5 rounded hover:bg-slate-100 transition"
+        >
+          <Maximize2 className="h-4 w-4 text-slate-600" />
+        </button>
+        <button
+          onClick={() => {
+            const chart = chartRef.current;
+            if (chart) {
+              chart.applyOptions({
+                handleScroll: {
+                  mouseWheel: true,
+                  pressedMouseMove: true,
+                  horzTouchDrag: true,
+                  vertTouchDrag: true,
+                },
+                handleScale: {
+                  mouseWheel: true,
+                  pinch: true,
+                  axisDoubleClickReset: true,
+                },
+              });
+            }
+          }}
+          title="Enable pan/zoom"
+          className="p-1.5 rounded hover:bg-slate-100 transition"
+        >
+          <Move className="h-4 w-4 text-slate-600" />
+        </button>
+        <button
+          onClick={() => {
+            const wrapper = wrapperRef.current;
+            if (wrapper) {
+              if (!document.fullscreenElement) {
+                wrapper.requestFullscreen();
+                setIsFullscreen(true);
+              } else {
+                document.exitFullscreen();
+                setIsFullscreen(false);
+              }
+            }
+          }}
+          title="Toggle fullscreen"
+          className="p-1.5 rounded hover:bg-slate-100 transition"
+        >
+          {isFullscreen ? (
+            <Minimize2 className="h-4 w-4 text-slate-600" />
+          ) : (
+            <Maximize2 className="h-4 w-4 text-slate-600" />
+          )}
+        </button>
+      </div>
 
 
       {/* CHART CANVAS */}
@@ -1476,7 +1653,7 @@ export function BullionChart({
 
         {/* ROW 2 — OHLC + CHANGE */}
 
-        {shown && (
+{shown && (
           <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[11px] font-medium tabular-nums">
 
             <span className="text-slate-400">
@@ -1485,7 +1662,7 @@ export function BullionChart({
 
               <span className="text-slate-700">
 
-                {fmt(shown.open)}
+                {fmt(shown.open, instrumentConfig)}
 
               </span>
             </span>
@@ -1494,7 +1671,7 @@ export function BullionChart({
               H{" "}
               <span className="text-slate-700">
 
-                {fmt(shown.high)}
+                {fmt(shown.high, instrumentConfig)}
 
               </span>
             </span>
@@ -1503,7 +1680,7 @@ export function BullionChart({
               L{" "}
               <span className="text-slate-700">
 
-                {fmt(shown.low)}
+                {fmt(shown.low, instrumentConfig)}
 
               </span>
             </span>
@@ -1519,7 +1696,7 @@ export function BullionChart({
                     : "text-[#f23645]"
                 }
               >
-                {fmt(shown.close)}
+                {fmt(shown.close, instrumentConfig)}
               </span>
             </span>
 
@@ -1535,7 +1712,7 @@ export function BullionChart({
                   : "text-[#f23645]",
               ].join(" ")}
             >
-              {fmtSigned(change)}
+              {fmtSigned(change, instrumentConfig)}
             </span>
 
             <span
@@ -1577,17 +1754,14 @@ export function BullionChart({
 }
 
 
-function fmtSigned(v: number) {
-  const hasFraction =
-    Math.abs(v % 1) > 1e-9;
+function fmtSigned(v: number, instrumentConfig?: { tickSize: number; decimals: number }) {
+  const decimals = getDecimals(instrumentConfig);
 
   return (
     (v >= 0 ? "+" : "") +
     v.toLocaleString("en-IN", {
-      minimumFractionDigits:
-        hasFraction ? 2 : 0,
-
-      maximumFractionDigits: 2,
+      minimumFractionDigits: decimals,
+      maximumFractionDigits: decimals,
     })
   );
 }

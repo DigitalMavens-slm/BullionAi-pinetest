@@ -1702,11 +1702,110 @@
   },
   {
     "open": 266,
-    "high": 266.7,
+    "high": 267.7,
     "low": 265.9,
-    "close": 266.7,
-    "volume": 79135,
-    "openInterest": 50891,
+    "close": 267.4,
+    "volume": 82008,
+    "openInterest": 50231,
     "time": 1787670000000
+  },
+  {
+    "open": 267.5,
+    "high": 268.2,
+    "low": 267,
+    "close": 267.7,
+    "volume": 87141,
+    "openInterest": 49555,
+    "time": 1787671800000
+  },
+  {
+    "open": 267.8,
+    "high": 269.4,
+    "low": 267.6,
+    "close": 269.3,
+    "volume": 91906,
+    "openInterest": 48006,
+    "time": 1787673600000
+  },
+  {
+    "open": 269.2,
+    "high": 270.5,
+    "low": 269.1,
+    "close": 269.5,
+    "volume": 100192,
+    "openInterest": 45704,
+    "time": 1787675400000
+  },
+  {
+    "open": 269.4,
+    "high": 270.5,
+    "low": 269.4,
+    "close": 270,
+    "volume": 103841,
+    "openInterest": 44782,
+    "time": 1787677200000
+  },
+  {
+    "open": 269.9,
+    "high": 270.6,
+    "low": 269.9,
+    "close": 270.4,
+    "volume": 108673,
+    "openInterest": 42910,
+    "time": 1787679000000
+  },
+  {
+    "open": 270.8,
+    "high": 273.5,
+    "low": 270.8,
+    "close": 273.3,
+    "volume": 5789,
+    "openInterest": 41771,
+    "time": 1787715000000
+  },
+  {
+    "open": 273.4,
+    "high": 273.9,
+    "low": 273.1,
+    "close": 273.6,
+    "volume": 8536,
+    "openInterest": 41247,
+    "time": 1787716800000
+  },
+  {
+    "open": 273.7,
+    "high": 274.1,
+    "low": 273.2,
+    "close": 273.4,
+    "volume": 10490,
+    "openInterest": 41311,
+    "time": 1787718600000
+  },
+  {
+    "open": 273.3,
+    "high": 273.9,
+    "low": 273.1,
+    "close": 273.4,
+    "volume": 12445,
+    "openInterest": 40822,
+    "time": 1787720400000
+  },
+  {
+    "open": 273.2,
+    "high": 274.3,
+    "low": 273.2,
+    "close": 273.7,
+    "volume": 14593,
+    "openInterest": 40589,
+    "time": 1787722200000
+  },
+  {
+    "open": 273.8,
+    "high": 273.9,
+    "low": 273.5,
+    "close": 273.8,
+    "volume": 14972,
+    "openInterest": 40486,
+    "time": 1787724000000
   }
 ]

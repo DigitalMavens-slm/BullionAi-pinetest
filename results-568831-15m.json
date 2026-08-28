@@ -55,127 +55,6 @@
           "value": false
         },
         {
-          "value": true,
-          "options": {
-            "text": "BUY",
-            "textcolor": "#FFFFFF",
-            "color": "#4CAF50",
-            "shape": "shape_label_up",
-            "location": "BelowBar"
-          }
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
           "value": false
         },
         {
@@ -1632,6 +1511,120 @@
             "shape": "shape_label_up",
             "location": "BelowBar"
           }
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
+        },
+        {
+          "value": false
         },
         {
           "value": false
@@ -3457,6 +3450,120 @@
           "options": {
             "color": "#00E676"
           }
+        },
+        {
+          "value": 1387.3143320653,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 1387.3143320653,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 1387.3143320653,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 1387.6052149655,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 1387.6052149655,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 1387.6052149655,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 1387.6052149655,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 1387.6052149655,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 1390.9724086881,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 1391.2315223532,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 1392.263199328,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 1393.5104708045,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 1393.5104708045,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 1393.5104708045,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 1393.5104708045,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 1395.1287941651,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 1395.1287941651,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 1395.1287941651,
+          "options": {
+            "color": "#00E676"
+          }
+        },
+        {
+          "value": 1395.1287941651,
+          "options": {
+            "color": "#00E676"
+          }
         }
       ]
     },
@@ -3619,7 +3726,7 @@
                     "_merge_parent": null
                   },
                   {
-                    "text": "1387.31",
+                    "text": "1395.13",
                     "width": 0,
                     "height": 0,
                     "text_color": "#FF9800",
@@ -3649,7 +3756,7 @@
                     "_merge_parent": null
                   },
                   {
-                    "text": "1390.00",
+                    "text": "1399.45",
                     "width": 0,
                     "height": 0,
                     "text_color": "#00BCD4",
@@ -3679,7 +3786,7 @@
                     "_merge_parent": null
                   },
                   {
-                    "text": "2.25",
+                    "text": "9.75",
                     "width": 0,
                     "height": 0,
                     "text_color": "#00E676",
@@ -3709,7 +3816,7 @@
                     "_merge_parent": null
                   },
                   {
-                    "text": "2.25",
+                    "text": "11.70",
                     "width": 0,
                     "height": 0,
                     "text_color": "#00E676",

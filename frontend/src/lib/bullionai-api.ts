@@ -8,7 +8,7 @@ export type Candle = {
   time: number;
 };
 
-export type Instrument = "gold" | "silver";
+export type Instrument = "gold" | "silver" | "copper" | "lead" | "natural_gas" | "zinc" | "nickel" | "crude_oil";
 
 export type DayStats = {
   date: string;
@@ -97,38 +97,6 @@ export type LivePriceInfo = {
   connected: boolean;
 };
 
-export type WatchlistRow = {
-  instrument: Instrument;
-  tvName: string;
-  symbol: string;
-  name: string;
-  price: number | null;
-  open: number | null;
-  dayHigh: number | null;
-  dayLow: number | null;
-  prevClose: number | null;
-  change: number | null;
-  changePct: number | null;
-};
-
-export async function fetchWatchlist(): Promise<
-  WatchlistRow[]
-> {
-  const response = await fetch(
-    `${API_BASE}/api/watchlist`
-  );
-
-  if (!response.ok) {
-    throw new Error(
-      `Watchlist failed: ${response.status}`
-    );
-  }
-
-  const data = await response.json();
-
-  return data.rows ?? [];
-}
-
 export type StrategyRunResponse = {
   ok: boolean;
   instrument: Instrument;
@@ -149,6 +117,12 @@ export type BullionState = {
     connected?: boolean;
     gold?: LivePriceInfo | null;
     silver?: LivePriceInfo | null;
+    copper?: LivePriceInfo | null;
+    lead?: LivePriceInfo | null;
+    natural_gas?: LivePriceInfo | null;
+    zinc?: LivePriceInfo | null;
+    nickel?: LivePriceInfo | null;
+    crude_oil?: LivePriceInfo | null;
   } | null;
 };
 

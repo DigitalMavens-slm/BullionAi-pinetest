@@ -1,5 +1,30 @@
 const { ShoonyaClient } = require("shoonya-api-js");
 
+/*
+ * Shared classifier for Shoonya
+ * authentication rejections (HTTP 401/403,
+ * expired token, session no longer valid).
+ *
+ * Deliberately does NOT match generic
+ * "Not_Ok" business errors so unrelated
+ * API failures are never mistaken for
+ * an invalid session.
+ */
+function isShoonyaAuthFailure(error) {
+
+    const message =
+        String(
+            error?.message ||
+            error ||
+            ""
+        );
+
+    return /http 40[13]|unauthorized|session expired|token expired|invalid token|invalid session|please login|authentication/i.test(
+        message
+    );
+
+}
+
 class MarketDataService {
     constructor({
         clientId,
@@ -158,6 +183,72 @@ class MarketDataService {
                 null,
 
         };
+
+    }
+
+
+    // =========================================================
+    // SESSION VERIFICATION
+    //
+    // Local state proves nothing about what
+    // Shoonya currently accepts. Probe the
+    // server with a lightweight authenticated
+    // call before trusting a restored token.
+    //
+    // Resolves true  -> token accepted
+    // Resolves false -> Shoonya rejected it
+    // Throws         -> network problem, verdict unknown
+    // =========================================================
+
+    async verifySession() {
+
+        if (
+            !this.isAuthenticated()
+        ) {
+            return false;
+        }
+
+        try {
+
+            await this.client.getUserDetails();
+
+            return true;
+
+        } catch (
+            error
+        ) {
+
+            if (
+                isShoonyaAuthFailure(
+                    error
+                )
+            ) {
+                return false;
+            }
+
+            throw error;
+
+        }
+
+    }
+
+
+    clearSession() {
+
+        this.client.setSession({
+            accessToken: null,
+            uid: null,
+            actid: null,
+        });
+
+        this.uid =
+            null;
+
+        this.actid =
+            null;
+
+        this.session =
+            null;
 
     }
 
@@ -560,4 +651,5 @@ class MarketDataService {
 
 module.exports = {
     MarketDataService,
+    isShoonyaAuthFailure,
 };

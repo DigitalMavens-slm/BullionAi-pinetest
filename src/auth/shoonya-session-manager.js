@@ -78,7 +78,18 @@ class ShoonyaSessionManager {
          * stay logged in for the day.
          */
 
-        this.saveSession();
+        const saved =
+            this.saveSession();
+
+        console.log(
+            "Fresh Shoonya session authenticated."
+        );
+
+        if (saved) {
+            console.log(
+                "Session saved."
+            );
+        }
 
         console.log(
             "Shoonya authentication successful."
@@ -311,6 +322,94 @@ class ShoonyaSessionManager {
         } catch {
             // Best effort.
         }
+
+    }
+
+
+    // =========================================================
+    // STORED SESSION VALIDATION
+    //
+    // A file on disk is NOT proof of a live
+    // session. Ask Shoonya whether the
+    // restored token is actually accepted.
+    //
+    // "valid"        -> token works
+    // "invalid"      -> Shoonya rejected it
+    // "inconclusive" -> network problem,
+    //                   verdict unknown
+    // =========================================================
+
+    async validateStoredSession() {
+
+        console.log(
+            "Validating stored session..."
+        );
+
+        try {
+
+            const valid =
+                await this.market.verifySession();
+
+            if (valid) {
+
+                console.log(
+                    "Stored Shoonya session validated."
+                );
+
+                return "valid";
+
+            }
+
+            console.log(
+                "Stored Shoonya session rejected."
+            );
+
+            return "invalid";
+
+        } catch (
+            error
+        ) {
+
+            console.log(
+                "Could not validate stored session:",
+                error?.message || error
+            );
+
+            return "inconclusive";
+
+        }
+
+    }
+
+
+    // =========================================================
+    // SESSION INVALIDATION
+    //
+    // Drops in-memory credentials AND deletes
+    // the persisted session so nothing can
+    // keep using a token Shoonya rejected.
+    // =========================================================
+
+    invalidateSession() {
+
+        this.market.clearSession();
+
+        this.authenticatedAt =
+            null;
+
+        this.expiresIn =
+            null;
+
+        this.expiresAt =
+            null;
+
+        this.uid =
+            null;
+
+        this.actid =
+            null;
+
+        this.clearPersistedSession();
 
     }
 

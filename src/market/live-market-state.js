@@ -35,12 +35,17 @@ class LiveMarketState extends EventEmitter {
         /*
          * Track every subscribed
          * instrument separately.
+         *
+         * An explicit empty array is allowed:
+         * the feed starts with zero
+         * subscriptions (search-box-only flow)
+         * and tokens are added at runtime.
          */
 
         this.tokens =
             Array.isArray(
                 tokens
-            ) && tokens.length
+            )
                 ? tokens.map(t =>
                       String(t)
                   )
@@ -78,13 +83,15 @@ class LiveMarketState extends EventEmitter {
 
         /*
          * Primary price state kept for
-         * backwards compatibility.
+         * backwards compatibility. Absent
+         * when starting with no scripts.
          */
 
         this.priceState =
             this.priceStates.get(
                 this.token
-            );
+            ) ??
+            null;
 
 
         // -----------------------------------------------------
@@ -244,20 +251,43 @@ class LiveMarketState extends EventEmitter {
 
 
         // -----------------------------------------------------
-        // PRICE STATE UPDATE
+        // AUTH FAILURE (invalid session)
         // -----------------------------------------------------
 
-        this.priceState.on(
-            "update",
-            state => {
+        this.feed.on(
+            "auth-failed",
+            error => {
 
                 this.emit(
-                    "priceState",
-                    state
+                    "auth-failed",
+                    error
                 );
 
             }
         );
+
+
+        // -----------------------------------------------------
+        // PRICE STATE UPDATE
+        // -----------------------------------------------------
+
+        if (
+            this.priceState
+        ) {
+
+            this.priceState.on(
+                "update",
+                state => {
+
+                    this.emit(
+                        "priceState",
+                        state
+                    );
+
+                }
+            );
+
+        }
 
     }
 
@@ -274,17 +304,25 @@ class LiveMarketState extends EventEmitter {
 
             const EX = String(exch || this.exchange).toUpperCase();
 
-            if (!this.priceStates.has(token)) {
+            const t = String(token);
+
+            if (!this.priceStates.has(t)) {
                 this.priceStates.set(
-                    token,
+                    t,
                     new LivePriceState({
                         exchange: EX,
-                        token,
+                        token: t,
                     })
                 );
             }
 
-            subs.push(EX + "|" + token);
+            /* Back-compat: first ever script becomes the primary */
+            if (!this.priceState) {
+                this.priceState =
+                    this.priceStates.get(t);
+            }
+
+            subs.push(EX + "|" + t);
         });
 
         try {
@@ -307,10 +345,40 @@ class LiveMarketState extends EventEmitter {
 
             const EX = String(exch || this.exchange).toUpperCase();
 
-            subs.push(EX + "|" + token);
+            const t = String(token);
 
-            /* keep price state; stop is feed-level only */
+            subs.push(EX + "|" + t);
+
+            /* Removed scripts drop their live state */
+            this.priceStates.delete(t);
+
         });
+
+        /*
+         * Reassign the backwards-compatible
+         * primary if it was just removed.
+         */
+
+        if (
+            this.priceState &&
+            !this.priceStates.has(
+                this.priceState.token
+            )
+        ) {
+
+            const first =
+                this.priceStates
+                    .keys()
+                    .next();
+
+            this.priceState =
+                first.done
+                    ? null
+                    : this.priceStates.get(
+                          first.value
+                      );
+
+        }
 
         try {
             this.feed.unsubscribeTouchline(subs);
@@ -345,8 +413,6 @@ class LiveMarketState extends EventEmitter {
 
         return this.getState();
     }
-
-
     // =========================================================
     // STOP
     // =========================================================
@@ -439,7 +505,9 @@ class LiveMarketState extends EventEmitter {
             prices,
 
             price:
-                this.priceState.getState(),
+                this.priceState
+                    ? this.priceState.getState()
+                    : null,
 
             lastTick:
                 this.feed.getLastTick(),
@@ -454,7 +522,9 @@ class LiveMarketState extends EventEmitter {
 
     getPrice() {
 
-        return this.priceState.getPrice();
+        return this.priceState
+            ? this.priceState.getPrice()
+            : null;
 
     }
 
@@ -467,9 +537,11 @@ class LiveMarketState extends EventEmitter {
         maxAgeMs = 10000
     ) {
 
-        return this.priceState.isFresh(
-            maxAgeMs
-        );
+        return this.priceState
+            ? this.priceState.isFresh(
+                  maxAgeMs
+              )
+            : false;
 
     }
 
