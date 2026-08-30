@@ -22,14 +22,8 @@ import {
   type Time,
 } from "lightweight-charts";
 
-import { 
-  ChevronsRight, 
-  ZoomIn, 
-  ZoomOut, 
-  Move, 
-  RotateCcw, 
-  Maximize2,
-  Minimize2
+import {
+  ChevronsRight,
 } from "lucide-react";
 
 
@@ -258,11 +252,6 @@ export function BullionChart({
   timeframeSeconds = 0,
   instrumentConfig,
 }: BullionChartProps) {
-
-  const wrapperRef =
-    useRef<HTMLDivElement | null>(
-      null
-    );
 
   const containerRef =
     useRef<HTMLDivElement | null>(
@@ -1403,9 +1392,6 @@ markersRef.current =
   const [showJumpLatest, setShowJumpLatest] =
     useState(false);
 
-  const [isFullscreen, setIsFullscreen] =
-    useState(false);
-
   const dataCountRef =
     useRef(0);
 
@@ -1425,15 +1411,8 @@ markersRef.current =
     const ts = chart.timeScale();
     ts.subscribeVisibleLogicalRangeChange(handler);
 
-    // Fullscreen change listener
-    function onFullscreenChange() {
-      setIsFullscreen(!!document.fullscreenElement);
-    }
-    document.addEventListener("fullscreenchange", onFullscreenChange);
-
     return () => {
       ts.unsubscribeVisibleLogicalRangeChange(handler);
-      document.removeEventListener("fullscreenchange", onFullscreenChange);
     };
   }, []);
 
@@ -1445,7 +1424,6 @@ markersRef.current =
 
   return (
     <div
-      ref={wrapperRef}
       className="absolute inset-0"
     >
 
@@ -1478,122 +1456,7 @@ markersRef.current =
         </button>
       )}
 
-      {/* TRADINGVIEW-LIKE CHART TOOLBAR */}
-
-      <div className="absolute top-4 right-4 z-20 flex items-center gap-1 bg-white/95 rounded-lg border border-slate-200 p-1 shadow-md">
-        <button
-          onClick={() => chartRef.current?.timeScale()?.scrollToRealTime()}
-          title="Jump to latest"
-          className="p-1.5 rounded hover:bg-slate-100 transition"
-        >
-          <RotateCcw className="h-4 w-4 text-slate-600" />
-        </button>
-        <button
-          onClick={() => {
-            const chart = chartRef.current;
-            if (chart) {
-              const timeScale = chart.timeScale();
-              const range = timeScale.getVisibleLogicalRange();
-              if (range) {
-                const center = (range.from + range.to) / 2;
-                const length = (range.to - range.from) / 1.3;
-                timeScale.setVisibleLogicalRange({
-                  from: center - length / 2,
-                  to: center + length / 2,
-                });
-              }
-            }
-          }}
-          title="Zoom in"
-          className="p-1.5 rounded hover:bg-slate-100 transition"
-        >
-          <ZoomIn className="h-4 w-4 text-slate-600" />
-        </button>
-        <button
-          onClick={() => {
-            const chart = chartRef.current;
-            if (chart) {
-              const timeScale = chart.timeScale();
-              const range = timeScale.getVisibleLogicalRange();
-              if (range) {
-                const center = (range.from + range.to) / 2;
-                const length = (range.to - range.from) * 1.3;
-                timeScale.setVisibleLogicalRange({
-                  from: center - length / 2,
-                  to: center + length / 2,
-                });
-              }
-            }
-          }}
-          title="Zoom out"
-          className="p-1.5 rounded hover:bg-slate-100 transition"
-        >
-          <ZoomOut className="h-4 w-4 text-slate-600" />
-        </button>
-        <button
-          onClick={() => {
-            const chart = chartRef.current;
-            if (chart) {
-              const timeScale = chart.timeScale();
-              timeScale.setVisibleLogicalRange({
-                from: 0,
-                to: (dataCountRef.current || 100) + 10,
-              });
-            }
-          }}
-          title="Reset zoom"
-          className="p-1.5 rounded hover:bg-slate-100 transition"
-        >
-          <Maximize2 className="h-4 w-4 text-slate-600" />
-        </button>
-        <button
-          onClick={() => {
-            const chart = chartRef.current;
-            if (chart) {
-              chart.applyOptions({
-                handleScroll: {
-                  mouseWheel: true,
-                  pressedMouseMove: true,
-                  horzTouchDrag: true,
-                  vertTouchDrag: true,
-                },
-                handleScale: {
-                  mouseWheel: true,
-                  pinch: true,
-                  axisDoubleClickReset: true,
-                },
-              });
-            }
-          }}
-          title="Enable pan/zoom"
-          className="p-1.5 rounded hover:bg-slate-100 transition"
-        >
-          <Move className="h-4 w-4 text-slate-600" />
-        </button>
-        <button
-          onClick={() => {
-            const wrapper = wrapperRef.current;
-            if (wrapper) {
-              if (!document.fullscreenElement) {
-                wrapper.requestFullscreen();
-                setIsFullscreen(true);
-              } else {
-                document.exitFullscreen();
-                setIsFullscreen(false);
-              }
-            }
-          }}
-          title="Toggle fullscreen"
-          className="p-1.5 rounded hover:bg-slate-100 transition"
-        >
-          {isFullscreen ? (
-            <Minimize2 className="h-4 w-4 text-slate-600" />
-          ) : (
-            <Maximize2 className="h-4 w-4 text-slate-600" />
-          )}
-        </button>
-      </div>
-
+      {/* TRADINGVIEW-LIKE CHART TOOLBAR REMOVED (per request) */}
 
       {/* CHART CANVAS */}
 

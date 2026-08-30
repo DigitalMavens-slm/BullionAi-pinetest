@@ -140,7 +140,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
               <div className="font-display text-[16px] font-bold tracking-tight text-slate-900">
                 BULLION<span className="text-accent">AI</span>
               </div>
-              <div className="text-[8px] font-semibold uppercase tracking-[0.2em] text-slate-500">Market Intelligence</div>
+              <div className="hidden min-[380px]:block text-[8px] font-semibold uppercase tracking-[0.2em] text-slate-500">Market Intelligence</div>
             </div>
           </Link>
 
@@ -158,9 +158,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
           </nav>
 
           <div className="flex items-center gap-2">
+            {/* Login always visible, including mobile */}
             <button
               onClick={() => navigate(auth ? "/dashboard" : "/login")}
-              className="hidden items-center gap-1.5 rounded-full border border-slate-300 bg-white px-3.5 py-1.5 text-[12px] font-semibold text-slate-700 transition hover:border-accent hover:text-accent md:inline-flex"
+              className="inline-flex items-center gap-1.5 rounded-full border border-slate-300 bg-white px-3.5 py-1.5 text-[12px] font-semibold text-slate-700 transition hover:border-accent hover:text-accent"
             >
               <LogIn className="h-3.5 w-3.5" /> Login
             </button>

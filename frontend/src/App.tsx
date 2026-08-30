@@ -11,8 +11,12 @@ import {
   Bell,
   BellOff,
   BellRing,
+  CandlestickChart,
+  ChevronDown,
   Circle,
   Clock,
+  List,
+  Activity,
   ShieldCheck,
   Trash2,
   X,
@@ -335,6 +339,15 @@ function App() {
   const [selectedSymbol, setSelectedSymbol] =
     useState<SelectedSymbol | null>(null);
 
+  // Mobile tab: 'chart' | 'watchlist' | 'signals'. Desktop ignores this
+  // and shows the full 3-column terminal. Defaults to watchlist.
+  const [mobileTab, setMobileTab] =
+    useState<"chart" | "watchlist" | "signals">("watchlist");
+
+  // Premium mobile symbol picker (bottom sheet) on Chart/Signals tabs.
+  const [mobileSymbolOpen, setMobileSymbolOpen] =
+    useState(false);
+
   const latestSelRef =
     useRef<{
       tf: string;
@@ -415,6 +428,26 @@ function App() {
     }
     subscribeSymbol(selectedSymbol);
   }, [selectedSymbol, allowedSegments]);
+
+  // Auto-load the first watchlist script (or a default) so the chart always
+  // shows candles and a signal without requiring a manual selection.
+  useEffect(() => {
+    if (selectedSymbol) return;
+    const first = filteredCustomSyms[0];
+    if (first) {
+      setSelectedSymbol(first);
+      return;
+    }
+    // No watchlist yet -> default to MCX GOLD so the chart isn't empty.
+    const defaultSym: SelectedSymbol = {
+      exch: "MCX",
+      token: "483079",
+      tsym: "GOLD",
+      label: "GOLD",
+    };
+    setSelectedSymbol(defaultSym);
+    subscribeSymbol(defaultSym);
+  }, [selectedSymbol, filteredCustomSyms]);
 
   const [customLastCloses, setCustomLastCloses] = useState<
     Record<string, number>
@@ -2098,7 +2131,7 @@ function App() {
 
       {(customTickerRows.length > 0 ||
         importantIndicesLive.length > 0) && (
-        <div className="ticker-viewport z-10 shrink-0 border-b border-slate-200/60 bg-white/80 py-1">
+        <div className="ticker-viewport z-10 hidden shrink-0 border-b border-slate-200/60 bg-white/80 py-1 lg:flex">
 
           <div className="ticker-track">
 
@@ -2144,11 +2177,117 @@ function App() {
 
       {/* ================= WORKSPACE ================= */}
 
-      <main className="mx-auto flex w-full max-w-[1800px] flex-1 flex-col gap-3 p-3 lg:min-h-0 lg:flex-row lg:gap-3 lg:p-3">
+      <main className="mx-auto flex w-full max-w-[1800px] flex-1 flex-col gap-3 p-3 pb-20 lg:min-h-0 lg:flex-row lg:gap-3 lg:p-3">
+
+        {/* Mobile premium header (shown on Chart + Signals tabs) */}
+        <div className={`-mt-1 lg:hidden ${mobileTab === "chart" || mobileTab === "signals" ? "block" : "hidden"}`}>
+          <Card className="overflow-hidden border-0 bg-white/80 p-0">
+            {/* Live symbol + price header */}
+            <div className="px-3 pb-2 pt-2.5">
+              {/* Tappable symbol selector */}
+              <button
+                onClick={() => setMobileSymbolOpen(true)}
+                className="flex w-full items-center justify-between rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 transition hover:bg-slate-100"
+              >
+                <div className="flex items-center gap-2">
+                  <span className="flex h-7 w-7 items-center justify-center rounded-full bg-navy text-[11px] font-bold text-white">
+                    {(selectedSymbol?.label ?? selectedSymbol?.tsym ?? "—").charAt(0)}
+                  </span>
+                  <div className="text-left">
+                    <div className="text-[14px] font-bold text-slate-900">
+                      {selectedSymbol ? (selectedSymbol.label ?? selectedSymbol.tsym) : "Select symbol"}
+                    </div>
+                    <div className="text-[10px] font-medium uppercase tracking-wider text-slate-400">
+                      {selectedSymbol ? selectedSymbol.exch : "—"}
+                    </div>
+                  </div>
+                </div>
+                <ChevronDown className="h-4 w-4 text-slate-400" />
+              </button>
+
+              {/* Live price + change */}
+              <div className="mt-2">
+                <div className="flex items-baseline gap-2">
+                  <span className="font-mono text-[26px] font-bold tabular-nums tracking-[-0.02em] text-slate-900">
+                    {fmt(livePrice ?? dayStats?.close)}
+                  </span>
+                  <span className={`font-mono text-[13px] font-semibold tabular-nums ${(() => {
+                    const pc = dayStats?.prevClose ?? null;
+                    const chg = livePrice != null && pc != null ? livePrice - pc : null;
+                    return (chg ?? 0) >= 0 ? "text-emerald-600" : "text-rose-600";
+                  })()}`}>
+                    {(() => {
+                      const pc = dayStats?.prevClose ?? null;
+                      const chg = livePrice != null && pc != null ? livePrice - pc : null;
+                      const pct = chg != null && pc ? (chg / pc) * 100 : null;
+                      return `${chg != null ? `${chg >= 0 ? "+" : ""}${fmt(chg)}` : "—"} ${pct != null ? `(${pct >= 0 ? "+" : ""}${pct.toFixed(2)}%)` : ""}`;
+                    })()}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </Card>
+        </div>
+
+        {/* Mobile symbol picker bottom sheet */}
+        {mobileSymbolOpen && (
+          <div className="fixed inset-0 z-[120] flex flex-col justify-end lg:hidden">
+            <div className="absolute inset-0 bg-slate-900/50 backdrop-blur-sm" onClick={() => setMobileSymbolOpen(false)} />
+            <div className="relative max-h-[70vh] overflow-hidden rounded-t-3xl bg-white shadow-2xl">
+              <div className="mx-auto mt-2 h-1 w-10 rounded-full bg-slate-200" />
+              <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3">
+                <h3 className="text-[15px] font-bold text-slate-900">Select Symbol</h3>
+                <button onClick={() => setMobileSymbolOpen(false)} className="rounded-full p-1.5 text-slate-400 hover:bg-slate-100" aria-label="Close">
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+              <div className="max-h-[55vh] overflow-y-auto">
+                {filteredCustomSyms.length === 0 && (
+                  <div className="px-4 py-10 text-center text-[12px] text-slate-400">
+                    No symbols in watchlist. Add one from the Watchlist tab.
+                  </div>
+                )}
+                <div className="divide-y divide-slate-50">
+                  {filteredCustomSyms.map((sym, i) => {
+                    const lp = (state as any)?.livePrices?.[sym.token]?.price ?? customLastCloses[`${sym.exch}:${sym.token}`] ?? null;
+                    const pc = customPrevCloses[`${sym.exch}:${sym.token}`] ?? dayStats?.prevClose ?? null;
+                    const chg = lp != null && pc != null ? lp - pc : null;
+                    const pct = chg != null && pc ? (chg / pc) * 100 : null;
+                    const up = (chg ?? 0) >= 0;
+                    const isSel = selectedSymbol?.token === sym.token && selectedSymbol?.exch === sym.exch;
+                    const palette = ["bg-amber-500", "bg-slate-500", "bg-slate-800", "bg-indigo-500", "bg-emerald-600"];
+                    return (
+                      <button
+                        key={`${sym.exch}:${sym.token}`}
+                        onClick={() => { setSelectedSymbol(sym); setMobileSymbolOpen(false); }}
+                        className={`flex w-full items-center gap-3 px-4 py-3 text-left transition ${isSel ? "bg-slate-50" : "active:bg-slate-50"}`}
+                      >
+                        <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-[13px] font-bold text-white ${palette[i % palette.length]}`}>
+                          {(sym.label ?? sym.tsym).charAt(0)}
+                        </span>
+                        <span className="min-w-0 flex-1">
+                          <span className="block truncate text-[15px] font-semibold text-slate-900">{sym.label ?? sym.tsym}</span>
+                          <span className="block truncate text-[11px] text-slate-400">{sym.exch} · {sym.token}</span>
+                        </span>
+                        <span className="text-right">
+                          <span className="block font-mono text-[14px] font-bold tabular-nums text-slate-900">{fmt(lp)}</span>
+                          <span className={`block font-mono text-[11px] tabular-nums ${up ? "text-emerald-600" : "text-rose-600"}`}>
+                            {chg != null ? `${chg >= 0 ? "+" : ""}${fmt(chg)}` : "—"}{" "}
+                            {pct != null ? `${pct >= 0 ? "+" : ""}${pct.toFixed(2)}%` : ""}
+                          </span>
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* ============ LEFT: CHART ============ */}
 
-                <aside className="flex w-full shrink-0 flex-col gap-3 lg:w-[300px] lg:min-h-0 order-2 lg:order-1">
+                <aside className={`flex w-full shrink-0 flex-col gap-3 lg:w-[300px] lg:min-h-0 order-3 lg:order-1 ${mobileTab === "signals" ? "flex" : "hidden"} lg:flex`}>
           {/* BULLIONAI STRATEGY */}
 
           <Card className="shrink-0">
@@ -2547,9 +2686,9 @@ function App() {
 
         </aside>
 
-<section className="flex min-w-0 flex-col gap-3 lg:min-h-0 lg:flex-1 order-1 lg:order-2">
+<section className={`flex min-w-0 flex-col gap-3 lg:min-h-0 lg:flex-1 order-2 lg:order-2 max-lg:h-[calc(100dvh-200px)] ${mobileTab === "chart" ? "flex" : "hidden"} lg:flex`}>
 
-          <Card className="flex min-h-[420px] flex-1 flex-col overflow-hidden max-lg:h-[62vh]">
+          <Card className="flex flex-1 flex-col overflow-hidden min-h-[320px] lg:h-auto">
 
             {/* Chart canvas */}
 
@@ -2769,7 +2908,16 @@ function App() {
 
         {/* ============ RIGHT: SIDEBAR ============ */}
 
-        <aside className="flex w-full shrink-0 flex-col gap-2 lg:w-[360px] lg:min-h-0 order-3">
+        <aside className={`flex w-full shrink-0 flex-col gap-2 lg:w-[360px] lg:min-h-0 order-1 lg:order-3 ${mobileTab === "watchlist" ? "flex" : "hidden"} lg:flex`}>
+
+          {/* Add scripts (mobile-only; desktop uses header search) */}
+          <div className="lg:hidden">
+            <Card className="p-2.5">
+              <InstrumentPicker
+                onAdd={(sym: any) => addCustomSym(sym)}
+              />
+            </Card>
+          </div>
 
           {/* MCX SESSION */}
           {/* WATCHLIST */}
@@ -2806,15 +2954,83 @@ function App() {
 
             </CardTitle>
 
+            {/* MOBILE premium TradingView-style list */}
+            <div className="divide-y divide-slate-100 lg:hidden">
+              {filteredCustomSyms.length === 0 && (
+                <div className="px-4 py-10 text-center text-[12px] text-slate-400">
+                  No scripts yet. Add one below.
+                </div>
+              )}
+              {filteredCustomSyms.map((sym, i) => {
+                const lprow =
+                  (state as any)?.livePrices?.[sym.token]?.price ??
+                  customLastCloses[`${sym.exch}:${sym.token}`] ??
+                  null;
+                const pcrow =
+                  customPrevCloses[`${sym.exch}:${sym.token}`] ??
+                  dayStats?.prevClose ??
+                  null;
+                const chgrow = lprow != null && pcrow != null ? lprow - pcrow : null;
+                const pctrow = chgrow != null && pcrow ? (chgrow / pcrow) * 100 : null;
+                const uprow = (chgrow ?? 0) >= 0;
+                const isSel = selectedSymbol?.token === sym.token && selectedSymbol?.exch === sym.exch;
+                const palette = ["bg-amber-500", "bg-slate-500", "bg-slate-800", "bg-indigo-500", "bg-emerald-600"];
+                return (
+                  <div
+                    key={sym.exch + sym.token}
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => setSelectedSymbol(sym)}
+                    className={`flex items-center gap-3 px-4 py-3 transition ${isSel ? "bg-slate-50" : "active:bg-slate-50"}`}
+                  >
+                    <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-[13px] font-bold text-white ${palette[i % palette.length]}`}>
+                      {(sym.label ?? sym.tsym).charAt(0)}
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="flex items-center gap-1 text-[15px] font-semibold text-slate-900">
+                        <span className="truncate">{sym.label ?? sym.tsym}</span>
+                      </span>
+                      <span className="block truncate text-[12px] text-slate-400">
+                        {sym.exch} · {String(sym.token)}
+                      </span>
+                    </span>
+                    <span className="text-right">
+                      <span className={`block font-mono text-[15px] font-bold tabular-nums ${uprow ? "text-slate-900" : "text-slate-900"}`}>
+                        {fmt(lprow)}
+                      </span>
+                      <span className={`block font-mono text-[12px] font-medium tabular-nums ${uprow ? "text-emerald-600" : "text-rose-600"}`}>
+                        {chgrow != null ? `${chgrow >= 0 ? "+" : ""}${fmt(chgrow)}` : "—"}{" "}
+                        {pctrow != null ? `${pctrow >= 0 ? "+" : ""}${pctrow.toFixed(2)}%` : ""}
+                      </span>
+                    </span>
+                    <button
+                      onClick={e => { e.stopPropagation(); removeCustomSym(sym); }}
+                      className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-slate-300 hover:bg-rose-50 hover:text-rose-500"
+                      aria-label="Remove"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
+                );
+              })}
+              <button
+                onClick={() => document.getElementById("mobile-add-symbol")?.scrollIntoView({ behavior: "smooth", block: "center" })}
+                className="flex w-full items-center justify-center gap-1.5 py-3.5 text-[13px] font-bold text-slate-600"
+              >
+                + Add Symbol
+              </button>
+            </div>
 
-            <div className="flex items-center gap-2 border-b border-slate-100 bg-slate-50/70 px-2.5 py-2 text-[9px] font-semibold uppercase tracking-[0.12em] text-slate-400">
+            {/* DESKTOP table (unchanged) */}
+            <div className="hidden lg:block">
+              <div className="flex items-center gap-2 border-b border-slate-100 bg-slate-50/70 px-2.5 py-2 text-[9px] font-semibold uppercase tracking-[0.12em] text-slate-400">
               <span className="w-6 shrink-0" aria-hidden />
               <span className="flex-1">Symbol</span>
               <span className="w-[62px] text-right">LTP</span>
               <span className="w-[48px] text-right">Chg</span>
               <span className="w-[48px] text-right">Chg%</span>
               <span className="hidden w-7 shrink-0 sm:block" aria-hidden />
-            </div>
+              </div>
 
             <div className="p-1">
 
@@ -2938,6 +3154,7 @@ function App() {
                 );
               })}
 </div>
+            </div>
 
           </Card>
 
@@ -3174,6 +3391,40 @@ function App() {
 
 
         </aside>
+
+        {/* Mobile bottom tab bar (TradingView-style compact; hidden on desktop) */}
+        <nav
+          className="fixed bottom-0 left-0 right-0 z-30 border-t border-slate-200/80 bg-white/95 backdrop-blur-xl lg:hidden"
+          aria-label="Mobile terminal tabs"
+        >
+          <div className="mx-auto flex max-w-md items-stretch justify-around py-1">
+          {[
+            { id: "watchlist", label: "Watchlist", icon: List },
+            { id: "chart", label: "Chart", icon: CandlestickChart },
+            { id: "signals", label: "Signals", icon: Activity },
+          ].map(tab => {
+            const Icon = tab.icon;
+            const active = mobileTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setMobileTab(tab.id as any)}
+                className={[
+                  "flex min-w-[70px] flex-1 flex-col items-center justify-center gap-0.5 pb-[max(0.45rem,env(safe-area-inset-bottom))] pt-1.5 text-[10px] font-semibold transition-colors",
+                  active
+                    ? "text-accent"
+                    : "text-slate-400 hover:text-slate-600",
+                ].join(" ")}
+              >
+                <span className={`h-5 w-5 ${active ? "text-accent" : ""}`}>
+                  <Icon className={`h-5 w-5 ${active ? "fill-accent/15" : ""}`} strokeWidth={active ? 2.4 : 2} />
+                </span>
+                {tab.label}
+              </button>
+            );
+          })}
+          </div>
+        </nav>
 
       </main>
 
