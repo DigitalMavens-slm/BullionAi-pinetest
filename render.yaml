@@ -1,5 +1,13 @@
-# Render Blueprint — backend (always-on Node host)
-# Deploy: push to GitHub, add blueprint in Render, it builds + runs this.
+# Render Blueprint — backend (always-on Node host) + PostgreSQL
+# Deploy: push to GitHub, add a Blueprint in Render, it creates everything below.
+databases:
+  - name: bullionai-db
+    databaseName: bullionai
+    user: bullionai
+    plan: free
+    # Render injects DATABASE_URL into the web service automatically.
+    postgresVersion: "16"
+
 services:
   - type: web
     name: bullionai-api
@@ -12,12 +20,28 @@ services:
         value: 8787
       - key: NODE_ENV
         value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: bullionai-db
+          property: connectionString
       - key: SHOONYA_CLIENT_ID
-        sync: false
+        value: FN215549_U
       - key: SHOONYA_SECRET_CODE
         sync: false
       - key: SHOONYA_REDIRECT_URL
         value: https://bullionai.in/
       - key: SHOONYA_EXCHANGE
         value: MCX
+      - key: SHOONYA_GOLD_SYMBOL
+        value: GOLD05OCT26
+      - key: SHOONYA_GOLD_TOKEN
+        value: "483079"
+      - key: SHOONYA_TOKEN
+        value: "483079"
+      - key: SHOONYA_SILVER_SYMBOL
+        value: SILVER04SEP26
+      - key: SHOONYA_SILVER_TOKEN
+        value: "471725"
+      - key: ADMIN_EMAILS
+        value: sheriff.sheikh12@gmail.com
     autoDeploy: true
