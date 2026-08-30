@@ -1213,21 +1213,26 @@ class StrategyEngine {
 
         const tradeVal = String(pick("Trade", "TRADE") || "").trim().toUpperCase();
 
+        // Highest/Lowest are PRICE columns (trailing strategy). The
+        // fixed-target table has no such column, so don't fall back to
+        // "MAX POINTS" (a points value) — keep extremePrice null there.
         if (
             tradeVal === "SELL"
         ) {
 
+            const lowRaw = pick("Lowest", "LOWEST");
             extremePrice =
-                this.toNumber(
-                    pick("Lowest", "LOWEST") ?? pick("MAX POINTS", "Max Points", "MAXPOINTS")
-                );
+                lowRaw != null
+                    ? this.toNumber(lowRaw)
+                    : null;
 
         } else {
 
+            const highRaw = pick("Highest", "HIGHEST");
             extremePrice =
-                this.toNumber(
-                    pick("Highest", "HIGHEST") ?? pick("MAX POINTS", "Max Points", "MAXPOINTS")
-                );
+                highRaw != null
+                    ? this.toNumber(highRaw)
+                    : null;
 
         }
 

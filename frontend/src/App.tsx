@@ -1066,13 +1066,10 @@ function App() {
     async function checkSignals() {
       for (const sym of filteredCustomSyms) {
         const key = `${sym.exch}:${sym.token}`;
-        // MCX signals are always 15m per requirement
-        const tfForSym =
-          String(sym.exch || "")
-            .trim()
-            .toUpperCase() === "MCX"
-            ? "15m"
-            : selectedTimeframe;
+        // Use the timeframe the user is currently viewing so watchlist
+        // alerts match the chart/panel. (MCX uses the fixed-target
+        // strategy on 15m and the trailing strategy on other timeframes.)
+        const tfForSym = selectedTimeframe;
         try {
           const res =
             await fetchStrategy(
@@ -1221,6 +1218,14 @@ function App() {
       .trim()
       .toUpperCase() === "MCX";
 
+  /* Which info-panel layout: backend reports it via strategy.panel.
+     Fallback to the MCX+15m rule when the panel field is absent. */
+  const usesFixedTargets =
+    (viewStrategy as any)?.panel === "fixed-target" ||
+    ((viewStrategy as any)?.panel == null &&
+      isMCXSelected &&
+      selectedTimeframe === "15m");
+
 
   /* Last 5 signals, newest first —
      straight from the Pine engine's
@@ -1268,37 +1273,27 @@ function App() {
 
 
   /* Best P/L — market extreme (Pine maxHigh/maxLow) */
-
+  // The backend already returns the Pine-computed best P/L. Use it as
+  // authoritative. Only recompute from the live tick as a fallback for
+  // the trailing strategy (where extremePrice is a real price). For the
+  // fixed-target strategy, extremePrice is MAX POINTS (a points value),
+  // so never treat it as a price.
   const bestPL =
-    !isTradeOpen
-
-      ? (strategy?.bestPL ?? null)
-
-      : entryPrice === null
-
-        ? (strategy?.bestPL ?? null)
-
-        : signal === "SELL"
-
+    strategy?.bestPL != null &&
+    strategy.bestPL !== 0
+      ? strategy.bestPL
+      : !usesFixedTargets && isTradeOpen && entryPrice !== null
+        ? signal === "SELL"
           ? entryPrice -
-
             Math.min(
-
-              strategy?.extremePrice ??
-                Infinity,
-
+              strategy?.extremePrice ?? Infinity,
               livePrice ?? Infinity
-
             )
-
           : Math.max(
-
-              strategy?.extremePrice ??
-                -Infinity,
-
+              strategy?.extremePrice ?? -Infinity,
               livePrice ?? -Infinity
-
-            ) - entryPrice;
+            ) - entryPrice
+        : (strategy?.bestPL ?? null);
 
 
   /* Timeline */
@@ -2402,7 +2397,7 @@ function App() {
 
               {/* ============ STRATEGY TABLE ============ */}
 
-              {isMCXSelected ? (
+              {usesFixedTargets ? (
                 <table className="mt-2 w-full border-collapse text-[12px]">
                   <tbody>
                     {[
@@ -2831,9 +2826,10 @@ function App() {
               {selectedSymbol &&
                 String(
                   selectedSymbol.exch || ""
-                ).toUpperCase() === "MCX" && (
+                ).toUpperCase() === "MCX" &&
+                selectedTimeframe === "15m" && (
                   <span className="mr-2 hidden shrink-0 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-700 sm:inline">
-                    MCX signals: 15m only
+                    MCX · Fixed targets
                   </span>
                 )}
 
@@ -2909,6 +2905,15 @@ function App() {
         {/* ============ RIGHT: SIDEBAR ============ */}
 
         <aside className={`flex w-full shrink-0 flex-col gap-2 lg:w-[360px] lg:min-h-0 order-1 lg:order-3 ${mobileTab === "watchlist" ? "flex" : "hidden"} lg:flex`}>
+
+          {/* Mobile-only: add a script to the watchlist */}
+          <div className="lg:hidden">
+            <Card className="p-2.5">
+              <InstrumentPicker
+                onAdd={(sym: any) => addCustomSym(sym)}
+              />
+            </Card>
+          </div>
 
           {/* MCX SESSION */}
           {/* WATCHLIST */}

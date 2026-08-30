@@ -2158,16 +2158,16 @@ const allowedTimeframes =
         instOverride
     ) {
 
-        // MCX signals are always 15m — ignore UI timeframe for MCX instruments
+        // MCX uses the fixed-target strategy ONLY on 15m; on other
+        // timeframes (or always for NSE/BSE) it uses the trailing/open
+        // strategy. The requested timeframe is honored for every segment.
         const _isMCX =
             instOverride && instOverride.exchange
                 ? String(instOverride.exchange).toUpperCase() ===
                   "MCX"
                 : true; // legacy keys (gold/silver/...) are MCX
 
-        const effectiveTimeframeKey = _isMCX
-            ? "15m"
-            : timeframeKey;
+        const effectiveTimeframeKey = timeframeKey;
 
         const ensured =
             await this.ensureCandles(
@@ -2269,19 +2269,13 @@ const allowedTimeframes =
 
 
         const strategyFileForInst =
-            exchUpper === "MCX"
+            exchUpper === "MCX" && tf.key === "15m"
                 ? "BullionAI-fixedtgt.pine"
                 : "BullionAI.pine";
 
-        if (_isMCX && timeframeKey !== "15m") {
-            console.log(
-                `[strategy-routing] MCX ${inst.token} requested ${timeframeKey} → forced to 15m fixedtgt (old pine NEVER used for MCX)`
-            );
-        } else {
-            console.log(
-                `[strategy] ${exchUpper} ${inst.token} ${tf.key} -> ${strategyFileForInst}`
-            );
-        }
+        console.log(
+            `[strategy] ${exchUpper} ${inst.token} ${tf.key} -> ${strategyFileForInst}`
+        );
 
         const run =
 
@@ -2311,6 +2305,11 @@ const allowedTimeframes =
                     engine.run();
 
 
+                const panel =
+                    strategyFileForInst === "BullionAI-fixedtgt.pine"
+                        ? "fixed-target"
+                        : "trailing";
+
                 const payload = {
                     ok: true,
 
@@ -2334,9 +2333,10 @@ const allowedTimeframes =
                         ensured.candles
                             .length,
 
-                    strategy:
-
-                        output.state,
+                    strategy: {
+                        ...output.state,
+                        panel,
+                    },
                 };
 
 

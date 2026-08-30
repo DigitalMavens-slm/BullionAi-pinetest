@@ -68,6 +68,7 @@ export type StrategyState = {
   lastCandleTime?: number | null;
   signalHistory?: SignalEvent[] | null;
   trailHistory?: TrailPoint[] | null;
+  panel?: "fixed-target" | "trailing" | null;
 };
 
 export type MarketState = {
