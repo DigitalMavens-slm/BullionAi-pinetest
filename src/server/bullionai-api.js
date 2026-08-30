@@ -100,7 +100,7 @@ class BullionAIApi {
             timeframe;
 
         this.port =
-            Number(port) || 8787;
+            Number(process.env.PORT) || Number(port) || 8787;
 
         this.coordinator =
             new BullionAILiveCoordinator({
@@ -3690,7 +3690,8 @@ const allowedTimeframes =
             );
 
             return;
-        }        // -----------------------------------------------------
+        }
+        // -----------------------------------------------------
         // SHOONYA LOGIN (redirect URL via browser/HTTP)
         //
         // Fallback for hosts where the interactive
