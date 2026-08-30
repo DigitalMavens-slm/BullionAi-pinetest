@@ -1,4 +1,22 @@
 const TIMEFRAMES = Object.freeze({
+    "1m": {
+        label: "1 Minute",
+        interval: "1",
+        seconds: 1 * 60,
+    },
+
+    "3m": {
+        label: "3 Minutes",
+        interval: "3",
+        seconds: 3 * 60,
+    },
+
+    "5m": {
+        label: "5 Minutes",
+        interval: "5",
+        seconds: 5 * 60,
+    },
+
     "15m": {
         label: "15 Minutes",
         interval: "15",

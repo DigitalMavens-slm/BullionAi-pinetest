@@ -1,0 +1,17 @@
+# Normalize line endings; .pine and .json stay LF for cross-platform determinism
+* text=auto
+
+*.js text eol=lf
+*.json text eol=lf
+*.pine text eol=lf
+*.md text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.pdf binary
+*.zip binary

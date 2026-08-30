@@ -23,6 +23,8 @@ class CandleAggregator {
         instruments,
         timeframes,
         storage,
+        onCandleUpdate,
+        onCandleClose,
     }) {
 
         /*
@@ -52,6 +54,16 @@ class CandleAggregator {
 
         this.storage =
             storage;
+
+        /* Optional incremental event hooks (used by SSE phase 2) */
+        this.onCandleUpdate =
+            typeof onCandleUpdate === "function"
+                ? onCandleUpdate
+                : () => {};
+        this.onCandleClose =
+            typeof onCandleClose === "function"
+                ? onCandleClose
+                : () => {};
 
 
         /* forming[token|tf] = candle */
@@ -282,7 +294,6 @@ class CandleAggregator {
                 forming.time
 
         ) {
-
             /* Roll: persist completed */
 
             if (
@@ -302,6 +313,16 @@ class CandleAggregator {
 
                     this.stats
                         .persisted += 1;
+
+                    // Incremental event: candle closed.
+                    try {
+                        this.onCandleClose({
+                            exchange,
+                            token,
+                            tfKey,
+                            candle: { ...forming },
+                        });
+                    } catch {}
 
                 } catch (err) {
 
@@ -335,6 +356,7 @@ class CandleAggregator {
             this.forming.set(
                 key,
                 fresh
+
             );
 
 
@@ -369,6 +391,16 @@ class CandleAggregator {
         forming.volume += volDelta;
 
         this.stats.updates += 1;
+
+        // Incremental event: current (developing) candle changed.
+        try {
+            this.onCandleUpdate({
+                exchange,
+                token,
+                tfKey,
+                candle: { ...forming },
+            });
+        } catch {}
 
     }
 

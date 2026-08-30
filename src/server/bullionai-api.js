@@ -9,8 +9,26 @@ const {
 } = require("../runner/bullionai-live-coordinator");
 
 const {
+    getMarketStatus,
+} = require("../market/segment-config");
+
+const {
+    fetchYahooHistory,
+    toYahooSymbol,
+} = require("../market/yahoo-history");
+
+const {
     StrategyEngine,
 } = require("../strategy/strategy-engine");
+
+const {
+    TradeEngine,
+} = require("../strategy/trade-engine");
+
+const {
+    latestSignal,
+    generateSignalSeries,
+} = require("../strategy/signal-engine");
 
 const {
     getTimeframe,
@@ -44,6 +62,19 @@ const {
 const {
     isShoonyaAuthFailure,
 } = require("../market/market-data-service");
+
+const {
+    getRolloverDate,
+    shouldRollover,
+    getStitchedCandles,
+    stitchWithBackAdjust,
+    getCandlesWithPreviousFallback,
+} = require("../market/rollover-manager");
+
+const {
+    getRegistry,
+    getRawExchangeRows,
+} = require("../market/symbol-master");
 
 const GOLD_STORE = new CandleDataManager({
     dataDirectory: "./data",
@@ -101,6 +132,19 @@ class BullionAIApi {
         this.strategyInflight =
             new Map();
 
+        /*
+         * Phase 4: JS-native signal + trade engines (multi-segment,
+         * per exchange:symbol:timeframe). These are the authoritative
+         * source for the segment-aware information centre.
+         */
+
+        this.tradeEngine =
+            new TradeEngine();
+
+        // instrumentKey -> { exchange, symbol, token, timeframe, signal, lastCandleTime }
+        this.jsSignals =
+            new Map();
+
         this.sseClients =
             new Set();
 
@@ -126,6 +170,9 @@ class BullionAIApi {
          */
 
         const aggTfs = [
+            "1m",
+            "3m",
+            "5m",
             "15m",
             "30m",
             "45m",
@@ -152,10 +199,26 @@ class BullionAIApi {
                 token: "471725",
             });
 
-        const storeFor = token =>
-            String(token) === "471725"
-                ? silverStore
-                : goldStore;
+        const storeFor = (exchange, token) => {
+            const exch = String(exchange || "MCX").toUpperCase();
+            const t = String(token);
+            // Dedicated stores for the default gold/silver datasets.
+            if (t === "483079") return goldStore;
+            if (t === "471725") return silverStore;
+            // Dynamic per-symbol store (also used by getStore()).
+            const key = `${exch}_${t}`;
+            if (!this.dynStores.has(key)) {
+                this.dynStores.set(
+                    key,
+                    new CandleDataManager({
+                        dataDirectory: "./data",
+                        exchange: exch,
+                        token: t,
+                    })
+                );
+            }
+            return this.dynStores.get(key);
+        };
 
         /*
          * No default instruments: every script
@@ -178,12 +241,32 @@ class BullionAIApi {
                         tfKey,
                         candle
                     ) =>
-                        storeFor(token).upsertCandle(
+                        storeFor(
+                            exchange,
+                            token
+                        ).upsertCandle(
                             tfKey,
                             candle
                         ),
 
                 },
+
+                // Incremental candle events -> SSE (phase 2)
+                onCandleUpdate: (
+                    ev
+                ) =>
+                    this.broadcastEvent(
+                        "candle_update",
+                        this.segmentEvent("candle", ev)
+                    ),
+
+                onCandleClose: (
+                    ev
+                ) =>
+                    this.broadcastEvent(
+                        "candle_close",
+                        this.segmentEvent("candle", ev)
+                    ),
 
             });
 
@@ -212,10 +295,14 @@ class BullionAIApi {
 
             feed.on(
                 "tick",
-                tick =>
+                tick => {
                     this.aggregator.onTick(
                         tick
-                    )
+                    );
+                    this.emitTickEvent(
+                        tick
+                    );
+                }
             );
 
         }
@@ -269,10 +356,10 @@ class BullionAIApi {
                     "*",
 
                 "Access-Control-Allow-Methods":
-                    "GET, POST, OPTIONS",
+                    "GET, POST, PUT, DELETE, OPTIONS",
 
                 "Access-Control-Allow-Headers":
-                    "Content-Type, Authorization",
+                    "Content-Type, Authorization, X-Admin-Key, X-Admin-Token",
             }
         );
 
@@ -342,6 +429,47 @@ class BullionAIApi {
                 this.broadcastState(
                     state
                 );
+
+                // Incremental strategy/signal/trade event so the frontend
+                // updates the info centre without waiting for a full state.
+                const st =
+                    state?.strategy ??
+                    null;
+                this.broadcastEvent(
+                    "strategy",
+                    this.segmentEvent(
+                        "strategy",
+                        {
+                            signal:
+                                st?.signal ??
+                                null,
+                            status:
+                                st?.status ??
+                                null,
+                            entryPrice:
+                                st?.entryPrice ??
+                                null,
+                            trailSL:
+                                st?.trailSL ??
+                                null,
+                            currentPL:
+                                st?.currentPL ??
+                                null,
+                            bestPL:
+                                st?.bestPL ??
+                                null,
+                            realizedPL:
+                                st?.realizedPL ??
+                                null,
+                            entryTime:
+                                st?.entryTime ??
+                                null,
+                            exitTime:
+                                st?.exitTime ??
+                                null,
+                        }
+                    )
+                );
             }
         );
 
@@ -383,6 +511,19 @@ class BullionAIApi {
                             true,
                     }
                 );
+
+                this.broadcastEvent(
+                    "connection_status",
+                    this.segmentEvent(
+                        "connection_status",
+                        {
+                            connected: true,
+                            status: "connected",
+                            message:
+                                "Shoonya market feed connected",
+                        }
+                    )
+                );
             }
         );
 
@@ -401,6 +542,19 @@ class BullionAIApi {
                             reason ??
                             null,
                     }
+                );
+
+                this.broadcastEvent(
+                    "connection_status",
+                    this.segmentEvent(
+                        "connection_status",
+                        {
+                            connected: false,
+                            status: "disconnected",
+                            message:
+                                "Shoonya market feed disconnected",
+                        }
+                    )
                 );
             }
         );
@@ -431,6 +585,20 @@ class BullionAIApi {
         );
 
         this.startPeriodicReconcile();
+
+        // Wire all MCX current contracts into the live candle builder
+        // so they accumulate history autonomously during market hours.
+        this.bootstrapMCXContracts().catch(() => {});
+
+        // Detect and execute any pending contract rollover at boot.
+        this.rolloverAllActive("startup").catch(() => {});
+
+        // Prime the JS segment snapshot so /api/state + event stream
+        // carry segment signal/trade data immediately.
+        this.refreshSegmentSnapshot().catch(() => {});
+
+        // Attempt an immediate missing-history backfill pass.
+        this.retryMissingBackfill("startup").catch(() => {});
     }
 
 
@@ -696,9 +864,24 @@ async reconcileAll(label) {
                 this.getMarketService()?.isAuthenticated?.() ?? false;
             if (authed) {
                 this.reconcileAll("periodic").catch(() => {});
+                // Runtime contract rollover check for contract-based segments.
+                this.rolloverAllActive("periodic").catch(() => {});
+                // Recompute the JS signal/trade segment snapshot.
+                this.refreshSegmentSnapshot().catch(() => {});
             }
         }, 5 * 60 * 1000);
         this.periodicTimer.unref?.();
+
+        // Aggressive missing-history retry: re-attempt the Shoonya backfill
+        // for any script with no data yet, so it populates as soon as
+        // Shoonya's historical endpoint unblocks.
+        if (!this.missingRetryTimer) {
+            this.missingRetryTimer = setInterval(() => {
+                const result = this.retryMissingBackfill("retry").catch(() => ({ attempted: 0, filled: 0 }));
+                if (result) result.then?.(() => {});
+            }, 2 * 60 * 1000);
+            this.missingRetryTimer.unref?.();
+        }
     }
 
 // =========================================================
@@ -938,15 +1121,349 @@ const allowedTimeframes =
 
 
     // =========================================================
-    // ENSURE CANDLES (REAL DATA, FETCHED ON DEMAND)
+    // LIVE-FIRST SUBSCRIPTION
     //
-    // Returns the dataset for an
+    // Guarantees any requested script is subscribed to the
+    // Shoonya WebSocket feed and routed into the candle
+    // aggregator. Ticks then build OHLCV buckets and completed
+    // candles persist to disk — a reliable source that does not
+    // depend on the (sometimes unavailable) historical endpoint.
+    // =========================================================
+
+    ensureLiveSubscription(inst) {
+        const exch =
+            String(inst.exchange || "MCX").toUpperCase();
+        const token = String(inst.token);
+
+        if (!token) return;
+
+        const key = `${exch}_${token}`;
+
+        // Track for background reconciliation of live-formed data.
+        if (!this.activeInstruments.has(key)) {
+            this.activeInstruments.set(key, { exchange: exch, token });
+        }
+
+        // Route ticks into the candle aggregator for every TF.
+        try {
+            this.aggregator.addInstrument({
+                key: inst.key || inst.symbol || token,
+                token,
+                exchange: exch,
+            });
+        } catch {
+            // already registered is fine
+        }
+
+        // Subscribe the token on the live WebSocket feed.
+        const live = this.coordinator?.liveMarket;
+        if (live?.subscribeTokens) {
+            live.subscribeTokens([{ exch, token }]);
+        }
+    }
+
+    // =========================================================
+    // LIVE ACCUMULATION BOOTSTRAP
+    //
+    // Subscribes every MCX current contract to the live feed +
+    // aggregator so their candle datasets build automatically from
+    // ticks during market hours — even for symbols Shoonya's
+    // historical endpoint won't backfill. Also registers them for
+    // periodic reconciliation.
+    // =========================================================
+
+    async bootstrapMCXContracts() {
+        try {
+            const registry =
+                await getRegistry("MCX").catch(() => []);
+            let wired = 0;
+            for (const row of registry) {
+                if (!row?.token) continue;
+                this.ensureLiveSubscription({
+                    key: row.symbol || row.tradingSymbol || row.token,
+                    symbol: row.symbol || row.tradingSymbol,
+                    name: row.name || row.tradingSymbol,
+                    token: row.token,
+                    exchange: "MCX",
+                });
+                wired++;
+            }
+            console.log(
+                `[boot] wired ${wired} MCX contracts into live candle build`
+            );
+            return wired;
+        } catch (error) {
+            console.error(
+                "[boot] MCX contract bootstrap failed:",
+                error?.message || error
+            );
+            return 0;
+        }
+    }
+
+    // =========================================================
+    // RUNTIME CONTRACT ROLLOVER
+    //
+    // For contract-based segments (MCX derivatives), periodically
+    // checks whether the currently subscribed contract should roll
+    // to the next expiry. On rollover:
+    //
+    //   OLD CONTRACT -> STOP SUBSCRIPTION
+    //                -> RESOLVE NEW CONTRACT
+    //                -> LOAD/CONTINUE HISTORY
+    //                -> START NEW WEBSOCKET SUBSCRIPTION
+    //                -> CONTINUE SIGNAL ENGINE
+    //                -> EMIT contract_change
+    //
+    // Never mixes two contracts into one live series; the old token
+    // is unsubscribed and removed from the aggregator before the new
+    // one is added.
+    // =========================================================
+
+    async handleRolloverForInstrument(exchange, token) {
+        const exch = String(exchange || "MCX").toUpperCase();
+        if (!token) return { rolled: false };
+
+        // Only contract-based segments roll (MCX futures etc.).
+        const live = this.coordinator?.liveMarket;
+        const rows = await getRegistry(exch).catch(() => []);
+        const cur = rows.find(r => String(r.token) === String(token));
+        if (!cur || !cur.expiry) return { rolled: false };
+
+        const decision = await shouldRollover({
+            exchange: exch,
+            token,
+            getRegistry,
+            market: this.coordinator?.market,
+        }).catch(() => ({ roll: false }));
+
+        if (!decision?.roll || !decision.next) {
+            return { rolled: false };
+        }
+
+        const next = decision.next;
+        const newKey = `${exch}_${next.token}`;
+        const oldKey = `${exch}_${token}`;
+
+        console.log(
+            `[CONTRACT] ${exch} ${cur.tradingSymbol || cur.symbol} (${token}) -> ` +
+                `rolling to ${next.tradingSymbol || next.symbol} (${next.token}) ` +
+                `[${decision.reason}]`
+        );
+
+        // 1. Stop old subscription.
+        if (live?.unsubscribeTokens) {
+            live.unsubscribeTokens([{ exch, token: String(token) }]);
+        }
+        try {
+            this.aggregator.removeInstrument(exch, token);
+        } catch {}
+        this.activeInstruments.delete(oldKey);
+
+        // Clear any cached strategy/history for the OLD token (per timeframe).
+        const oldPrefix = `${exch}_${token}`;
+        for (const k of [...this.strategyCache.keys()]) {
+            if (String(k).startsWith(oldPrefix)) this.strategyCache.delete(k);
+        }
+        for (const k of [...(this.strategyInflight?.keys?.() || [])]) {
+            if (String(k).startsWith(oldPrefix)) this.strategyInflight.delete(k);
+        }
+
+        // 2. Resolve + subscribe new contract.
+        this.ensureLiveSubscription({
+            key: next.symbol || next.tradingSymbol || next.token,
+            symbol: next.symbol || next.tradingSymbol,
+            name: next.name || next.tradingSymbol,
+            token: next.token,
+            exchange: exch,
+        });
+
+        // 3. Emit contract_change so the frontend swaps to the new token.
+        this.emitSegmentEvent("contract_change", {
+            exchange: exch,
+            prevToken: String(token),
+            prevSymbol: cur.tradingSymbol || cur.symbol,
+            nextToken: String(next.token),
+            nextSymbol: next.tradingSymbol || next.symbol,
+            nextExpiry: next.expiry ?? null,
+            reason: decision.reason,
+        });
+
+        return {
+            rolled: true,
+            exchange: exch,
+            from: { token: String(token), symbol: cur.tradingSymbol || cur.symbol },
+            to: { token: String(next.token), symbol: next.tradingSymbol || next.symbol },
+            reason: decision.reason,
+        };
+    }
+
+    // Iterate all active instruments and roll any expired contract.
+    async rolloverAllActive(label = "periodic") {
+        const actives = [...(this.activeInstruments?.values() || [])];
+        let rolled = 0;
+        for (const inst of actives) {
+            if (!inst?.token) continue;
+            const result = await this.handleRolloverForInstrument(
+                inst.exchange || "MCX",
+                inst.token
+            ).catch(() => ({ rolled: false }));
+            if (result?.rolled) rolled++;
+            await new Promise(r => setTimeout(r, 200));
+        }
+        if (rolled) {
+            console.log(`[CONTRACT:${label}] rolled ${rolled} contract(s)`);
+        }
+        return rolled;
+    }
+
+    // =========================================================
+    // MISSING-HISTORY RETRY (scheduled)
+    //
+    // Periodically re-attempts the Shoonya historical backfill for
+    // any active instrument that still has no cached 15m dataset.
+    // As soon as Shoonya's TPSeries endpoint becomes available
+    // again, the script populates automatically — no manual action.
+    // =========================================================
+
+    hasDataset(exchange, token, tfKey = "15m") {
+        const file = path.resolve(
+            process.cwd(),
+            "data",
+            `${String(exchange || "MCX").toUpperCase()}_${token}_${String(tfKey).toLowerCase()}.json`
+        );
+        if (!fs.existsSync(file)) return false;
+        try {
+            const parsed = JSON.parse(fs.readFileSync(file, "utf8"));
+            return Array.isArray(parsed) && parsed.length > 0;
+        } catch {
+            return false;
+        }
+    }
+
+    async retryMissingBackfill(label = "periodic") {
+        const authed =
+            this.getMarketService()?.isAuthenticated?.() ?? false;
+        // Only attempt when we have a live session (Shoonya may still
+        // reject TPSeries, but we keep trying without hammering).
+        if (!authed) return { attempted: 0, filled: 0, skipped: "no-session" };
+
+        const actives = [...(this.activeInstruments?.values() || [])];
+        let attempted = 0;
+        let filled = 0;
+
+        for (const inst of actives) {
+            if (!inst?.token) continue;
+            const exch = String(inst.exchange || "MCX").toUpperCase();
+            if (this.hasDataset(exch, inst.token, "15m")) continue;
+
+            attempted++;
+            try {
+                const key = `${exch}_${inst.token}_15m`;
+                const ensured = await this.ensureCandles(key, "15m", {
+                    key: inst.symbol || inst.token,
+                    symbol: inst.symbol || inst.tradingSymbol || inst.token,
+                    name: inst.name || inst.symbol || inst.token,
+                    token: inst.token,
+                    exchange: exch,
+                });
+                if ((ensured.candles || []).length > 0) {
+                    filled++;
+                    console.log(
+                        `[BACKFILL:${label}] ${exch}:${inst.token} populated (${ensured.candles.length} candles)`
+                    );
+                    this.broadcastEvent(
+                        "contract_change",
+                        this.segmentEvent("contract_change", {
+                            exchange: exch,
+                            token: String(inst.token),
+                            symbol: inst.symbol || inst.token,
+                            note: "history-available",
+                        })
+                    );
+                }
+            } catch {
+                // TPSeries still unavailable — retry next cycle.
+            }
+            await new Promise(r => setTimeout(r, 1000));
+        }
+
+        return { attempted, filled };
+    }
+
+    // =========================================================
+    // INSTRUMENT+TF DATASTORE
+    //
+    // Ensures a candle dataset exists for an
     // instrument+timeframe. When the
     // file is missing or empty AND a
     // Shoonya session exists, real
     // candles are fetched once and
     // persisted — no dummy data.
     // =========================================================
+
+    // Yahoo Finance historical fallback for NSE/BSE. Called when
+    // Shoonya's TPSeries returns nothing for an equity/index. Fetches
+    // real OHLCV and persists to the same per-(exchange,token,tf) file.
+    async tryYahooFallback({ exchange, token, symbol, tsym, tf, filePath }) {
+        const exch = String(exchange || "MCX").toUpperCase();
+        if (!["NSE", "BSE"].includes(exch)) return [];
+
+        // Map interval: Yahoo accepts minute buckets like "1m","3m","5m","15m","30m","60m",
+        // and "1d" for daily. We only fall back for minute timeframes.
+        const minute = Number.isNaN(Number(tf?.interval))
+            ? null
+            : Number(tf?.interval);
+        if (minute == null) return [];
+
+        const yahooInterval =
+            minute >= 60 ? "60m" : `${minute}m`;
+
+        // Yahoo caps intraday history (~60 days for 15m). Use 1mo for
+        // sub-hour, 3mo for hourly; only daily intervals can go longer.
+        const range =
+            minute >= 60 ? "3mo" : "1mo";
+
+        let result;
+        try {
+            result = await fetchYahooHistory({
+                exchange: exch,
+                token,
+                symbol,
+                tsym,
+                interval: yahooInterval,
+                range,
+            });
+        } catch (error) {
+            console.error(
+                `[yahoo] ${exch}:${symbol} fetch failed:`,
+                error?.message || error
+            );
+            return [];
+        }
+
+        if (!result?.ok || !result.candles?.length) {
+            return [];
+        }
+
+        try {
+            fs.writeFileSync(
+                filePath,
+                JSON.stringify(result.candles, null, 2),
+                "utf8"
+            );
+            console.log(
+                `[yahoo] ${exch}:${symbol} backfilled ${result.candles.length} candles (${result.symbol})`
+            );
+        } catch (error) {
+            console.error(
+                `[yahoo] persist failed ${filePath}:`,
+                error?.message || error
+            );
+        }
+
+        return result.candles;
+    }
 
     async ensureCandles(
         instrumentKey,
@@ -985,6 +1502,9 @@ const allowedTimeframes =
 
 
         let candles = [];
+        // Track whether the current contract had no candles before the
+        // previous-contract fallback, so we know to persist the fallback.
+        let hadNoCandles = true;
 
 
         if (
@@ -1011,6 +1531,8 @@ const allowedTimeframes =
                     parsed.length >
                         0
                 ) {
+
+                    hadNoCandles = false;
 
                     /*
                      * Normalize on read:
@@ -1072,6 +1594,80 @@ const allowedTimeframes =
 
             }
 
+        }
+
+        // Rollover — stitch current + next with back-adjust (audit-safe, in-memory only)
+        // If the CURRENT contract has no cached data yet, fall back to the
+        // PREVIOUS contract's dataset so the chart + signal engine still render
+        // (Shoonya's historical endpoint often cannot backfill a fresh contract).
+        try {
+            const registry =
+                await getRegistry(exchange).catch(
+                    () => []
+                );
+            let stitched;
+            if (candles.length === 0 && registry.length) {
+                // Pass ALL rows (incl. expired) so the previous contract can
+                // be found even though getRegistry() only returns current ones.
+                const allRows =
+                    await getRawExchangeRows(exchange).catch(
+                        () => registry
+                    );
+                stitched = getCandlesWithPreviousFallback({
+                    exchange,
+                    token: inst.token,
+                    tfKey: tf.key,
+                    getRegistryRows: allRows,
+                });
+                if (stitched.length) {
+                    console.log(
+                        `[rollover] ${exchange}_${inst.token}_${tf.key} empty -> using previous contract (${stitched.length} candles)`
+                    );
+                }
+            } else {
+                stitched = getStitchedCandles({
+                    exchange,
+                    token: inst.token,
+                    tfKey: tf.key,
+                    getRegistryRows: registry,
+                });
+            }
+            if (
+                stitched.length > candles.length
+            ) {
+                console.log(
+                    `[rollover] ${exchange}_${inst.token}_${tf.key} stitched ${candles.length} -> ${stitched.length} (back-adjusted)`
+                );
+                candles = stitched;
+            }
+        } catch {}
+
+        // Persist previous-contract fallback data so the strategy engine
+        // (which reads the current token's file directly) still gets candles
+        // even though Shoonya's historical endpoint can't backfill it.
+        if (
+            hadNoCandles &&
+            candles.length > 0
+        ) {
+            try {
+                fs.writeFileSync(
+                    filePath,
+                    JSON.stringify(
+                        candles,
+                        null,
+                        2
+                    ),
+                    "utf8"
+                );
+                console.log(
+                    `[ensure] persisted previous-contract fallback -> ${fileName} (${candles.length} candles)`
+                );
+            } catch (error) {
+                console.error(
+                    "[ensure] failed to persist fallback:",
+                    error?.message || error
+                );
+            }
         }
 
 
@@ -1313,6 +1909,19 @@ const allowedTimeframes =
                         error?.message || error
                     );
                 }
+
+                // Yahoo Finance fallback for NSE/BSE when Shoonya returns nothing.
+                if (candles.length === 0) {
+                    const yah = await this.tryYahooFallback({
+                        exchange: inst.exchange || "MCX",
+                        token: inst.token,
+                        symbol: inst.symbol,
+                        tsym: inst.tradingSymbol || inst.symbol,
+                        tf,
+                        filePath,
+                    });
+                    if (yah.length) candles = yah;
+                }
             }
 
             return {
@@ -1506,6 +2115,19 @@ const allowedTimeframes =
 
         }
 
+        // Yahoo Finance fallback for NSE/BSE when Shoonya returned nothing.
+        if (candles.length === 0) {
+            const yah = await this.tryYahooFallback({
+                exchange: inst.exchange || "MCX",
+                token: inst.token,
+                symbol: inst.symbol,
+                tsym: inst.tradingSymbol || inst.symbol,
+                tf,
+                filePath,
+            });
+            if (yah.length) candles = yah;
+        }
+
 
         return {
             inst,
@@ -1536,15 +2158,36 @@ const allowedTimeframes =
         instOverride
     ) {
 
+        // MCX signals are always 15m — ignore UI timeframe for MCX instruments
+        const _isMCX =
+            instOverride && instOverride.exchange
+                ? String(instOverride.exchange).toUpperCase() ===
+                  "MCX"
+                : true; // legacy keys (gold/silver/...) are MCX
+
+        const effectiveTimeframeKey = _isMCX
+            ? "15m"
+            : timeframeKey;
+
         const ensured =
             await this.ensureCandles(
                 instrumentKey,
-                timeframeKey,
+                effectiveTimeframeKey,
                 instOverride
             );
 
         const { inst, tf } =
             ensured;
+
+        // Pre-compute exchange for cache key (needed before strategy routing)
+        const exchUpper = String(
+            ensured.exchange ||
+                inst.exchange ||
+                instOverride?.exchange ||
+                "MCX"
+        )
+            .trim()
+            .toUpperCase();
 
 
         if (
@@ -1586,7 +2229,7 @@ const allowedTimeframes =
 
 
         const cacheKey =
-            `${inst.token}_${tf.key}`;
+            `${exchUpper}_${inst.token}_${tf.key}`;
 
 
         const cached =
@@ -1625,6 +2268,21 @@ const allowedTimeframes =
         }
 
 
+        const strategyFileForInst =
+            exchUpper === "MCX"
+                ? "BullionAI-fixedtgt.pine"
+                : "BullionAI.pine";
+
+        if (_isMCX && timeframeKey !== "15m") {
+            console.log(
+                `[strategy-routing] MCX ${inst.token} requested ${timeframeKey} → forced to 15m fixedtgt (old pine NEVER used for MCX)`
+            );
+        } else {
+            console.log(
+                `[strategy] ${exchUpper} ${inst.token} ${tf.key} -> ${strategyFileForInst}`
+            );
+        }
+
         const run =
 
             (async () => {
@@ -1634,7 +2292,7 @@ const allowedTimeframes =
                         {
 
                             strategyFile:
-                                "BullionAI.pine",
+                                strategyFileForInst,
 
                             candlesFile:
                                 path.relative(
@@ -1667,6 +2325,9 @@ const allowedTimeframes =
 
                     timeframe:
                         tf.key,
+
+                    strategyFile:
+                        strategyFileForInst,
 
                     count:
 
@@ -2267,6 +2928,121 @@ const allowedTimeframes =
 
 
     // =========================================================
+    // JS SIGNAL + TRADE ENGINES (phase 4)
+    //
+    // For every active instrument, compute the latest candle-driven
+    // signal on candle close and feed it into the multi-segment
+    // trade engine. Returns a flat per-key snapshot for the frontend
+    // information centre. The JS engines are the authoritative,
+    // exchange-agnostic source (no frontend signal logic).
+    // =========================================================
+
+    async analyzeSegmentForInstrument(inst, timeframeKey) {
+        const exch = String(inst.exchange || "MCX").toUpperCase();
+        const token = String(inst.token);
+        const symbol = String(inst.symbol || inst.tradingSymbol || token);
+        const tf = getTimeframe(timeframeKey);
+        const key = `${exch}_${token}_${tf.key}`;
+
+        const ensured = await this.ensureCandles(key, tf.key, {
+            key: symbol || token,
+            symbol,
+            name: inst.name || symbol,
+            token,
+            exchange: exch,
+        }).catch(() => ({ candles: [] }));
+
+        const candles = ensured.candles || [];
+        if (candles.length === 0) {
+            return { exchange: exch, symbol, token: String(token), timeframe: tf.key, status: "no-data" };
+        }
+
+        // Evaluate signal on the LAST CLOSED candle (authoritative).
+        const sig = latestSignal(candles);
+        const tradeKey = `${exch}:${symbol}:${tf.key}`;
+        const active = this.tradeEngine.getState({ exchange: exch, symbol, timeframe: tf.key });
+
+        let openResult = null;
+        if (sig.signal === "BUY" || sig.signal === "SELL") {
+            // Only open if no active trade exists for this key.
+            if (!active.active) {
+                const atr = sig.indicators?.atr;
+                if (atr && Number.isFinite(atr) && atr > 0) {
+                    const res = this.tradeEngine.openTrade({
+                        exchange: exch,
+                        symbol,
+                        timeframe: tf.key,
+                        signal: sig.signal,
+                        entryPrice: sig.close,
+                        atr,
+                        time: sig.time || Date.now(),
+                    });
+                    if (res.ok) {
+                        openResult = { signal: sig.signal, entry: res.trade.entryPrice, sl: res.trade.initialSL, t1: res.trade.target1, t2: res.trade.target2 };
+                        this.broadcastEvent("trade_open", this.segmentEvent("trade_open", {
+                            exchange: exch, symbol, timeframe: tf.key, signal: sig.signal,
+                            entry: res.trade.entryPrice, sl: res.trade.initialSL, target1: res.trade.target1, target2: res.trade.target2,
+                        }));
+                    }
+                }
+            }
+        }
+
+        // Advance the active trade with the latest close (for live P/L / max points).
+        if (active.active) {
+            const upd = this.tradeEngine.updatePrice({
+                exchange: exch, symbol, timeframe: tf.key,
+                price: candles[candles.length - 1].close,
+                time: candles[candles.length - 1].time,
+            });
+            for (const ev of upd.events) {
+                this.broadcastEvent(ev.type, this.segmentEvent(ev.type, {
+                    exchange: exch, symbol, timeframe: tf.key, ...(ev.trade || {}),
+                    result: ev.result,
+                    resultPoints: ev.resultPoints,
+                }));
+            }
+        }
+
+        const state = this.tradeEngine.getState({ exchange: exch, symbol, timeframe: tf.key });
+        const t = state.active || state.lastClosed;
+
+        this.jsSignals.set(key, {
+            exchange: exch, symbol, token: String(token), timeframe: tf.key,
+            signal: sig.signal,
+            lastCandleTime: candles[candles.length - 1]?.time ?? null,
+        });
+
+        return {
+            exchange: exch,
+            symbol,
+            token: String(token),
+            timeframe: tf.key,
+            status: "ok",
+            signal: sig.signal,
+            indicators: sig.indicators,
+            trade: t
+                ? {
+                      signal: t.signal,
+                      status: t.status,
+                      entryPrice: t.entryPrice,
+                      activeSL: t.activeSL,
+                      entrySL: t.initialSL,
+                      target1: t.target1,
+                      target2: t.target2,
+                      target1Status: t.target1Status,
+                      target2Status: t.target2Status,
+                      currentPL: t.currentPL,
+                      maxPoints: t.maxPoints,
+                      entryTime: t.entryTime,
+                      exitTime: t.exitTime,
+                      result: t.result,
+                  }
+                : null,
+        };
+    }
+
+    // =========================================================
     // LIVE PRICES PER INSTRUMENT
     // =========================================================
 
@@ -2361,8 +3137,43 @@ const allowedTimeframes =
 
                 this.buildLivePrices(),
 
+            marketStatus:
+
+                getMarketStatus(),
+
+            segments:
+
+                this.segmentSnapshot ?? null,
+
         };
 
+    }
+
+
+    // =========================================================
+    // SEGMENT SNAPSHOT (phase 4)
+    //
+    // Lazily computes the JS signal/trade snapshot for every active
+    // instrument. Cached; refreshed by the periodic reconcile so it
+    // does not recompute candles on every SSE state broadcast.
+    // =========================================================
+
+    async refreshSegmentSnapshot() {
+        const actives = [...(this.activeInstruments?.values() || [])];
+        if (actives.length === 0) {
+            this.segmentSnapshot = null;
+            return null;
+        }
+
+        const out = [];
+        for (const inst of actives) {
+            const res = await this.analyzeSegmentForInstrument(inst, "15m")
+                .catch(() => null);
+            if (res) out.push(res);
+            await new Promise(r => setTimeout(r, 150));
+        }
+        this.segmentSnapshot = out;
+        return out;
     }
 
 
@@ -2410,6 +3221,21 @@ const allowedTimeframes =
         event,
         data
     ) {
+
+        // Filter-aware: clients on /api/events only receive the
+        // event types they subscribed to (unless it's a snapshot/heartbeat).
+        const flt =
+            response.__eventFilter;
+
+        if (
+            flt &&
+            event !== "snapshot" &&
+            event !== "state" &&
+            flt.size > 0 &&
+            !flt.has(event)
+        ) {
+            return;
+        }
 
         response.write(
             `event: ${event}\n`
@@ -2479,6 +3305,104 @@ const allowedTimeframes =
                 );
             }
         }
+    }
+
+
+    // =========================================================
+    // INCREMENTAL EVENT BUS (phase 2)
+    //
+    // Wraps an internal event into a stable, client-friendly
+    // shape with an explicit type/exchange/symbol/timeframe so
+    // the frontend can update only the affected instrument.
+    // =========================================================
+
+    segmentEvent(
+        type,
+        payload = {}
+    ) {
+
+        return {
+            type,
+            exchange:
+                payload.exchange ?? null,
+            symbol:
+                payload.symbol ?? null,
+            token:
+                payload.token ?? null,
+            timeframe:
+                payload.tfKey ?? payload.timeframe ?? null,
+            at:
+                Date.now(),
+            ...payload,
+        };
+
+    }
+
+
+    emitSegmentEvent(
+        type,
+        payload
+    ) {
+
+        this.broadcastEvent(
+            type,
+            this.segmentEvent(
+                type,
+                payload
+            )
+        );
+
+    }
+
+
+    // Tick events are high-frequency; throttle them so the SSE
+    // stream stays cheap while still updating live prices.
+    _lastTickEmit =
+        0;
+
+    emitTickEvent(tick) {
+
+        const now =
+            Date.now();
+
+        if (
+            now - this._lastTickEmit <
+                500
+        ) {
+            return;
+        }
+
+        this._lastTickEmit =
+            now;
+
+        this.broadcastEvent(
+            "tick",
+            this.segmentEvent(
+                "tick",
+                {
+                    exchange:
+                        tick?.exchange ??
+                        null,
+                    token:
+                        tick?.token ??
+                        null,
+                    symbol:
+                        tick?.symbol ??
+                        null,
+                    price:
+                        tick?.price ??
+                        tick?.ltp ??
+                        null,
+                    timestamp:
+                        tick?.time ??
+                        Date.now(),
+                    volume:
+                        tick?.volume ??
+                        null,
+                }
+            )
+        );
+
     }
 
 
@@ -2565,6 +3489,107 @@ const allowedTimeframes =
 
 
     // =========================================================
+    // INCREMENTAL EVENT STREAM (phase 2)
+    //
+    // Lightweight SSE endpoint that only streams the granular
+    // event bus (tick / candle_update / candle_close / strategy /
+    // connection_status / contract_change), optionally filtered
+    // by ?types=a,b,c. The full /api/stream (state) is unchanged.
+    // =========================================================
+
+    async handleEventsSse(
+        request,
+        response
+    ) {
+
+        await this.startCoordinator();
+
+        this.setupSse(
+            response
+        );
+
+        const filter =
+            (request.url
+                .split("?")[1] || "")
+            .split("&")
+            .map(kv => kv.split("="))
+            .filter(kv => kv[0] === "types")
+            .map(kv => decodeURIComponent(kv[1] || ""));
+
+        const allowed =
+            filter.length
+                ? new Set(
+                      filter
+                          .flatMap(s => s.split(","))
+                          .map(s => s.trim())
+                          .filter(Boolean)
+                  )
+                : null;
+
+        // Mark this client as filter-aware for /api/events.
+        response.__eventFilter =
+            allowed;
+
+        this.sseClients.add(
+            response
+        );
+
+        // Send a snapshot of current market + strategy so the client
+        // is immediately up to date, then stream event deltas.
+        if (this.state) {
+            this.sendSseEvent(
+                response,
+                "snapshot",
+                {
+                    state: this.state,
+                    marketStatus:
+                        getMarketStatus(),
+                }
+            );
+        }
+
+        const heartbeat =
+            setInterval(
+                () => {
+                    try {
+                        response.write(
+                            ": heartbeat\n\n"
+                        );
+                    } catch {
+                        clearInterval(
+                            heartbeat
+                        );
+                        this.sseClients.delete(
+                            response
+                        );
+                    }
+                },
+                15000
+            );
+
+        request.on(
+            "close",
+            () => {
+
+                clearInterval(
+                    heartbeat
+                );
+
+                this.sseClients.delete(
+                    response
+                );
+
+                try {
+                    response.end();
+                } catch {
+                    // Already closed.
+                }
+            }
+        );
+    }
+
+
+    // =========================================================
     // ROUTER
     // =========================================================
 
@@ -2589,10 +3614,10 @@ const allowedTimeframes =
                         "*",
 
                     "Access-Control-Allow-Methods":
-                        "GET, OPTIONS",
+                        "GET, POST, PUT, DELETE, OPTIONS",
 
                     "Access-Control-Allow-Headers":
-                        "Content-Type",
+                        "Content-Type, Authorization, X-Admin-Key, X-Admin-Token",
                 }
             );
 
@@ -2674,7 +3699,63 @@ const allowedTimeframes =
         //   GET  /api/shoonya/login              -> HTML form
         //   GET  /api/shoonya/login?url=<enc>    -> login
         //   POST /api/shoonya/login              -> {"redirectUrl": "..."}
+        //   GET  /api/shoonya/config             -> diagnostic
         // -----------------------------------------------------
+
+        // Diagnostic — shows exact redirect & IP Shoonya will see
+        if (
+            url.pathname === "/api/shoonya/config" &&
+            request.method === "GET"
+        ) {
+            const clientIp = String(
+                request.headers["x-forwarded-for"] ||
+                    request.headers["x-real-ip"] ||
+                    request.socket.remoteAddress ||
+                    ""
+            )
+                .split(",")[0]
+                .trim();
+            const cfgRedirect =
+                process.env.SHOONYA_REDIRECT_URL ||
+                "not set";
+            const clientId =
+                process.env.SHOONYA_CLIENT_ID ||
+                "not set";
+            let egressIp = null;
+            try {
+                const r = await fetch(
+                    "https://api.ipify.org?format=json",
+                    {
+                        signal: AbortSignal.timeout(
+                            2000
+                        ),
+                    }
+                ).catch(() => null);
+                if (r && r.ok) {
+                    const j =
+                        await r
+                            .json()
+                            .catch(() => null);
+                    egressIp = j?.ip || null;
+                }
+            } catch {}
+            this.sendJson(response, 200, {
+                ok: true,
+                clientId:
+                    clientId.length > 8
+                        ? clientId.slice(0, 6) +
+                          "..." +
+                          clientId.slice(-4)
+                        : clientId,
+                clientId_raw: clientId,
+                redirectConfigured: cfgRedirect,
+                requestIp:
+                    clientIp || "unknown",
+                egressIp: egressIp || "unknown",
+                hint: "Whitelist BOTH requestIp and egressIp in Shoonya. Redirect must exactly match SHOONYA_REDIRECT_URL (including trailing slash). Code is single-use and expires in ~30s.",
+            });
+            return;
+        }
 
         if (
             url.pathname ===
@@ -2688,6 +3769,52 @@ const allowedTimeframes =
                         "url"
                     ) || "";
 
+                // Diagnostic: log every login attempt with IP + redirect + code preview
+                try {
+                    const clientIp = String(
+                        request.headers[
+                            "x-forwarded-for"
+                        ] ||
+                            request.headers[
+                                "x-real-ip"
+                            ] ||
+                            request.socket
+                                .remoteAddress ||
+                            ""
+                    )
+                        .split(",")[0]
+                        .trim();
+                    const cfgRedirect =
+                        process.env
+                            .SHOONYA_REDIRECT_URL ||
+                        "not set";
+                    const codePreview = (() => {
+                        try {
+                            const u = new URL(
+                                redirectUrl
+                            );
+                            const c =
+                                u.searchParams.get(
+                                    "code"
+                                );
+                            return c
+                                ? c.slice(0, 8) + "..."
+                                : "no-code";
+                        } catch {
+                            return redirectUrl
+                                ? redirectUrl.slice(
+                                      0,
+                                      30
+                                  ) + "..."
+                                : "empty";
+                        }
+                    })();
+                    if (redirectUrl) {
+                        console.log(
+                            `[Shoonya][HTTP] login ip=${clientIp || "unknown"} cfg_redirect=${cfgRedirect} code=${codePreview} url_len=${redirectUrl.length}`
+                        );
+                    }
+                } catch {}
 
                 if (
                     !redirectUrl &&
@@ -2834,6 +3961,10 @@ const allowedTimeframes =
                 /* Reconciliation tracking (search-box additions only) */
                 this.activeInstruments.set(key, { exchange: exch, token });
 
+                // Recompute the JS signal/trade segment snapshot so the
+                // newly-added instrument shows up immediately in /api/state.
+                this.refreshSegmentSnapshot().catch(() => {});
+
                 this.sendJson(response, 200, { ok: true });
             } catch (error) {
                 this.sendJson(response, 400, {
@@ -2972,11 +4103,412 @@ const allowedTimeframes =
                 });
                 return;
             }
-            this.sendJson(response, 200, {
-                ok: true,
-                email: data.email,
-            });
+            try {
+                const {
+                    loadUsersPublic,
+                } = require("../auth/users");
+                const user =
+                    loadUsersPublic(
+                        data.email
+                    );
+                this.sendJson(response, 200, {
+                    ok: true,
+                    email: data.email,
+                    user,
+                });
+            } catch {
+                this.sendJson(response, 200, {
+                    ok: true,
+                    email: data.email,
+                });
+            }
             return;
+        }
+
+        // -----------------------------------------------------
+        // ADMIN — users & subscriptions (X-Admin-Key)
+        // -----------------------------------------------------
+
+        const isAdminRoute =
+            url.pathname.startsWith(
+                "/api/admin/"
+            );
+
+        const checkAdmin = () => {
+            // 1) Legacy secret key (back-compat)
+            const hdr =
+                request.headers["x-admin-key"] ||
+                request.headers["x-admin-token"] ||
+                "";
+            const qKey =
+                url.searchParams.get(
+                    "adminKey"
+                ) || "";
+            const provided =
+                String(hdr || qKey || "").trim();
+            try {
+                const {
+                    getAdminKey,
+                } = require("../auth/users");
+                const expected =
+                    getAdminKey().trim();
+                if (
+                    provided &&
+                    provided === expected
+                ) {
+                    return true;
+                }
+            } catch {}
+            // 2) Admin login via Bearer token + isAdmin flag
+            const auth =
+                request.headers.authorization ||
+                "";
+            const token = auth.startsWith(
+                "Bearer "
+            )
+                ? auth.slice(7)
+                : null;
+            if (token) {
+                const data =
+                    verifyToken(token);
+                if (
+                    data &&
+                    data.email
+                ) {
+                    try {
+                        const {
+                            isAdminEmail,
+                        } = require(
+                            "../auth/users"
+                        );
+                        if (
+                            isAdminEmail(
+                                data.email
+                            )
+                        ) {
+                            return true;
+                        }
+                    } catch {}
+                }
+            }
+            return false;
+        };
+
+        if (isAdminRoute) {
+            if (!checkAdmin()) {
+                this.sendJson(response, 401, {
+                    ok: false,
+                    error: "Admin authorization required. Login as admin or provide X-Admin-Key.",
+                });
+                return;
+            }
+
+            // GET /api/admin/verify
+            if (
+                url.pathname ===
+                    "/api/admin/verify" &&
+                request.method === "GET"
+            ) {
+                this.sendJson(response, 200, {
+                    ok: true,
+                });
+                return;
+            }
+
+            // GET /api/admin/users
+            if (
+                url.pathname ===
+                    "/api/admin/users" &&
+                request.method === "GET"
+            ) {
+                const {
+                    listUsersPublic,
+                } = require("../auth/users");
+                const users =
+                    listUsersPublic();
+                this.sendJson(response, 200, {
+                    ok: true,
+                    users,
+                    count: users.length,
+                });
+                return;
+            }
+
+            // POST /api/admin/users -> create user (admin only)
+            if (
+                url.pathname === "/api/admin/users" &&
+                request.method === "POST"
+            ) {
+                try {
+                    const body =
+                        await readBody(request);
+                    const {
+                        registerUser: adminRegister,
+                        updateUser: adminUpdate,
+                    } = require("../auth/users");
+                    let user = adminRegister({
+                        email: body.email,
+                        password: body.password,
+                        name: body.name,
+                        segments: body.segments,
+                    });
+                    // optional: set validity via calendar date
+                    const validTillRaw =
+                        body.validTill ||
+                        body.accessUntil;
+                    if (validTillRaw) {
+                        let ts;
+                        if (
+                            typeof validTillRaw ===
+                                "string" &&
+                            isNaN(
+                                Number(validTillRaw)
+                            )
+                        ) {
+                            const d = new Date(
+                                validTillRaw
+                            );
+                            ts = isNaN(d.getTime())
+                                ? NaN
+                                : d.getTime() +
+                                  24 * 60 * 60 * 1000 -
+                                  1000;
+                        } else {
+                            ts = Number(
+                                validTillRaw
+                            );
+                        }
+                        if (
+                            Number.isFinite(ts) &&
+                            ts > 0
+                        ) {
+                            user = adminUpdate(
+                                body.email,
+                                {
+                                    accessUntil: ts,
+                                    plan:
+                                        body.plan ||
+                                        "full",
+                                }
+                            );
+                        }
+                    } else if (body.plan) {
+                        user = adminUpdate(
+                            body.email,
+                            { plan: body.plan }
+                        );
+                    }
+                    if (body.isAdmin) {
+                        user = adminUpdate(
+                            body.email,
+                            { isAdmin: true }
+                        );
+                    }
+                    this.sendJson(response, 200, {
+                        ok: true,
+                        user,
+                    });
+                } catch (error) {
+                    this.sendJson(response, 400, {
+                        ok: false,
+                        error:
+                            error?.message ||
+                            String(error),
+                    });
+                }
+                return;
+            }
+
+            // POST /api/admin/users/:email/reset-password
+            const resetMatch =
+                url.pathname.match(
+                    /^\/api\/admin\/users\/([^/]+)\/reset-password$/
+                );
+            if (
+                resetMatch &&
+                request.method === "POST"
+            ) {
+                try {
+                    const email =
+                        decodeURIComponent(
+                            resetMatch[1]
+                        );
+                    const body =
+                        await readBody(request);
+                    const newPass = String(
+                        body.newPassword ||
+                            body.password ||
+                            ""
+                    );
+                    if (
+                        !newPass ||
+                        newPass.length < 6
+                    ) {
+                        throw new Error(
+                            "Password must be at least 6 characters."
+                        );
+                    }
+                    const {
+                        resetUserPassword,
+                    } = require("../auth/users");
+                    const user =
+                        resetUserPassword(
+                            email,
+                            newPass
+                        );
+                    this.sendJson(response, 200, {
+                        ok: true,
+                        user,
+                    });
+                } catch (error) {
+                    this.sendJson(response, 400, {
+                        ok: false,
+                        error:
+                            error?.message ||
+                            String(error),
+                    });
+                }
+                return;
+            }
+
+            // GET /api/admin/stats
+            if (
+                url.pathname ===
+                    "/api/admin/stats" &&
+                request.method === "GET"
+            ) {
+                const {
+                    listUsersPublic,
+                } = require("../auth/users");
+                const users =
+                    listUsersPublic();
+                const now = Date.now();
+                const stats = {
+                    total: users.length,
+                    active: users.filter(
+                        u => u.hasAccess
+                    ).length,
+                    expired: users.filter(
+                        u => !u.hasAccess
+                    ).length,
+                    trial: users.filter(
+                        u => u.plan === "trial"
+                    ).length,
+                    full: users.filter(
+                        u => u.plan === "full"
+                    ).length,
+                    segments: {
+                        MCX: users.filter(u =>
+                            (
+                                u.segments || []
+                            ).includes("MCX")
+                        ).length,
+                        NSE: users.filter(u =>
+                            (
+                                u.segments || []
+                            ).includes("NSE")
+                        ).length,
+                        BSE: users.filter(u =>
+                            (
+                                u.segments || []
+                            ).includes("BSE")
+                        ).length,
+                    },
+                };
+                this.sendJson(response, 200, {
+                    ok: true,
+                    stats,
+                });
+                return;
+            }
+
+            // POST /api/admin/users/:email/renew  { days }
+            const renewMatch =
+                url.pathname.match(
+                    /^\/api\/admin\/users\/([^/]+)\/renew$/
+                );
+            if (
+                renewMatch &&
+                request.method === "POST"
+            ) {
+                const email =
+                    decodeURIComponent(
+                        renewMatch[1]
+                    );
+                const body =
+                    await readBody(request);
+                const days = Number(
+                    body.days ?? 30
+                );
+                const {
+                    renewUser,
+                } = require("../auth/users");
+                const user = renewUser(
+                    email,
+                    days
+                );
+                this.sendJson(response, 200, {
+                    ok: true,
+                    user,
+                });
+                return;
+            }
+
+            // /api/admin/users/:email  (GET, PUT, DELETE)
+            const userMatch =
+                url.pathname.match(
+                    /^\/api\/admin\/users\/([^/]+)$/
+                );
+            if (userMatch) {
+                const email =
+                    decodeURIComponent(
+                        userMatch[1]
+                    );
+                if (
+                    request.method === "GET"
+                ) {
+                    const {
+                        loadUsersPublic,
+                    } = require("../auth/users");
+                    const user =
+                        loadUsersPublic(email);
+                    this.sendJson(response, 200, {
+                        ok: true,
+                        user,
+                    });
+                    return;
+                }
+                if (
+                    request.method === "PUT"
+                ) {
+                    const body =
+                        await readBody(request);
+                    const {
+                        updateUser,
+                    } = require("../auth/users");
+                    const user = updateUser(
+                        email,
+                        body
+                    );
+                    this.sendJson(response, 200, {
+                        ok: true,
+                        user,
+                    });
+                    return;
+                }
+                if (
+                    request.method === "DELETE"
+                ) {
+                    const {
+                        deleteUser,
+                    } = require("../auth/users");
+                    deleteUser(email);
+                    this.sendJson(response, 200, {
+                        ok: true,
+                    });
+                    return;
+                }
+            }
         }
 
         // HISTORICAL CANDLES
@@ -3022,6 +4554,14 @@ const allowedTimeframes =
                           }
                         : undefined;
 
+                // LIVE-FIRST: any requested script is immediately wired into
+                // the WebSocket feed + candle aggregator so live ticks start
+                // forming candles independent of the historical endpoint.
+                if (instOverride) {
+                    this.ensureLiveSubscription(
+                        instOverride
+                    );
+                }
 
                 const ensured =
                     await this.ensureCandles(
@@ -3034,6 +4574,7 @@ const allowedTimeframes =
                 /* Backend-built LIVE forming candle -> continuous series */
 
                 let outCandles = ensured.candles;
+                let liveOnly = false;
 
                 try {
 
@@ -3051,10 +4592,24 @@ const allowedTimeframes =
                         else arr.push(forming);
                         arr.sort((a, b) => a.time - b.time);
                         outCandles = arr;
+                        liveOnly = ensured.candles.length === 0;
                     }
 
                 } catch {
                     /* never fail the request over the live tail */
+                }
+
+                // Friendly notice when only live ticks (no history) are available.
+                let notice = ensured.notice ?? null;
+                if (!notice && liveOnly) {
+                    notice =
+                        "Live candle only — historical data will fill in automatically as trading occurs.";
+                } else if (!notice && outCandles.length === 0) {
+                    notice =
+                        "No candles yet. The script is now live-subscribed — candles will appear on the next market tick.";
+                } else if (notice && notice.startsWith("No historical data")) {
+                    notice =
+                        notice + " Live subscription active — candles will appear on the next market tick.";
                 }
 
 
@@ -3092,8 +4647,14 @@ const allowedTimeframes =
                             outCandles
                                 .length,
 
-                        notice:
-                            ensured.notice ?? null,
+                        liveOnly,
+
+                        live:
+
+                            outCandles.length >
+                            0,
+
+                        notice,
 
                         candles:
 
@@ -3104,6 +4665,19 @@ const allowedTimeframes =
                             await this.computeDayStats(
                                 ensured.inst
                             ),
+
+                        segmentState:
+
+                            await this.analyzeSegmentForInstrument(
+                                {
+                                    exchange: ensured.exchange,
+                                    token: ensured.inst.token,
+                                    symbol: ensured.inst.symbol,
+                                    tradingSymbol: ensured.inst.symbol,
+                                    name: ensured.inst.name,
+                                },
+                                ensured.tf.key
+                            ).catch(() => null),
                     }
                 );
 
@@ -3222,6 +4796,19 @@ const allowedTimeframes =
         ) {
 
             await this.handleSse(
+                request,
+                response
+            );
+
+            return;
+        }
+
+        if (
+            url.pathname ===
+            "/api/events"
+        ) {
+
+            await this.handleEventsSse(
                 request,
                 response
             );

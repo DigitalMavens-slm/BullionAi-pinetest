@@ -19,4645 +19,2521 @@
     "behind_chart": true
   },
   "plots": {
-    "plot": {
+    "BUY SIGNAL": {
+      "title": "BUY SIGNAL",
       "options": {
-        "location": "BelowBar",
         "style": "shape",
+        "location": "BelowBar",
         "color": "#4CAF50",
         "text": "BUY",
         "textcolor": "#FFFFFF",
+        "size": "small",
         "shape": "shape_label_up",
         "overlay": true
       },
       "data": [
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": true,
-          "options": {
-            "text": "SELL",
-            "textcolor": "#FFFFFF",
-            "color": "#F23645",
-            "shape": "shape_label_down",
-            "location": "AboveBar"
-          }
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": true,
-          "options": {
-            "text": "SELL",
-            "textcolor": "#FFFFFF",
-            "color": "#F23645",
-            "shape": "shape_label_down",
-            "location": "AboveBar"
-          }
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
+          "title": "BUY SIGNAL",
           "value": true,
           "options": {
             "text": "BUY",
             "textcolor": "#FFFFFF",
             "color": "#4CAF50",
             "shape": "shape_label_up",
-            "location": "BelowBar"
+            "location": "BelowBar",
+            "size": "small"
           }
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
+          "value": false
+        },
+        {
+          "title": "BUY SIGNAL",
+          "value": false
+        },
+        {
+          "title": "BUY SIGNAL",
+          "value": false
+        },
+        {
+          "title": "BUY SIGNAL",
+          "value": false
+        },
+        {
+          "title": "BUY SIGNAL",
+          "value": false
+        },
+        {
+          "title": "BUY SIGNAL",
+          "value": false
+        },
+        {
+          "title": "BUY SIGNAL",
+          "value": false
+        },
+        {
+          "title": "BUY SIGNAL",
+          "value": false
+        },
+        {
+          "title": "BUY SIGNAL",
+          "value": false
+        },
+        {
+          "title": "BUY SIGNAL",
+          "value": false
+        },
+        {
+          "title": "BUY SIGNAL",
+          "value": false
+        },
+        {
+          "title": "BUY SIGNAL",
+          "value": false
+        },
+        {
+          "title": "BUY SIGNAL",
+          "value": false
+        },
+        {
+          "title": "BUY SIGNAL",
+          "value": false
+        },
+        {
+          "title": "BUY SIGNAL",
+          "value": false
+        },
+        {
+          "title": "BUY SIGNAL",
+          "value": false
+        },
+        {
+          "title": "BUY SIGNAL",
+          "value": false
+        },
+        {
+          "title": "BUY SIGNAL",
           "value": true,
           "options": {
             "text": "BUY",
             "textcolor": "#FFFFFF",
             "color": "#4CAF50",
             "shape": "shape_label_up",
-            "location": "BelowBar"
+            "location": "BelowBar",
+            "size": "small"
           }
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
+          "title": "BUY SIGNAL",
           "value": true,
           "options": {
             "text": "BUY",
             "textcolor": "#FFFFFF",
             "color": "#4CAF50",
             "shape": "shape_label_up",
-            "location": "BelowBar"
+            "location": "BelowBar",
+            "size": "small"
           }
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
+          "title": "BUY SIGNAL",
           "value": true,
           "options": {
             "text": "BUY",
             "textcolor": "#FFFFFF",
             "color": "#4CAF50",
             "shape": "shape_label_up",
-            "location": "BelowBar"
+            "location": "BelowBar",
+            "size": "small"
           }
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
+          "title": "BUY SIGNAL",
           "value": true,
           "options": {
             "text": "BUY",
             "textcolor": "#FFFFFF",
             "color": "#4CAF50",
             "shape": "shape_label_up",
-            "location": "BelowBar"
+            "location": "BelowBar",
+            "size": "small"
           }
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
+          "value": false
+        },
+        {
+          "title": "BUY SIGNAL",
+          "value": false
+        },
+        {
+          "title": "BUY SIGNAL",
+          "value": false
+        },
+        {
+          "title": "BUY SIGNAL",
+          "value": false
+        },
+        {
+          "title": "BUY SIGNAL",
+          "value": false
+        },
+        {
+          "title": "BUY SIGNAL",
+          "value": false
+        },
+        {
+          "title": "BUY SIGNAL",
+          "value": false
+        },
+        {
+          "title": "BUY SIGNAL",
+          "value": false
+        },
+        {
+          "title": "BUY SIGNAL",
+          "value": false
+        },
+        {
+          "title": "BUY SIGNAL",
+          "value": false
+        },
+        {
+          "title": "BUY SIGNAL",
+          "value": false
+        },
+        {
+          "title": "BUY SIGNAL",
+          "value": false
+        },
+        {
+          "title": "BUY SIGNAL",
+          "value": false
+        },
+        {
+          "title": "BUY SIGNAL",
+          "value": false
+        },
+        {
+          "title": "BUY SIGNAL",
+          "value": false
+        },
+        {
+          "title": "BUY SIGNAL",
+          "value": false
+        },
+        {
+          "title": "BUY SIGNAL",
+          "value": false
+        },
+        {
+          "title": "BUY SIGNAL",
+          "value": false
+        },
+        {
+          "title": "BUY SIGNAL",
+          "value": false
+        },
+        {
+          "title": "BUY SIGNAL",
+          "value": false
+        },
+        {
+          "title": "BUY SIGNAL",
+          "value": false
+        },
+        {
+          "title": "BUY SIGNAL",
+          "value": false
+        },
+        {
+          "title": "BUY SIGNAL",
           "value": true,
           "options": {
             "text": "BUY",
             "textcolor": "#FFFFFF",
             "color": "#4CAF50",
             "shape": "shape_label_up",
-            "location": "BelowBar"
+            "location": "BelowBar",
+            "size": "small"
           }
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": true,
-          "options": {
-            "text": "SELL",
-            "textcolor": "#FFFFFF",
-            "color": "#F23645",
-            "shape": "shape_label_down",
-            "location": "AboveBar"
-          }
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": true,
-          "options": {
-            "text": "SELL",
-            "textcolor": "#FFFFFF",
-            "color": "#F23645",
-            "shape": "shape_label_down",
-            "location": "AboveBar"
-          }
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
+          "title": "BUY SIGNAL",
           "value": true,
           "options": {
             "text": "BUY",
             "textcolor": "#FFFFFF",
             "color": "#4CAF50",
             "shape": "shape_label_up",
-            "location": "BelowBar"
+            "location": "BelowBar",
+            "size": "small"
           }
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
+          "title": "BUY SIGNAL",
           "value": true,
           "options": {
             "text": "BUY",
             "textcolor": "#FFFFFF",
             "color": "#4CAF50",
             "shape": "shape_label_up",
-            "location": "BelowBar"
+            "location": "BelowBar",
+            "size": "small"
           }
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": true,
-          "options": {
-            "text": "SELL",
-            "textcolor": "#FFFFFF",
-            "color": "#F23645",
-            "shape": "shape_label_down",
-            "location": "AboveBar"
-          }
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": true,
-          "options": {
-            "text": "SELL",
-            "textcolor": "#FFFFFF",
-            "color": "#F23645",
-            "shape": "shape_label_down",
-            "location": "AboveBar"
-          }
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
+          "title": "BUY SIGNAL",
           "value": true,
           "options": {
             "text": "BUY",
             "textcolor": "#FFFFFF",
             "color": "#4CAF50",
             "shape": "shape_label_up",
-            "location": "BelowBar"
+            "location": "BelowBar",
+            "size": "small"
           }
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
-          "value": true,
-          "options": {
-            "text": "BUY",
-            "textcolor": "#FFFFFF",
-            "color": "#4CAF50",
-            "shape": "shape_label_up",
-            "location": "BelowBar"
-          }
-        },
-        {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
+          "title": "BUY SIGNAL",
           "value": false
         },
         {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": true,
-          "options": {
-            "text": "SELL",
-            "textcolor": "#FFFFFF",
-            "color": "#F23645",
-            "shape": "shape_label_down",
-            "location": "AboveBar"
-          }
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
+          "title": "BUY SIGNAL",
           "value": false
         }
       ]
     },
-    "#0": {
+    "SELL SIGNAL": {
+      "title": "SELL SIGNAL",
       "options": {
+        "style": "shape",
+        "location": "AboveBar",
         "color": "#F23645",
-        "linewidth": 3,
-        "style": "style_linebr",
+        "text": "SELL",
+        "textcolor": "#FFFFFF",
+        "size": "small",
+        "shape": "shape_label_down",
         "overlay": true
       },
       "data": [
         {
-          "value": 154061.579499408,
-          "options": {
-            "color": "#F23645"
-          }
-        },
-        {
-          "value": 154061.579499408,
-          "options": {
-            "color": "#F23645"
-          }
-        },
-        {
-          "value": 154061.579499408,
-          "options": {
-            "color": "#F23645"
-          }
-        },
-        {
-          "value": 154061.579499408,
-          "options": {
-            "color": "#F23645"
-          }
-        },
-        {
-          "value": 154061.579499408,
-          "options": {
-            "color": "#F23645"
-          }
-        },
-        {
-          "value": 154061.579499408,
-          "options": {
-            "color": "#F23645"
-          }
-        },
-        {
-          "value": 154061.579499408,
-          "options": {
-            "color": "#F23645"
-          }
-        },
-        {
-          "value": 153854.0002639981,
-          "options": {
-            "color": "#F23645"
-          }
-        },
-        {
-          "value": 153854.0002639981,
-          "options": {
-            "color": "#F23645"
-          }
-        },
-        {
-          "value": 153854.0002639981,
-          "options": {
-            "color": "#F23645"
-          }
-        },
-        {
-          "value": 153854.0002639981,
-          "options": {
-            "color": "#F23645"
-          }
-        },
-        {
-          "value": 153854.0002639981,
-          "options": {
-            "color": "#F23645"
-          }
-        },
-        {
-          "value": 153854.0002639981,
-          "options": {
-            "color": "#F23645"
-          }
-        },
-        {
-          "value": 153806.1667710027,
-          "options": {
-            "color": "#F23645"
-          }
-        },
-        {
-          "value": 153763.7620016454,
-          "options": {
-            "color": "#F23645"
-          }
-        },
-        {
-          "value": 152883.3861443849,
-          "options": {
-            "color": "#F23645"
-          }
-        },
-        {
-          "value": 152778.8228483574,
-          "options": {
-            "color": "#F23645"
-          }
-        },
-        {
-          "value": 152778.8228483574,
-          "options": {
-            "color": "#F23645"
-          }
-        },
-        {
-          "value": 152766.0998029205,
-          "options": {
-            "color": "#F23645"
-          }
-        },
-        {
-          "value": 152766.0998029205,
-          "options": {
-            "color": "#F23645"
-          }
-        },
-        {
-          "value": 152766.0998029205,
-          "options": {
-            "color": "#F23645"
-          }
-        },
-        {
-          "value": 152618.6413145102,
-          "options": {
-            "color": "#F23645"
-          }
-        },
-        {
-          "value": 152513.2026491882,
-          "options": {
-            "color": "#F23645"
-          }
-        },
-        {
-          "value": 152513.2026491882,
-          "options": {
-            "color": "#F23645"
-          }
-        },
-        {
-          "value": 152513.2026491882,
-          "options": {
-            "color": "#F23645"
-          }
-        },
-        {
-          "value": 152899.8821902384,
-          "options": {
-            "color": "#F23645"
-          }
-        },
-        {
-          "value": 152899.8821902384,
-          "options": {
-            "color": "#F23645"
-          }
-        },
-        {
-          "value": 152899.8821902384,
-          "options": {
-            "color": "#F23645"
-          }
-        },
-        {
-          "value": 152899.8821902384,
-          "options": {
-            "color": "#F23645"
-          }
-        },
-        {
-          "value": 152899.8821902384,
-          "options": {
-            "color": "#F23645"
-          }
-        },
-        {
-          "value": 152899.8821902384,
-          "options": {
-            "color": "#F23645"
-          }
-        },
-        {
-          "value": 152057.899429713,
-          "options": {
-            "color": "#F23645"
-          }
-        },
-        {
-          "value": 152714.3731981542,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 152725.5965411433,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 152725.5965411433,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 152725.5965411433,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 152791.4225950771,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 152815.3209811431,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 152908.3694824899,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 153051.7359480264,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 153214.0048088817,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 153214.0048088817,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 153214.0048088817,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 153214.0048088817,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 152895.6584976695,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 152959.0400335503,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 153069.9657454394,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 153298.2896207652,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 153534.3046478534,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 153556.9971730068,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 153775.8188035063,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 153775.8188035063,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 153775.8188035063,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 153797.6326207373,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 154002.9088621133,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 154231.0939433908,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 154231.0939433908,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 154288.0325328217,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 154318.2087804773,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 154318.2087804773,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 154318.2087804773,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 154416.7837794128,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 154416.7837794128,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 154416.7837794128,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 154417.1076761552,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 154417.1076761552,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 154417.1076761552,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 154417.1076761552,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 154417.1076761552,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 154417.1076761552,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 154417.1076761552,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 154417.1076761552,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 154417.1076761552,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 154617.6317294603,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 154730.8723202131,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 154788.488583055,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 154788.488583055,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 154788.488583055,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 154788.488583055,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 154788.488583055,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 154793.6865488864,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 154793.6865488864,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 154793.6865488864,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 154793.6865488864,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 154830.6450963855,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 154830.6450963855,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 155002.9950065772,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 155002.9950065772,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 155007.7456944468,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 155162.5852877005,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 155162.5852877005,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 155162.5852877005,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 155162.5852877005,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 155162.5852877005,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 155162.5852877005,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 155162.5852877005,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 155162.5852877005,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 155162.5852877005,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 155162.5852877005,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 155162.5852877005,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 155162.5852877005,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 155162.5852877005,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 155162.5852877005,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 155162.5852877005,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 155162.5852877005,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 155162.5852877005,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 155162.5852877005,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 155162.5852877005,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 155162.5852877005,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 154870.5541706935,
-          "options": {
-            "color": "#F23645"
-          }
-        },
-        {
-          "value": 154870.5541706935,
-          "options": {
-            "color": "#F23645"
-          }
-        },
-        {
-          "value": 154870.5541706935,
-          "options": {
-            "color": "#F23645"
-          }
-        },
-        {
-          "value": 154870.5541706935,
-          "options": {
-            "color": "#F23645"
-          }
-        },
-        {
-          "value": 155185.8529432835,
-          "options": {
-            "color": "#F23645"
-          }
-        },
-        {
-          "value": 154401.3073250098,
-          "options": {
-            "color": "#F23645"
-          }
-        },
-        {
-          "value": 155170.310472373,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 155351.3240100607,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 155428.5508664849,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 155428.5508664849,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 155525.1127369181,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 155631.2118271383,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 155631.2118271383,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 155666.993871359,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 155723.3514519761,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 155723.3514519761,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 155746.1117111427,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 155746.1117111427,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 155746.1117111427,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 155746.1117111427,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 155746.1117111427,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 155746.1117111427,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 156044.1143946781,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 155376.6457470095,
-          "options": {
-            "color": "#F23645"
-          }
-        },
-        {
-          "value": 155376.6457470095,
-          "options": {
-            "color": "#F23645"
-          }
-        },
-        {
-          "value": 155376.6457470095,
-          "options": {
-            "color": "#F23645"
-          }
-        },
-        {
-          "value": 155376.6457470095,
-          "options": {
-            "color": "#F23645"
-          }
-        },
-        {
-          "value": 155376.6457470095,
-          "options": {
-            "color": "#F23645"
-          }
-        },
-        {
-          "value": 155376.6457470095,
-          "options": {
-            "color": "#F23645"
-          }
-        },
-        {
-          "value": 155376.6457470095,
-          "options": {
-            "color": "#F23645"
-          }
-        },
-        {
-          "value": 155376.6457470095,
-          "options": {
-            "color": "#F23645"
-          }
-        },
-        {
-          "value": 155376.6457470095,
-          "options": {
-            "color": "#F23645"
-          }
-        },
-        {
-          "value": 155376.6457470095,
-          "options": {
-            "color": "#F23645"
-          }
-        },
-        {
-          "value": 155376.6457470095,
-          "options": {
-            "color": "#F23645"
-          }
-        },
-        {
-          "value": 155376.6457470095,
-          "options": {
-            "color": "#F23645"
-          }
-        },
-        {
-          "value": 155645.0982445873,
-          "options": {
-            "color": "#F23645"
-          }
-        },
-        {
-          "value": 155645.0982445873,
-          "options": {
-            "color": "#F23645"
-          }
-        },
-        {
-          "value": 155645.0982445873,
-          "options": {
-            "color": "#F23645"
-          }
-        },
-        {
-          "value": 155645.0982445873,
-          "options": {
-            "color": "#F23645"
-          }
-        },
-        {
-          "value": 155638.5340864134,
-          "options": {
-            "color": "#F23645"
-          }
-        },
-        {
-          "value": 155564.853080241,
-          "options": {
-            "color": "#F23645"
-          }
-        },
-        {
-          "value": 155348.435003081,
-          "options": {
-            "color": "#F23645"
-          }
-        },
-        {
-          "value": 155348.435003081,
-          "options": {
-            "color": "#F23645"
-          }
-        },
-        {
-          "value": 155348.435003081,
-          "options": {
-            "color": "#F23645"
-          }
-        },
-        {
-          "value": 155348.435003081,
-          "options": {
-            "color": "#F23645"
-          }
-        },
-        {
-          "value": 155348.435003081,
-          "options": {
-            "color": "#F23645"
-          }
-        },
-        {
-          "value": 155321.6830173048,
-          "options": {
-            "color": "#F23645"
-          }
-        },
-        {
-          "value": 155321.6830173048,
-          "options": {
-            "color": "#F23645"
-          }
-        },
-        {
-          "value": 155321.6830173048,
-          "options": {
-            "color": "#F23645"
-          }
-        },
-        {
-          "value": 155321.6830173048,
-          "options": {
-            "color": "#F23645"
-          }
-        },
-        {
-          "value": 155321.6830173048,
-          "options": {
-            "color": "#F23645"
-          }
-        },
-        {
-          "value": 155321.6830173048,
-          "options": {
-            "color": "#F23645"
-          }
-        },
-        {
-          "value": 155321.6830173048,
-          "options": {
-            "color": "#F23645"
-          }
-        },
-        {
-          "value": 155321.6830173048,
-          "options": {
-            "color": "#F23645"
-          }
-        },
-        {
-          "value": 155321.6830173048,
-          "options": {
-            "color": "#F23645"
-          }
-        },
-        {
-          "value": 155321.6830173048,
-          "options": {
-            "color": "#F23645"
-          }
-        },
-        {
-          "value": 155321.6830173048,
-          "options": {
-            "color": "#F23645"
-          }
-        },
-        {
-          "value": 155321.6830173048,
-          "options": {
-            "color": "#F23645"
-          }
-        },
-        {
-          "value": 155321.6830173048,
-          "options": {
-            "color": "#F23645"
-          }
-        },
-        {
-          "value": 155321.6830173048,
-          "options": {
-            "color": "#F23645"
-          }
-        },
-        {
-          "value": 155321.6830173048,
-          "options": {
-            "color": "#F23645"
-          }
-        },
-        {
-          "value": 155321.6830173048,
-          "options": {
-            "color": "#F23645"
-          }
-        },
-        {
-          "value": 155321.6830173048,
-          "options": {
-            "color": "#F23645"
-          }
-        },
-        {
-          "value": 155321.6830173048,
-          "options": {
-            "color": "#F23645"
-          }
-        },
-        {
-          "value": 155321.6830173048,
-          "options": {
-            "color": "#F23645"
-          }
-        },
-        {
-          "value": 155321.6830173048,
-          "options": {
-            "color": "#F23645"
-          }
-        },
-        {
-          "value": 155368.4789768168,
-          "options": {
-            "color": "#F23645"
-          }
-        },
-        {
-          "value": 155059.8019070441,
-          "options": {
-            "color": "#F23645"
-          }
-        },
-        {
-          "value": 154738.5660565409,
-          "options": {
-            "color": "#F23645"
-          }
-        },
-        {
-          "value": 154738.5660565409,
-          "options": {
-            "color": "#F23645"
-          }
-        },
-        {
-          "value": 154738.5660565409,
-          "options": {
-            "color": "#F23645"
-          }
-        },
-        {
-          "value": 154738.5660565409,
-          "options": {
-            "color": "#F23645"
-          }
-        },
-        {
-          "value": 154738.5660565409,
-          "options": {
-            "color": "#F23645"
-          }
-        },
-        {
-          "value": 154738.5660565409,
-          "options": {
-            "color": "#F23645"
-          }
-        },
-        {
-          "value": 154738.5660565409,
-          "options": {
-            "color": "#F23645"
-          }
-        },
-        {
-          "value": 154738.5660565409,
-          "options": {
-            "color": "#F23645"
-          }
-        },
-        {
-          "value": 154738.5660565409,
-          "options": {
-            "color": "#F23645"
-          }
-        },
-        {
-          "value": 154738.5660565409,
-          "options": {
-            "color": "#F23645"
-          }
-        },
-        {
-          "value": 154660.6533891778,
-          "options": {
-            "color": "#F23645"
-          }
-        },
-        {
-          "value": 154634.1067185222,
-          "options": {
-            "color": "#F23645"
-          }
-        },
-        {
-          "value": 154608.5276671993,
-          "options": {
-            "color": "#F23645"
-          }
-        },
-        {
-          "value": 154441.2042623993,
-          "options": {
-            "color": "#F23645"
-          }
-        },
-        {
-          "value": 154338.5468150851,
-          "options": {
-            "color": "#F23645"
-          }
-        },
-        {
-          "value": 154202.7220425789,
-          "options": {
-            "color": "#F23645"
-          }
-        },
-        {
-          "value": 154127.0633252519,
-          "options": {
-            "color": "#F23645"
-          }
-        },
-        {
-          "value": 154047.3802305911,
-          "options": {
-            "color": "#F23645"
-          }
-        },
-        {
-          "value": 153842.3530712632,
-          "options": {
-            "color": "#F23645"
-          }
-        },
-        {
-          "value": 153842.3530712632,
-          "options": {
-            "color": "#F23645"
-          }
-        },
-        {
-          "value": 153842.3530712632,
-          "options": {
-            "color": "#F23645"
-          }
-        },
-        {
-          "value": 153837.8227760805,
-          "options": {
-            "color": "#F23645"
-          }
-        },
-        {
-          "value": 153829.335434932,
-          "options": {
-            "color": "#F23645"
-          }
-        },
-        {
-          "value": 153829.335434932,
-          "options": {
-            "color": "#F23645"
-          }
-        },
-        {
-          "value": 153829.335434932,
-          "options": {
-            "color": "#F23645"
-          }
-        },
-        {
-          "value": 153829.335434932,
-          "options": {
-            "color": "#F23645"
-          }
-        },
-        {
-          "value": 153829.335434932,
-          "options": {
-            "color": "#F23645"
-          }
-        },
-        {
-          "value": 153829.335434932,
-          "options": {
-            "color": "#F23645"
-          }
-        },
-        {
-          "value": 153829.335434932,
-          "options": {
-            "color": "#F23645"
-          }
-        },
-        {
-          "value": 153829.335434932,
-          "options": {
-            "color": "#F23645"
-          }
-        },
-        {
-          "value": 153949.911843915,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 153949.911843915,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 154025.8806205187,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 154025.8806205187,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 154025.8806205187,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 154025.8806205187,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 154025.8806205187,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 154028.4903113922,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 154028.4903113922,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 154294.0095031902,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 154294.0095031902,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 154294.0095031902,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 154432.8614717599,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 154453.2285094913,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 154453.2285094913,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 154453.2285094913,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 154453.2285094913,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 154453.2285094913,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 155482.3431456657,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 156108.8900638325,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 156411.6836307017,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 156524.5276570801,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 156641.8113958601,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 156654.2891532986,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 157009.4113566345,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 157276.3105454463,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 157431.2883636286,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 157431.2883636286,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 157431.2883636286,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 157431.2883636286,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 157431.2883636286,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 157497.6139590215,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 157656.4629619485,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 157656.4629619485,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 157656.4629619485,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 157656.4629619485,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 157656.4629619485,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 157656.4629619485,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 157656.4629619485,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 157656.4629619485,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 158079.8727465202,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 158175.060407483,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 158175.060407483,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 158175.060407483,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 158175.060407483,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 158175.060407483,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 158175.060407483,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 158175.060407483,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 158175.060407483,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 158175.060407483,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 158175.060407483,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 158175.060407483,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 158175.060407483,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 158175.060407483,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 158175.060407483,
+          "title": "SELL SIGNAL",
+          "value": true,
           "options": {
-            "color": "#00E676"
+            "text": "SELL",
+            "textcolor": "#FFFFFF",
+            "color": "#F23645",
+            "shape": "shape_label_down",
+            "location": "AboveBar",
+            "size": "small"
           }
         },
         {
-          "value": 158175.060407483,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 158175.060407483,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 158175.060407483,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 158175.060407483,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 158175.060407483,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 158175.060407483,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 158175.060407483,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 158175.060407483,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 158175.060407483,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 158175.060407483,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 158175.060407483,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 158175.060407483,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 158175.060407483,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 158175.060407483,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 158175.060407483,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 158175.060407483,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 158175.060407483,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 158175.060407483,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 157927.0057010542,
-          "options": {
-            "color": "#F23645"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 157885.2195795503,
-          "options": {
-            "color": "#F23645"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 157874.5253238681,
-          "options": {
-            "color": "#F23645"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 157874.5253238681,
-          "options": {
-            "color": "#F23645"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 157874.5253238681,
-          "options": {
-            "color": "#F23645"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 158111.4872000768,
-          "options": {
-            "color": "#F23645"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 158111.4872000768,
-          "options": {
-            "color": "#F23645"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 157068.410765904,
-          "options": {
-            "color": "#F23645"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 157682.3639679823,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 157857.373684555,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 158033.5255642297,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 158334.2023096419,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 158793.1164303818,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 159334.8581139259,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 159334.8581139259,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 159334.8581139259,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 158932.9813324691,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 158932.9813324691,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 158932.9813324691,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 158932.9813324691,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 158932.9813324691,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 158932.9813324691,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 158932.9813324691,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 158979.111338004,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 159061.0319567179,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 159145.1725312381,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 159336.7673504353,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 159584.1411111185,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 159815.8096031815,
+          "title": "SELL SIGNAL",
+          "value": true,
           "options": {
-            "color": "#00E676"
+            "text": "SELL",
+            "textcolor": "#FFFFFF",
+            "color": "#F23645",
+            "shape": "shape_label_down",
+            "location": "AboveBar",
+            "size": "small"
           }
         },
         {
-          "value": 159815.8096031815,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 159815.8096031815,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 159815.8096031815,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 159815.8096031815,
+          "title": "SELL SIGNAL",
+          "value": true,
           "options": {
-            "color": "#00E676"
+            "text": "SELL",
+            "textcolor": "#FFFFFF",
+            "color": "#F23645",
+            "shape": "shape_label_down",
+            "location": "AboveBar",
+            "size": "small"
           }
         },
         {
-          "value": 159705.9511968489,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 159988.1689685026,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 159988.1689685026,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 160156.056406515,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 160342.3738060497,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 160342.3738060497,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 160342.3738060497,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 160342.3738060497,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 160342.3738060497,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 160435.6252176726,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 160435.6252176726,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 160823.9982744219,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 160931.3198262489,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 160990.6541243739,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 161486.535972633,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 161486.535972633,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 160785.8677519132,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 160837.0200553479,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 160837.0200553479,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 160968.4280069071,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 161169.3260064137,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 161169.3260064137,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 161169.3260064137,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 161373.0964781673,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 161373.0964781673,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 161373.0964781673,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 161373.0964781673,
+          "title": "SELL SIGNAL",
+          "value": true,
           "options": {
-            "color": "#00E676"
+            "text": "SELL",
+            "textcolor": "#FFFFFF",
+            "color": "#F23645",
+            "shape": "shape_label_down",
+            "location": "AboveBar",
+            "size": "small"
           }
         },
         {
-          "value": 161373.0964781673,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 161373.0964781673,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 161373.0964781673,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 161373.0964781673,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 161373.0964781673,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 161373.0964781673,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 161373.0964781673,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 161373.0964781673,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 161373.0964781673,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 161373.0964781673,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 161373.0964781673,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 161373.0964781673,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 161373.0964781673,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 161466.0751288215,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 161658.6411910485,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 161675.9525345451,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 161675.9525345451,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 161814.8876445823,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 162073.0028128263,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 162073.0028128263,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 162073.0028128263,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 162073.0028128263,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 162073.0028128263,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 162578.0825779116,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
+        },
+        {
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 162623.0052509179,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 162623.0052509179,
+          "title": "SELL SIGNAL",
+          "value": true,
           "options": {
-            "color": "#00E676"
+            "text": "SELL",
+            "textcolor": "#FFFFFF",
+            "color": "#F23645",
+            "shape": "shape_label_down",
+            "location": "AboveBar",
+            "size": "small"
           }
         },
         {
-          "value": 162689.7698336996,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 162689.7698336996,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 162692.7428668125,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 162856.3683763259,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 162856.3683763259,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 162856.3683763259,
+          "title": "SELL SIGNAL",
+          "value": true,
           "options": {
-            "color": "#00E676"
+            "text": "SELL",
+            "textcolor": "#FFFFFF",
+            "color": "#F23645",
+            "shape": "shape_label_down",
+            "location": "AboveBar",
+            "size": "small"
           }
         },
         {
-          "value": 162856.3683763259,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 163233.1175472783,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 163233.1175472783,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 163233.1175472783,
+          "title": "SELL SIGNAL",
+          "value": true,
           "options": {
-            "color": "#00E676"
+            "text": "SELL",
+            "textcolor": "#FFFFFF",
+            "color": "#F23645",
+            "shape": "shape_label_down",
+            "location": "AboveBar",
+            "size": "small"
           }
         },
         {
-          "value": 163281.8945886919,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 163281.8945886919,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 163281.8945886919,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 163281.8945886919,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 163281.8945886919,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 163281.8945886919,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 163281.8945886919,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 163281.8945886919,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 163281.8945886919,
+          "title": "SELL SIGNAL",
+          "value": true,
           "options": {
-            "color": "#00E676"
+            "text": "SELL",
+            "textcolor": "#FFFFFF",
+            "color": "#F23645",
+            "shape": "shape_label_down",
+            "location": "AboveBar",
+            "size": "small"
           }
         },
         {
-          "value": 163281.8945886919,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 163281.8945886919,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 163281.8945886919,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 163281.8945886919,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 163281.8945886919,
+          "title": "SELL SIGNAL",
+          "value": true,
           "options": {
-            "color": "#00E676"
+            "text": "SELL",
+            "textcolor": "#FFFFFF",
+            "color": "#F23645",
+            "shape": "shape_label_down",
+            "location": "AboveBar",
+            "size": "small"
           }
         },
         {
-          "value": 163281.8945886919,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 163281.8945886919,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 163281.8945886919,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 163281.8945886919,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 163281.8945886919,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 163281.8945886919,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 163423.04791477,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 163543.9016351436,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 163637.1586612048,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 163637.1586612048,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 163791.9837435898,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 164222.6991904763,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 164222.6991904763,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 164222.6991904763,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 164222.6991904763,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 164222.6991904763,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 164222.6991904763,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 164222.6991904763,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 164222.6991904763,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 164222.6991904763,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 164222.6991904763,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 164222.6991904763,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 164213.9562310555,
-          "options": {
-            "color": "#F23645"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 164213.9562310555,
-          "options": {
-            "color": "#F23645"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 164213.9562310555,
-          "options": {
-            "color": "#F23645"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 164213.9562310555,
-          "options": {
-            "color": "#F23645"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 164213.9562310555,
-          "options": {
-            "color": "#F23645"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 164213.9562310555,
-          "options": {
-            "color": "#F23645"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 164061.6306151089,
-          "options": {
-            "color": "#F23645"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 163914.2641426011,
-          "options": {
-            "color": "#F23645"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 163641.3167038439,
-          "options": {
-            "color": "#F23645"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 163641.3167038439,
-          "options": {
-            "color": "#F23645"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 163468.4899130083,
-          "options": {
-            "color": "#F23645"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 163468.4899130083,
-          "options": {
-            "color": "#F23645"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 163439.3943637673,
-          "options": {
-            "color": "#F23645"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 163194.3661949268,
-          "options": {
-            "color": "#F23645"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 163194.3661949268,
-          "options": {
-            "color": "#F23645"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 163194.3661949268,
-          "options": {
-            "color": "#F23645"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 163194.3661949268,
-          "options": {
-            "color": "#F23645"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 163694.7491929853,
-          "options": {
-            "color": "#F23645"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 163694.7491929853,
-          "options": {
-            "color": "#F23645"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 163694.7491929853,
-          "options": {
-            "color": "#F23645"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 162548.5575986307,
-          "options": {
-            "color": "#F23645"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 163100.8949953942,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 163100.8949953942,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 163100.8949953942,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 163100.8949953942,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 163100.8949953942,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 163100.8949953942,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 163100.8949953942,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 163100.8949953942,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 163100.8949953942,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 163100.8949953942,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 163100.8949953942,
+          "title": "SELL SIGNAL",
+          "value": true,
           "options": {
-            "color": "#00E676"
+            "text": "SELL",
+            "textcolor": "#FFFFFF",
+            "color": "#F23645",
+            "shape": "shape_label_down",
+            "location": "AboveBar",
+            "size": "small"
           }
         },
         {
-          "value": 163100.8949953942,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 163100.8949953942,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 163100.8949953942,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 163100.8949953942,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 163100.8949953942,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 163100.8949953942,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 163100.8949953942,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 163100.8949953942,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 163100.8949953942,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 162744.5835513319,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 162806.5418690939,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 162806.5418690939,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 162806.5418690939,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 162806.5418690939,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 162806.5418690939,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 163518.8498122124,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 162352.1790250263,
-          "options": {
-            "color": "#F23645"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 162352.1790250263,
-          "options": {
-            "color": "#F23645"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 162352.1790250263,
-          "options": {
-            "color": "#F23645"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 162352.1790250263,
-          "options": {
-            "color": "#F23645"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 162352.1790250263,
-          "options": {
-            "color": "#F23645"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 162352.1790250263,
-          "options": {
-            "color": "#F23645"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 162912.7020131028,
-          "options": {
-            "color": "#F23645"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 162912.7020131028,
-          "options": {
-            "color": "#F23645"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 162912.7020131028,
-          "options": {
-            "color": "#F23645"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 161909.0506806592,
-          "options": {
-            "color": "#F23645"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 162687.700557641,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 162687.700557641,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 162687.700557641,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 162687.700557641,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 162687.700557641,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 162687.700557641,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 162687.700557641,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 162361.1440499174,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 162556.0623320661,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 162556.0623320661,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 162556.0623320661,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 162556.0623320661,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 162556.0623320661,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 162573.1168429818,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 162573.1168429818,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 162636.207890122,
+          "title": "SELL SIGNAL",
+          "value": true,
           "options": {
-            "color": "#00E676"
+            "text": "SELL",
+            "textcolor": "#FFFFFF",
+            "color": "#F23645",
+            "shape": "shape_label_down",
+            "location": "AboveBar",
+            "size": "small"
           }
         },
         {
-          "value": 162636.207890122,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 162636.207890122,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 162636.207890122,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 162636.207890122,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 163285.7034078268,
-          "options": {
-            "color": "#00E676"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 163044.1620621892,
-          "options": {
-            "color": "#F23645"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 162993.2576291757,
-          "options": {
-            "color": "#F23645"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 162993.2576291757,
-          "options": {
-            "color": "#F23645"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 162850.1966292383,
+          "title": "SELL SIGNAL",
+          "value": true,
           "options": {
-            "color": "#F23645"
+            "text": "SELL",
+            "textcolor": "#FFFFFF",
+            "color": "#F23645",
+            "shape": "shape_label_down",
+            "location": "AboveBar",
+            "size": "small"
           }
         },
         {
-          "value": 162850.1966292383,
-          "options": {
-            "color": "#F23645"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 162850.1966292383,
-          "options": {
-            "color": "#F23645"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 162743.5501073019,
-          "options": {
-            "color": "#F23645"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 162731.7608139232,
-          "options": {
-            "color": "#F23645"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         },
         {
-          "value": 162668.5993272144,
-          "options": {
-            "color": "#F23645"
-          }
+          "title": "SELL SIGNAL",
+          "value": false
         }
       ]
     },
@@ -4675,18 +2551,18 @@
               "id": 0,
               "position": "bottom_right",
               "columns": 2,
-              "rows": 11,
-              "bgcolor": "rgb(15, 15, 18)",
-              "frame_color": "rgb(120, 120, 120)",
+              "rows": 12,
+              "bgcolor": "rgb(12, 14, 18)",
+              "frame_color": "rgb(90, 92, 98)",
               "frame_width": 2,
-              "border_color": "",
+              "border_color": "rgb(42, 44, 48)",
               "border_width": 1,
               "force_overlay": false,
               "_deleted": false,
               "cells": [
                 [
                   {
-                    "text": "BULLIONAI PRO",
+                    "text": "BULLIONAI",
                     "width": 0,
                     "height": 0,
                     "text_color": "#363A45",
@@ -4700,13 +2576,13 @@
                     "_merge_parent": null
                   },
                   {
-                    "text": "",
+                    "text": "INFORMATION CENTER",
                     "width": 0,
                     "height": 0,
                     "text_color": "#363A45",
                     "text_halign": "center",
                     "text_valign": "center",
-                    "text_size": "normal",
+                    "text_size": "small",
                     "bgcolor": "rgb(190, 150, 25)",
                     "tooltip": "",
                     "text_font_family": "default",
@@ -4716,7 +2592,7 @@
                 ],
                 [
                   {
-                    "text": "Trade",
+                    "text": "TRADE",
                     "width": 0,
                     "height": 0,
                     "text_color": "#B2B5BE",
@@ -4746,7 +2622,7 @@
                 ],
                 [
                   {
-                    "text": "Status",
+                    "text": "STATUS",
                     "width": 0,
                     "height": 0,
                     "text_color": "#B2B5BE",
@@ -4776,7 +2652,7 @@
                 ],
                 [
                   {
-                    "text": "Entry Price",
+                    "text": "ENTRY",
                     "width": 0,
                     "height": 0,
                     "text_color": "#B2B5BE",
@@ -4790,7 +2666,7 @@
                     "_merge_parent": null
                   },
                   {
-                    "text": "162641.00",
+                    "text": "156234",
                     "width": 0,
                     "height": 0,
                     "text_color": "#FFFFFF",
@@ -4806,7 +2682,7 @@
                 ],
                 [
                   {
-                    "text": "Trail SL",
+                    "text": "SL",
                     "width": 0,
                     "height": 0,
                     "text_color": "#B2B5BE",
@@ -4820,10 +2696,10 @@
                     "_merge_parent": null
                   },
                   {
-                    "text": "162668.60",
+                    "text": "157037",
                     "width": 0,
                     "height": 0,
-                    "text_color": "#FF9800",
+                    "text_color": "#F23645",
                     "text_halign": "center",
                     "text_valign": "center",
                     "text_size": "normal",
@@ -4836,7 +2712,7 @@
                 ],
                 [
                   {
-                    "text": "Lowest",
+                    "text": "TARGET 1",
                     "width": 0,
                     "height": 0,
                     "text_color": "#B2B5BE",
@@ -4850,7 +2726,7 @@
                     "_merge_parent": null
                   },
                   {
-                    "text": "162224.00",
+                    "text": "WAITING 155164",
                     "width": 0,
                     "height": 0,
                     "text_color": "#00BCD4",
@@ -4866,7 +2742,7 @@
                 ],
                 [
                   {
-                    "text": "Current P/L",
+                    "text": "TARGET 2",
                     "width": 0,
                     "height": 0,
                     "text_color": "#B2B5BE",
@@ -4880,10 +2756,10 @@
                     "_merge_parent": null
                   },
                   {
-                    "text": "320.00",
+                    "text": "WAITING 154094",
                     "width": 0,
                     "height": 0,
-                    "text_color": "#00E676",
+                    "text_color": "#4CAF50",
                     "text_halign": "center",
                     "text_valign": "center",
                     "text_size": "normal",
@@ -4896,7 +2772,7 @@
                 ],
                 [
                   {
-                    "text": "Best P/L",
+                    "text": "CURRENT P/L",
                     "width": 0,
                     "height": 0,
                     "text_color": "#B2B5BE",
@@ -4910,10 +2786,10 @@
                     "_merge_parent": null
                   },
                   {
-                    "text": "417.00",
+                    "text": "-166 pts",
                     "width": 0,
                     "height": 0,
-                    "text_color": "#00E676",
+                    "text_color": "#F23645",
                     "text_halign": "center",
                     "text_valign": "center",
                     "text_size": "normal",
@@ -4926,7 +2802,67 @@
                 ],
                 [
                   {
-                    "text": "Realized P/L",
+                    "text": "MAX POINTS",
+                    "width": 0,
+                    "height": 0,
+                    "text_color": "#B2B5BE",
+                    "text_halign": "center",
+                    "text_valign": "center",
+                    "text_size": "normal",
+                    "bgcolor": "",
+                    "tooltip": "",
+                    "text_font_family": "default",
+                    "_merged": false,
+                    "_merge_parent": null
+                  },
+                  {
+                    "text": "+149 pts",
+                    "width": 0,
+                    "height": 0,
+                    "text_color": "#00BCD4",
+                    "text_halign": "center",
+                    "text_valign": "center",
+                    "text_size": "normal",
+                    "bgcolor": "",
+                    "tooltip": "",
+                    "text_font_family": "default",
+                    "_merged": false,
+                    "_merge_parent": null
+                  }
+                ],
+                [
+                  {
+                    "text": "ENTRY TIME",
+                    "width": 0,
+                    "height": 0,
+                    "text_color": "#B2B5BE",
+                    "text_halign": "center",
+                    "text_valign": "center",
+                    "text_size": "normal",
+                    "bgcolor": "",
+                    "tooltip": "",
+                    "text_font_family": "default",
+                    "_merged": false,
+                    "_merge_parent": null
+                  },
+                  {
+                    "text": "- • -",
+                    "width": 0,
+                    "height": 0,
+                    "text_color": "#FFFFFF",
+                    "text_halign": "center",
+                    "text_valign": "center",
+                    "text_size": "normal",
+                    "bgcolor": "",
+                    "tooltip": "",
+                    "text_font_family": "default",
+                    "_merged": false,
+                    "_merge_parent": null
+                  }
+                ],
+                [
+                  {
+                    "text": "EXIT TIME",
                     "width": 0,
                     "height": 0,
                     "text_color": "#B2B5BE",
@@ -4943,36 +2879,6 @@
                     "text": "-",
                     "width": 0,
                     "height": 0,
-                    "text_color": "#F23645",
-                    "text_halign": "center",
-                    "text_valign": "center",
-                    "text_size": "normal",
-                    "bgcolor": "",
-                    "tooltip": "",
-                    "text_font_family": "default",
-                    "_merged": false,
-                    "_merge_parent": null
-                  }
-                ],
-                [
-                  {
-                    "text": "Entry",
-                    "width": 0,
-                    "height": 0,
-                    "text_color": "#B2B5BE",
-                    "text_halign": "center",
-                    "text_valign": "center",
-                    "text_size": "normal",
-                    "bgcolor": "",
-                    "tooltip": "",
-                    "text_font_family": "default",
-                    "_merged": false,
-                    "_merge_parent": null
-                  },
-                  {
-                    "text": "NaN-NaN-NaN  NaN:NaN AM",
-                    "width": 0,
-                    "height": 0,
                     "text_color": "#FFFFFF",
                     "text_halign": "center",
                     "text_valign": "center",
@@ -4986,7 +2892,7 @@
                 ],
                 [
                   {
-                    "text": "Exit",
+                    "text": "RESULT",
                     "width": 0,
                     "height": 0,
                     "text_color": "#B2B5BE",

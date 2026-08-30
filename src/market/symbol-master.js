@@ -748,9 +748,24 @@ async function searchSymbols({
 }
 
 
+async function getRawRows(exch) {
+    const E =
+        String(exch || "")
+            .trim()
+            .toUpperCase();
+    if (!EXCHANGES.includes(E)) return [];
+    await ensureFile(E);
+    return parseFile(E);
+}
+
 module.exports = {
     searchSymbols,
     getRegistry,
     getExchangeRows:
         getRegistry,
+    // Return ALL parsed rows for an exchange (includes expired
+    // contracts and options) — useful for rollover fallback logic
+    // that needs the previous contract even after it expires.
+    getRawExchangeRows:
+        getRawRows,
 };

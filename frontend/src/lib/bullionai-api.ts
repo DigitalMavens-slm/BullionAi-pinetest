@@ -108,11 +108,26 @@ export type StrategyRunResponse = {
   error?: string;
 };
 
+export type SegmentStatus = {
+  status: "OPEN" | "CLOSED" | "PRE-OPEN" | "PAUSED" | "HALTED" | "UNKNOWN";
+  label: string;
+  open: boolean;
+  tradingDay: boolean;
+};
+
+export type MarketStatus = {
+  MCX?: SegmentStatus;
+  NSE?: SegmentStatus;
+  BSE?: SegmentStatus;
+  open?: boolean;
+};
+
 export type BullionState = {
   timeframe: string;
   updatedAt: number;
   strategy: StrategyState;
   market: MarketState;
+  marketStatus?: MarketStatus | null;
   livePrices?: {
     connected?: boolean;
     gold?: LivePriceInfo | null;
@@ -211,9 +226,108 @@ export function createStateStream(
 
   return source;
 }
+
 /* =========================================================
-   SYMBOL SEARCH — typeahead over /api/symbols
+   INCREMENTAL EVENT STREAM — /api/events (phase 2)
    ========================================================= */
+
+export type SegmentEventType =
+  | "snapshot"
+  | "tick"
+  | "candle_update"
+  | "candle_close"
+  | "strategy"
+  | "signal"
+  | "trade_open"
+  | "target1"
+  | "target2"
+  | "sl_update"
+  | "trade_close"
+  | "contract_change"
+  | "connection_status"
+  | "error";
+
+export type SegmentEvent = {
+  type: SegmentEventType;
+  exchange?: string | null;
+  symbol?: string | null;
+  token?: string | null;
+  timeframe?: string | null;
+  at?: number;
+  price?: number | null;
+  timestamp?: number | null;
+  volume?: number | null;
+  candle?: Candle | null;
+  signal?: string | null;
+  status?: string | null;
+  entryPrice?: number | null;
+  trailSL?: number | null;
+  currentPL?: number | null;
+  bestPL?: number | null;
+  realizedPL?: number | null;
+  entryTime?: number | null;
+  exitTime?: string | number | null;
+  connected?: boolean;
+  message?: string;
+  state?: BullionState;
+  marketStatus?: MarketStatus;
+  prevToken?: string;
+  prevSymbol?: string;
+  nextToken?: string;
+  nextSymbol?: string;
+  nextExpiry?: number | null;
+  reason?: string;
+  entry?: number;
+  sl?: number;
+  target1?: number;
+  target2?: number;
+  result?: string;
+  resultPoints?: number;
+  maxPoints?: number;
+  entrySL?: number;
+  activeSL?: number;
+  target1Status?: string;
+  target2Status?: string;
+};
+
+export function createEventStream(
+  onEvent: (event: SegmentEvent) => void,
+  opts?: { types?: SegmentEventType[]; onSnapshot?: (snap: { state: BullionState; marketStatus?: MarketStatus }) => void; onError?: (e: Event) => void }
+) {
+  const types = opts?.types?.join(",") || "";
+  const source = new EventSource(
+    `${API_BASE}/api/events${types ? `?types=${encodeURIComponent(types)}` : ""}`
+  );
+
+  const handle = (raw: string) => {
+    try {
+      const data = JSON.parse(raw);
+      if (data?.type === "snapshot" && opts?.onSnapshot) {
+        opts.onSnapshot(data);
+      }
+      onEvent(data as SegmentEvent);
+    } catch (e) {
+      console.error("Invalid SSE event:", e);
+    }
+  };
+
+  source.onmessage = event => {
+    handle((event as MessageEvent).data);
+  };
+
+  // Some browsers deliver named events via addEventListener, so cover both.
+  ["snapshot", "tick", "candle_update", "candle_close", "strategy", "signal", "trade_open", "target1", "target2", "sl_update", "trade_close", "contract_change", "connection_status", "error"].forEach(type => {
+    source.addEventListener(type, (event: Event) => {
+      handle((event as MessageEvent).data);
+    });
+  });
+
+  source.onerror = event => {
+    opts?.onError?.(event);
+  };
+
+  return source;
+}
 
 export type SymbolRow = {
   exch: string;

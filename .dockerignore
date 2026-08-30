@@ -1,0 +1,16 @@
+node_modules
+frontend/node_modules
+frontend/dist
+data/*.json
+data/symbols/*.zip
+!data/symbols/*.txt
+.env
+.env.*
+api-server.log
+backfill.log
+reconcile-debug.log
+boot-debug.log
+*.tmp
+shoonya-auth.txt
+.git
+.vscode

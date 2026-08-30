@@ -41,13 +41,20 @@ class StrategyEngine {
         // PINE INTEGRITY
         // =====================================================
 
+        const isFixedTgt =
+            String(strategyFile)
+                .toLowerCase()
+                .includes("fixedtgt");
+
         this.pineIntegrity =
             new PineIntegrity({
                 strategyFile:
                     this.strategyFile,
 
                 hashFile:
-                    "data/bullionai-pine-integrity.json",
+                    isFixedTgt
+                        ? "data/bullionai-fixedtgt-integrity.json"
+                        : "data/bullionai-pine-integrity.json",
             });
     }
 
@@ -154,6 +161,16 @@ class StrategyEngine {
             "Verifying Pine strategy integrity..."
         );
 
+        // Auto-create baseline on first run (needed for new fixedtgt script)
+        if (
+            !this.pineIntegrity.loadBaseline()
+        ) {
+            console.log(
+                "Creating Pine integrity baseline for:",
+                path.basename(this.strategyFile)
+            );
+            this.pineIntegrity.createBaseline();
+        }
 
         const integrity =
             this.pineIntegrity.requireValid();
@@ -529,15 +546,10 @@ class StrategyEngine {
         }
 
 
-        const number =
-            Number(
-                String(value)
-                    .replace(
-                        /,/g,
-                        ""
-                    )
-                    .trim()
-            );
+        const cleaned = String(value).replace(/,/g, "").trim();
+        // Extract leading numeric token (handles "+110 pts", "-496 pts", "WAITING 233396", etc.)
+        const m = cleaned.match(/-?\d+(\.\d+)?/);
+        const number = m ? Number(m[0]) : Number(cleaned);
 
 
         return Number.isFinite(
@@ -1153,17 +1165,38 @@ class StrategyEngine {
          */
 
 
-        const table =
+        const rawTable =
             this.extractPineTable(
                 results
             );
 
+        // -----------------------------------------------------
+        // Normalize table keys case-insensitively + aliases
+        // Supports BOTH BullionAI.pine and BullionAI-fixedtgt.pine
+        // -----------------------------------------------------
+        const normMap = new Map();
+        for (const [k, v] of Object.entries(rawTable)) {
+            normMap.set(String(k).trim().toLowerCase(), v);
+        }
+        const pick = (...keys) => {
+            for (const k of keys) {
+                const v = normMap.get(String(k).trim().toLowerCase());
+                if (v !== undefined && v !== null && String(v).trim() !== "") return v;
+            }
+            return undefined;
+        };
+        const table = new Proxy(rawTable, {
+            get(target, prop) {
+                if (typeof prop !== "string") return target[prop];
+                if (prop in target) return target[prop];
+                const v = pick(prop);
+                return v !== undefined ? v : undefined;
+            },
+        });
 
         const entryPrice =
             this.toNumber(
-                table[
-                    "Entry Price"
-                ]
+                pick("Entry Price", "ENTRY", "Entry", "entry price", "entry")
             );
 
 
@@ -1178,21 +1211,22 @@ class StrategyEngine {
         let extremePrice =
             null;
 
+        const tradeVal = String(pick("Trade", "TRADE") || "").trim().toUpperCase();
 
         if (
-            table.Trade === "SELL"
+            tradeVal === "SELL"
         ) {
 
             extremePrice =
                 this.toNumber(
-                    table.Lowest
+                    pick("Lowest", "LOWEST") ?? pick("MAX POINTS", "Max Points", "MAXPOINTS")
                 );
 
         } else {
 
             extremePrice =
                 this.toNumber(
-                    table.Highest
+                    pick("Highest", "HIGHEST") ?? pick("MAX POINTS", "Max Points", "MAXPOINTS")
                 );
 
         }
@@ -1839,25 +1873,40 @@ class StrategyEngine {
         }
 
 
+        const signalVal = String(pick("Trade", "TRADE") || "NONE").trim().toUpperCase();
+        const statusVal = String(pick("Status", "STATUS") || "CLOSED").trim().toUpperCase();
+        // MCX fixedtgt specific display strings (raw table values)
+        const target1Raw = pick("TARGET 1", "Target 1", "TARGET1", "Target1", "Target - 1");
+        const target2Raw = pick("TARGET 2", "Target 2", "TARGET2", "Target2", "Target - 2");
+        const maxPointsRaw = pick("MAX POINTS", "Max Points", "MAXPOINTS", "Max points");
+        const resultRaw = pick("RESULT", "Result", "result", "RESULT ");
+        const slRaw = pick("SL", "sl", "Stop Loss", "Trail SL", "TRAIL SL");
         return {
 
             signal:
-                table.Trade ||
-                "NONE",
+                signalVal || "NONE",
 
             status:
-                table.Status ||
-                "CLOSED",
+                statusVal || "CLOSED",
 
             entryPrice:
                 entryPrice,
 
             trailSL:
                 this.toNumber(
-                    table[
-                        "Trail SL"
-                    ]
+                    pick("Trail SL", "TRAIL SL", "SL", "sl", "Stop Loss")
                 ),
+
+            // MCX fixedtgt panel fields (raw display strings)
+            target1: target1Raw,
+            target1Price: this.toNumber(target1Raw),
+            target2: target2Raw,
+            target2Price: this.toNumber(target2Raw),
+            maxPoints: this.toNumber(maxPointsRaw),
+            maxPointsText: maxPointsRaw,
+            result: resultRaw,
+            resultText: resultRaw,
+            slText: slRaw,
 
             trailHistory:
 
@@ -1867,7 +1916,7 @@ class StrategyEngine {
                 ),
 
             extremeLabel:
-                table.Trade === "SELL"
+                signalVal === "SELL"
                     ? "Lowest"
                     : "Highest",
 
@@ -1875,23 +1924,17 @@ class StrategyEngine {
 
             currentPL:
                 this.toNumber(
-                    table[
-                        "Current P/L"
-                    ]
+                    pick("Current P/L", "CURRENT P/L", "Current PL", "CURRENT PL")
                 ),
 
             bestPL:
                 this.toNumber(
-                    table[
-                        "Best P/L"
-                    ]
+                    pick("Best P/L", "BEST P/L", "MAX POINTS", "Max Points", "MAXPOINTS")
                 ),
 
             realizedPL:
                 this.toNumber(
-                    table[
-                        "Realized P/L"
-                    ]
+                    pick("Realized P/L", "REALIZED P/L", "RESULT", "Result", "result")
                 ),
 
             entryTime:

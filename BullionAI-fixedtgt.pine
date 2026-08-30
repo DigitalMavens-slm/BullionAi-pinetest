@@ -1,0 +1,935 @@
+//@version=6
+indicator("BullionAI", overlay=true)
+
+// =====================================================
+// INPUTS
+// =====================================================
+
+emaLen = input.int(50, "EMA Length")
+rsiLen = input.int(14, "RSI Length")
+atrLen = input.int(14, "ATR Length")
+stAtr = input.int(10, "Supertrend ATR")
+stFactor = input.float(3.0, "Supertrend Factor")
+
+// =====================================================
+// TRADE SETTINGS
+// =====================================================
+
+slAtrMult = input.float(1.5, "SL ATR Multiplier", step=0.1)
+tgt1AtrMult = input.float(2.0, "Target 1 ATR Multiplier", step=0.1)
+tgt2AtrMult = input.float(4.0, "Target 2 ATR Multiplier", step=0.1)
+lockPercent = input.float(35.0, "SL Lock After Target 1 (%)", step=1.0)
+
+// =====================================================
+// INDICATORS
+// =====================================================
+
+emaTrend = ta.ema(close, emaLen)
+rsi = ta.rsi(close, rsiLen)
+atr = ta.atr(atrLen)
+
+[supertrend, direction] = ta.supertrend(stFactor, stAtr)
+
+[macdLine, macdSignal, macdHist] = ta.macd(close, 12, 26, 9)
+
+// =====================================================
+// ORIGINAL BUY / SELL LOGIC
+// =====================================================
+
+trendBull = direction < 0
+trendBear = direction > 0
+
+momentumBull = rsi > 50 and macdLine > macdSignal
+momentumBear = rsi < 50 and macdLine < macdSignal
+
+buyCondition = trendBull and momentumBull
+sellCondition = trendBear and momentumBear
+
+// =====================================================
+// TRADE STORAGE
+// =====================================================
+
+var string lastSignal = "NONE"
+var string tradeStatus = "CLOSED"
+
+var float entryPrice = na
+var float entryATR = na
+var float activeSL = na
+var float target1 = na
+var float target2 = na
+
+var float exitPrice = na
+var float finalPL = na
+
+// Maximum favorable points
+var float maxPoints = na
+
+// Target states
+var bool target1Hit = false
+var bool target2Hit = false
+
+// Entry bar
+var int entryBarIndex = na
+
+// =====================================================
+// ENTRY DATE / TIME
+// =====================================================
+
+var int entryYear = na
+var int entryMonth = na
+var int entryDay = na
+var int entryHour = na
+var int entryMinute = na
+
+// =====================================================
+// EXIT DATE / TIME
+// =====================================================
+
+var int exitYear = na
+var int exitMonth = na
+var int exitDay = na
+var int exitHour = na
+var int exitMinute = na
+
+// =====================================================
+// RESULT
+// =====================================================
+
+var string resultText = "-"
+
+// =====================================================
+// NEW SIGNALS
+// =====================================================
+
+newBuy = buyCondition and tradeStatus == "CLOSED"
+newSell = sellCondition and tradeStatus == "CLOSED"
+
+// =====================================================
+// BUY ENTRY
+// =====================================================
+
+if newBuy
+    entryPrice := close
+    entryATR := atr
+    entryBarIndex := bar_index
+
+    lastSignal := "BUY"
+    tradeStatus := "OPEN"
+
+    exitPrice := na
+    finalPL := na
+    maxPoints := 0.0
+
+    target1Hit := false
+    target2Hit := false
+
+    resultText := "-"
+
+    // Initial fixed SL for this trade
+    activeSL := entryPrice - (entryATR * slAtrMult)
+
+    // Fixed targets based on ATR at entry
+    target1 := entryPrice + (entryATR * tgt1AtrMult)
+    target2 := entryPrice + (entryATR * tgt2AtrMult)
+
+    entryYear := year
+    entryMonth := month
+    entryDay := dayofmonth
+    entryHour := hour
+    entryMinute := minute
+
+    exitYear := na
+    exitMonth := na
+    exitDay := na
+    exitHour := na
+    exitMinute := na
+
+// =====================================================
+// SELL ENTRY
+// =====================================================
+
+if newSell
+    entryPrice := close
+    entryATR := atr
+    entryBarIndex := bar_index
+
+    lastSignal := "SELL"
+    tradeStatus := "OPEN"
+
+    exitPrice := na
+    finalPL := na
+    maxPoints := 0.0
+
+    target1Hit := false
+    target2Hit := false
+
+    resultText := "-"
+
+    // Initial fixed SL for this trade
+    activeSL := entryPrice + (entryATR * slAtrMult)
+
+    // Fixed targets based on ATR at entry
+    target1 := entryPrice - (entryATR * tgt1AtrMult)
+    target2 := entryPrice - (entryATR * tgt2AtrMult)
+
+    entryYear := year
+    entryMonth := month
+    entryDay := dayofmonth
+    entryHour := hour
+    entryMinute := minute
+
+    exitYear := na
+    exitMonth := na
+    exitDay := na
+    exitHour := na
+    exitMinute := na
+
+// =====================================================
+// TRADE MANAGEMENT
+// =====================================================
+
+canManageTrade = tradeStatus == "OPEN" and bar_index > entryBarIndex
+
+// =====================================================
+// MAX POINTS TRACKING
+//
+// IMPORTANT:
+// For an active trade, maxPoints tracks the maximum
+// favorable movement reached during the trade.
+//
+// If TGT2 is hit, maxPoints is overwritten with the
+// exact TGT2 distance so candle wick beyond TGT2 does
+// NOT inflate the value.
+// =====================================================
+
+if canManageTrade
+    if lastSignal == "BUY"
+        favorablePointsBuy = high - entryPrice
+        maxPoints := math.max(maxPoints, favorablePointsBuy)
+
+    if lastSignal == "SELL"
+        favorablePointsSell = entryPrice - low
+        maxPoints := math.max(maxPoints, favorablePointsSell)
+
+// =====================================================
+// BUY MANAGEMENT
+// =====================================================
+
+if canManageTrade and lastSignal == "BUY"
+
+    // -------------------------------------------------
+    // BEFORE TARGET 1
+    // -------------------------------------------------
+
+    if not target1Hit
+
+        buySLHit = low <= activeSL
+        buyTGT1Hit = high >= target1
+
+        // SL gets priority if both levels are touched
+        if buySLHit
+
+            exitPrice := activeSL
+            finalPL := exitPrice - entryPrice
+
+            exitYear := year
+            exitMonth := month
+            exitDay := dayofmonth
+            exitHour := hour
+            exitMinute := minute
+
+            resultText := "SL HIT "
+
+            if finalPL >= 0
+                resultText += "+"
+            
+            resultText += str.tostring(math.round(finalPL))
+            resultText += " pts"
+
+            tradeStatus := "CLOSED"
+
+        else if buyTGT1Hit
+
+            target1Hit := true
+
+            // Move SL to 35% of Target 1 distance
+            activeSL := entryPrice + ((target1 - entryPrice) * lockPercent / 100.0)
+
+    // -------------------------------------------------
+    // AFTER TARGET 1
+    // -------------------------------------------------
+
+    else
+
+        buyProtectedSLHit = low <= activeSL
+        buyTGT2Hit = high >= target2
+
+        // Modified SL gets priority
+        if buyProtectedSLHit
+
+            exitPrice := activeSL
+            finalPL := exitPrice - entryPrice
+
+            exitYear := year
+            exitMonth := month
+            exitDay := dayofmonth
+            exitHour := hour
+            exitMinute := minute
+
+            resultText := "TGT1 +"
+            resultText += str.tostring(math.round(target1 - entryPrice))
+            resultText += " / SL "
+
+            if finalPL >= 0
+                resultText += "+"
+
+            resultText += str.tostring(math.round(finalPL))
+            resultText += " pts"
+
+            tradeStatus := "CLOSED"
+
+        else if buyTGT2Hit
+
+            target2Hit := true
+
+            exitPrice := target2
+            finalPL := target2 - entryPrice
+
+            // IMPORTANT:
+            // MAX POINTS is exactly Target 2.
+            maxPoints := target2 - entryPrice
+
+            exitYear := year
+            exitMonth := month
+            exitDay := dayofmonth
+            exitHour := hour
+            exitMinute := minute
+
+            resultText := "TGT2 ACHIEVED +"
+            resultText += str.tostring(math.round(finalPL))
+            resultText += " pts"
+
+            tradeStatus := "CLOSED"
+
+// =====================================================
+// SELL MANAGEMENT
+// =====================================================
+
+if canManageTrade and lastSignal == "SELL"
+
+    // -------------------------------------------------
+    // BEFORE TARGET 1
+    // -------------------------------------------------
+
+    if not target1Hit
+
+        sellSLHit = high >= activeSL
+        sellTGT1Hit = low <= target1
+
+        // SL gets priority if both levels are touched
+        if sellSLHit
+
+            exitPrice := activeSL
+            finalPL := entryPrice - exitPrice
+
+            exitYear := year
+            exitMonth := month
+            exitDay := dayofmonth
+            exitHour := hour
+            exitMinute := minute
+
+            resultText := "SL HIT "
+
+            if finalPL >= 0
+                resultText += "+"
+
+            resultText += str.tostring(math.round(finalPL))
+            resultText += " pts"
+
+            tradeStatus := "CLOSED"
+
+        else if sellTGT1Hit
+
+            target1Hit := true
+
+            // Move SL to 35% of Target 1 distance
+            activeSL := entryPrice - ((entryPrice - target1) * lockPercent / 100.0)
+
+    // -------------------------------------------------
+    // AFTER TARGET 1
+    // -------------------------------------------------
+
+    else
+
+        sellProtectedSLHit = high >= activeSL
+        sellTGT2Hit = low <= target2
+
+        // Modified SL gets priority
+        if sellProtectedSLHit
+
+            exitPrice := activeSL
+            finalPL := entryPrice - exitPrice
+
+            exitYear := year
+            exitMonth := month
+            exitDay := dayofmonth
+            exitHour := hour
+            exitMinute := minute
+
+            resultText := "TGT1 +"
+            resultText += str.tostring(math.round(entryPrice - target1))
+            resultText += " / SL "
+
+            if finalPL >= 0
+                resultText += "+"
+
+            resultText += str.tostring(math.round(finalPL))
+            resultText += " pts"
+
+            tradeStatus := "CLOSED"
+
+        else if sellTGT2Hit
+
+            target2Hit := true
+
+            exitPrice := target2
+            finalPL := entryPrice - target2
+
+            // IMPORTANT:
+            // MAX POINTS is exactly Target 2.
+            maxPoints := entryPrice - target2
+
+            exitYear := year
+            exitMonth := month
+            exitDay := dayofmonth
+            exitHour := hour
+            exitMinute := minute
+
+            resultText := "TGT2 ACHIEVED +"
+            resultText += str.tostring(math.round(finalPL))
+            resultText += " pts"
+
+            tradeStatus := "CLOSED"
+
+// =====================================================
+// BUY / SELL LABELS
+// =====================================================
+
+plotshape(
+     newBuy,
+     title="BUY SIGNAL",
+     style=shape.labelup,
+     location=location.belowbar,
+     color=color.green,
+     text="BUY",
+     textcolor=color.white,
+     size=size.small)
+
+plotshape(
+     newSell,
+     title="SELL SIGNAL",
+     style=shape.labeldown,
+     location=location.abovebar,
+     color=color.red,
+     text="SELL",
+     textcolor=color.white,
+     size=size.small)
+
+// =====================================================
+// CURRENT P/L
+// =====================================================
+
+float currentPL = na
+
+if tradeStatus == "OPEN"
+
+    if lastSignal == "BUY"
+        currentPL := close - entryPrice
+
+    if lastSignal == "SELL"
+        currentPL := entryPrice - close
+
+// =====================================================
+// ENTRY DISPLAY
+// =====================================================
+
+string entryText = "-"
+
+if not na(entryPrice)
+    entryText := str.tostring(math.round(entryPrice))
+
+// =====================================================
+// SL DISPLAY
+// =====================================================
+
+string slText = "-"
+
+if not na(activeSL)
+    slText := str.tostring(math.round(activeSL))
+
+// =====================================================
+// TARGET 1 DISPLAY
+// =====================================================
+
+string target1Text = "-"
+
+if tradeStatus == "OPEN"
+
+    if target1Hit
+        target1Points = math.abs(target1 - entryPrice)
+        target1Text := "ACHIEVED +"
+        target1Text += str.tostring(math.round(target1Points))
+        target1Text += " pts"
+
+    else
+        target1Text := "WAITING "
+        target1Text += str.tostring(math.round(target1))
+
+else
+
+    if target1Hit
+        target1Points = math.abs(target1 - entryPrice)
+        target1Text := "ACHIEVED +"
+        target1Text += str.tostring(math.round(target1Points))
+        target1Text += " pts"
+    else
+        target1Text := "NOT HIT"
+
+// =====================================================
+// TARGET 2 DISPLAY
+// =====================================================
+
+string target2Text = "-"
+
+if tradeStatus == "OPEN"
+
+    if target2Hit
+        target2Points = math.abs(target2 - entryPrice)
+        target2Text := "ACHIEVED +"
+        target2Text += str.tostring(math.round(target2Points))
+        target2Text += " pts"
+
+    else
+        target2Text := "WAITING "
+        target2Text += str.tostring(math.round(target2))
+
+else
+
+    if target2Hit
+        target2Points = math.abs(target2 - entryPrice)
+        target2Text := "ACHIEVED +"
+        target2Text += str.tostring(math.round(target2Points))
+        target2Text += " pts"
+    else
+        target2Text := "NOT HIT"
+
+// =====================================================
+// CURRENT / FINAL P/L DISPLAY
+// =====================================================
+
+string plText = "-"
+
+if tradeStatus == "OPEN"
+
+    if not na(currentPL)
+
+        if currentPL >= 0
+            plText := "+"
+            plText += str.tostring(math.round(currentPL))
+            plText += " pts"
+
+        else
+            plText := str.tostring(math.round(currentPL))
+            plText += " pts"
+
+else
+
+    if not na(finalPL)
+
+        if finalPL >= 0
+            plText := "+"
+            plText += str.tostring(math.round(finalPL))
+            plText += " pts"
+
+        else
+            plText := str.tostring(math.round(finalPL))
+            plText += " pts"
+
+// =====================================================
+// MAX POINTS DISPLAY
+// =====================================================
+
+string maxPointsText = "-"
+
+if not na(maxPoints)
+
+    maxPointsText := "+"
+    maxPointsText += str.tostring(math.round(maxPoints))
+    maxPointsText += " pts"
+
+// =====================================================
+// ENTRY DATE / TIME
+// =====================================================
+
+string entryDateText = "-"
+string entryTimeText = "-"
+
+if not na(entryDay)
+
+    entryDateText := str.tostring(entryDay)
+    entryDateText += "-"
+    entryDateText += str.tostring(entryMonth)
+    entryDateText += "-"
+    entryDateText += str.tostring(entryYear)
+
+if not na(entryHour)
+
+    int eHour = entryHour % 12
+
+    if eHour == 0
+        eHour := 12
+
+    string eAMPM = entryHour >= 12 ? "PM" : "AM"
+
+    entryTimeText := str.tostring(eHour)
+    entryTimeText += ":"
+    entryTimeText += str.tostring(entryMinute, "00")
+    entryTimeText += " "
+    entryTimeText += eAMPM
+
+// =====================================================
+// EXIT DATE / TIME
+// =====================================================
+
+string exitDateText = "-"
+string exitTimeText = "-"
+
+if tradeStatus == "CLOSED" and not na(exitDay)
+
+    exitDateText := str.tostring(exitDay)
+    exitDateText += "-"
+    exitDateText += str.tostring(exitMonth)
+    exitDateText += "-"
+    exitDateText += str.tostring(exitYear)
+
+if tradeStatus == "CLOSED" and not na(exitHour)
+
+    int xHour = exitHour % 12
+
+    if xHour == 0
+        xHour := 12
+
+    string xAMPM = exitHour >= 12 ? "PM" : "AM"
+
+    exitTimeText := str.tostring(xHour)
+    exitTimeText += ":"
+    exitTimeText += str.tostring(exitMinute, "00")
+    exitTimeText += " "
+    exitTimeText += xAMPM
+
+// =====================================================
+// INFORMATION CENTER
+//
+// ROW 0  HEADER
+// ROW 1  TRADE
+// ROW 2  STATUS
+// ROW 3  ENTRY
+// ROW 4  SL
+// ROW 5  TARGET 1
+// ROW 6  TARGET 2
+// ROW 7  CURRENT / FINAL P/L
+// ROW 8  MAX POINTS
+// ROW 9  ENTRY TIME
+// ROW 10 EXIT TIME
+// ROW 11 RESULT
+//
+// NO EXIT ROW
+// NO PROTECTION ROW
+// =====================================================
+
+var table panel = table.new(
+     position.bottom_right,
+     2,
+     12,
+     bgcolor=color.rgb(12, 14, 18),
+     frame_color=color.rgb(90, 92, 98),
+     frame_width=2,
+     border_color=color.rgb(42, 44, 48),
+     border_width=1)
+
+// =====================================================
+// INFORMATION CENTER DISPLAY
+// =====================================================
+
+if barstate.islast
+
+    // HEADER
+    table.cell(
+         panel,
+         0,
+         0,
+         "BULLIONAI",
+         bgcolor=color.rgb(190, 150, 25),
+         text_color=color.black,
+         text_size=size.normal)
+
+    table.cell(
+         panel,
+         1,
+         0,
+         "INFORMATION CENTER",
+         bgcolor=color.rgb(190, 150, 25),
+         text_color=color.black,
+         text_size=size.small)
+
+    // TRADE
+    table.cell(
+         panel,
+         0,
+         1,
+         "TRADE",
+         text_color=color.silver)
+
+    color tradeColor = color.white
+
+    if lastSignal == "BUY"
+        tradeColor := color.lime
+
+    if lastSignal == "SELL"
+        tradeColor := color.red
+
+    table.cell(
+         panel,
+         1,
+         1,
+         lastSignal,
+         text_color=tradeColor)
+
+    // STATUS
+    table.cell(
+         panel,
+         0,
+         2,
+         "STATUS",
+         text_color=color.silver)
+
+    color statusColor = color.white
+
+    if tradeStatus == "OPEN"
+        statusColor := color.yellow
+
+    table.cell(
+         panel,
+         1,
+         2,
+         tradeStatus,
+         text_color=statusColor)
+
+    // ENTRY
+    table.cell(
+         panel,
+         0,
+         3,
+         "ENTRY",
+         text_color=color.silver)
+
+    table.cell(
+         panel,
+         1,
+         3,
+         entryText,
+         text_color=color.white)
+
+    // SL
+    table.cell(
+         panel,
+         0,
+         4,
+         "SL",
+         text_color=color.silver)
+
+    color slColor = color.red
+
+    if target1Hit
+        slColor := color.yellow
+
+    table.cell(
+         panel,
+         1,
+         4,
+         slText,
+         text_color=slColor)
+
+    // TARGET 1
+    table.cell(
+         panel,
+         0,
+         5,
+         "TARGET 1",
+         text_color=color.silver)
+
+    color tgt1Color = color.aqua
+
+    if target1Hit
+        tgt1Color := color.lime
+
+    if tradeStatus == "CLOSED" and not target1Hit
+        tgt1Color := color.gray
+
+    table.cell(
+         panel,
+         1,
+         5,
+         target1Text,
+         text_color=tgt1Color)
+
+    // TARGET 2
+    table.cell(
+         panel,
+         0,
+         6,
+         "TARGET 2",
+         text_color=color.silver)
+
+    color tgt2Color = color.green
+
+    if target2Hit
+        tgt2Color := color.lime
+
+    if tradeStatus == "CLOSED" and not target2Hit
+        tgt2Color := color.gray
+
+    table.cell(
+         panel,
+         1,
+         6,
+         target2Text,
+         text_color=tgt2Color)
+
+    // CURRENT / FINAL P/L
+    string plLabel = "CURRENT P/L"
+
+    if tradeStatus == "CLOSED"
+        plLabel := "FINAL P/L"
+
+    table.cell(
+         panel,
+         0,
+         7,
+         plLabel,
+         text_color=color.silver)
+
+    color plColor = color.white
+
+    if tradeStatus == "OPEN"
+
+        if not na(currentPL)
+
+            if currentPL >= 0
+                plColor := color.lime
+            else
+                plColor := color.red
+
+    else
+
+        if not na(finalPL)
+
+            if finalPL >= 0
+                plColor := color.lime
+            else
+                plColor := color.red
+
+    table.cell(
+         panel,
+         1,
+         7,
+         plText,
+         text_color=plColor)
+
+    // MAX POINTS
+    table.cell(
+         panel,
+         0,
+         8,
+         "MAX POINTS",
+         text_color=color.silver)
+
+    table.cell(
+         panel,
+         1,
+         8,
+         maxPointsText,
+         text_color=color.aqua)
+
+    // ENTRY TIME
+    table.cell(
+         panel,
+         0,
+         9,
+         "ENTRY TIME",
+         text_color=color.silver)
+
+    table.cell(
+         panel,
+         1,
+         9,
+         entryDateText + " • " + entryTimeText,
+         text_color=color.white)
+
+    // EXIT TIME
+    table.cell(
+         panel,
+         0,
+         10,
+         "EXIT TIME",
+         text_color=color.silver)
+
+    string exitDisplay = "-"
+
+    if tradeStatus == "CLOSED"
+        exitDisplay := exitDateText + " • " + exitTimeText
+
+    table.cell(
+         panel,
+         1,
+         10,
+         exitDisplay,
+         text_color=color.white)
+
+    // RESULT
+    table.cell(
+         panel,
+         0,
+         11,
+         "RESULT",
+         text_color=color.silver)
+
+    color resultColor = color.white
+
+    if target2Hit
+        resultColor := color.lime
+    else if target1Hit and tradeStatus == "CLOSED"
+        resultColor := color.yellow
+    else if tradeStatus == "CLOSED"
+        resultColor := color.red
+
+    table.cell(
+         panel,
+         1,
+         11,
+         resultText,
+         text_color=resultColor)
+
+// =====================================================
+// ALERTS
+// =====================================================
+
+alertcondition(
+     newBuy,
+     title="BUY SIGNAL",
+     message="BullionAI BUY {{ticker}}")
+
+alertcondition(
+     newSell,
+     title="SELL SIGNAL",
+     message="BullionAI SELL {{ticker}}")

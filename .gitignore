@@ -22,6 +22,9 @@ Thumbs.db
 *.tmp
 *.temp
 
+# Temp debug scripts
+scripts/tmp-*.cjs
+
 # Local runtime files
 *.pid
 
@@ -33,4 +36,5 @@ shoonya-auth.txt
 # BullionAI authentication secrets
 data/bullionai-auth-secret.txt
 data/bullionai-users.json
-src/auth/users.js
+data/bullionai-admin-key.txt
+data/bullionai-pine-secret.txt

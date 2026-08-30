@@ -109,10 +109,17 @@ class BullionAILiveCoordinator extends EventEmitter {
         // It does NOT contain a second copy of the strategy.
         // =====================================================
 
+        const strategyFileForExch =
+            String(
+                this.exchange || "MCX"
+            ).toUpperCase() === "MCX"
+                ? "BullionAI-fixedtgt.pine"
+                : "BullionAI.pine";
+
         this.strategy =
             new StrategyEngine({
                 strategyFile:
-                    "BullionAI.pine",
+                    strategyFileForExch,
 
                 candlesFile:
                     this.resolveStrategyDataFile(),

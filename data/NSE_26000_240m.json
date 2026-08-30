@@ -1,50 +1,5 @@
 [
   {
-    "open": 24048,
-    "high": 24225.45,
-    "low": 24025.65,
-    "close": 24225.45,
-    "volume": 0,
-    "openInterest": 0,
-    "time": 1787125500000
-  },
-  {
-    "open": 24225.2,
-    "high": 24265.15,
-    "low": 24184.55,
-    "close": 24246.8,
-    "volume": 0,
-    "openInterest": 0,
-    "time": 1787197500000
-  },
-  {
-    "open": 24247.15,
-    "high": 24284.05,
-    "low": 24205.3,
-    "close": 24284.05,
-    "volume": 0,
-    "openInterest": 0,
-    "time": 1787211900000
-  },
-  {
-    "open": 24282,
-    "high": 24282,
-    "low": 24206.8,
-    "close": 24244,
-    "volume": 0,
-    "openInterest": 0,
-    "time": 1787283900000
-  },
-  {
-    "open": 24244.05,
-    "high": 24285.05,
-    "low": 24223.6,
-    "close": 24285.05,
-    "volume": 0,
-    "openInterest": 0,
-    "time": 1787298300000
-  },
-  {
     "open": 24291.05,
     "high": 24313,
     "low": 24153.3,

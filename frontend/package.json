@@ -13,8 +13,10 @@
     "@tailwindcss/vite": "^4.3.3",
     "lightweight-charts": "^5.2.1",
     "lucide-react": "^1.33.0",
+    "qrcode.react": "^4.2.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
+    "react-router-dom": "^7.18.3",
     "tailwindcss": "^4.3.3"
   },
   "devDependencies": {

@@ -1,4 +1,5 @@
 import {
+  useCallback,
   useEffect,
   useMemo,
   useRef,
@@ -7,24 +8,43 @@ import {
 
 import {
   BarChart3,
+  Bell,
+  BellOff,
+  BellRing,
   Circle,
   Clock,
   ShieldCheck,
   Trash2,
+  X,
 } from "lucide-react";
 
 import {
   BullionChart,
 } from "./components/chart/BullionChart";
+import { Routes, Route, Navigate, useNavigate, useLocation } from "react-router-dom";
 import { AuthScreen } from "./components/AuthScreen";
 import { InstrumentPicker, type SelectedSymbol } from "./components/SymbolSearch";
-import { HomePage, TrialExpired, TrialBadge } from "./components/HomePage";
+import { TrialExpired, TrialBadge } from "./components/HomePage";
+import { AdminDashboard } from "./components/AdminDashboard";
+import { ContactPage } from "./pages/ContactPage";
+import { AboutPage } from "./pages/AboutPage";
+import { Layout } from "./components/Layout";
 import { clearAuthSession, getAuthSession, type AuthUser } from "./lib/auth";
+
+import { MarketingHomePage } from "./pages/MarketingHomePage";
+import { FeaturesPage } from "./pages/FeaturesPage";
+import { PricingPage } from "./pages/PricingPage";
+import { HowItWorksPage } from "./pages/HowItWorksPage";
+import { BlogPage, BlogArticleRoute } from "./pages/BlogPage";
+import { FAQPage } from "./pages/FAQPage";
+import { PaymentPage } from "./pages/PaymentPage";
+import { LegalPage, TERMS_DOC, PRIVACY_DOC, RISK_DOC, REFUND_DOC } from "./pages/LegalPage";
 
 import "./App.css";
 
 import {
   createStateStream,
+  createEventStream,
   subscribeSymbol,
   fetchCandles,
   fetchStrategy,
@@ -336,6 +356,37 @@ function App() {
       }
     });
 
+  // Segment-based display filtering — user segments from registration
+  const allowedSegments = useMemo(
+    () =>
+      new Set(
+        (
+          authUser?.segments || [
+            "MCX",
+            "NSE",
+            "BSE",
+          ]
+        ).map(s =>
+          String(s)
+            .trim()
+            .toUpperCase()
+        )
+      ),
+    [authUser]
+  );
+
+  const filteredCustomSyms = useMemo(
+    () =>
+      customSyms.filter(sym =>
+        allowedSegments.has(
+          String(sym.exch || "")
+            .trim()
+            .toUpperCase()
+        )
+      ),
+    [customSyms, allowedSegments]
+  );
+
   useEffect(() => {
     localStorage.setItem(
       "bullionai_custom_symbols",
@@ -343,19 +394,27 @@ function App() {
     );
   }, [customSyms]);
 
-  /* Stream live prices for every added script */
+  /* Stream live prices for every added script (filtered by user segments) */
 
   useEffect(() => {
-    customSyms.forEach(sym => {
+    filteredCustomSyms.forEach(sym => {
       subscribeSymbol(sym);
     });
-  }, [customSyms]);
+  }, [filteredCustomSyms]);
 
   useEffect(() => {
     if (!selectedSymbol) return;
-
+    const seg = String(
+      selectedSymbol.exch || ""
+    )
+      .trim()
+      .toUpperCase();
+    if (!allowedSegments.has(seg)) {
+      setSelectedSymbol(null);
+      return;
+    }
     subscribeSymbol(selectedSymbol);
-  }, [selectedSymbol]);
+  }, [selectedSymbol, allowedSegments]);
 
   const [customLastCloses, setCustomLastCloses] = useState<
     Record<string, number>
@@ -366,7 +425,7 @@ function App() {
   >({});
 
   useEffect(() => {
-    customSyms.forEach(async sym => {
+    filteredCustomSyms.forEach(async sym => {
       const key = `${sym.exch}:${sym.token}`;
       if (customLastCloses[key] != null) return;
       try {
@@ -381,7 +440,7 @@ function App() {
         }
       } catch {}
     });
-  }, [customSyms]);
+  }, [filteredCustomSyms]);
 
   // Keep ref in sync synchronously (before effects run)
   latestSelRef.current = {
@@ -398,15 +457,31 @@ function App() {
   }
 
   function addCustomSym(sym: SelectedSymbol) {
+    const seg = String(sym.exch || "")
+      .trim()
+      .toUpperCase();
+    if (!allowedSegments.has(seg)) {
+      setCandleError(
+        `This script is ${seg} but your account allows only ${[...allowedSegments].join(", ")}.`
+      );
+      return;
+    }
+    setCandleError(null);
+    const isNew = !customSyms.some(
+      x => x.exch === sym.exch && x.token === sym.token
+    );
     setCustomSyms(prev =>
       prev.some(
-        x =>
-          x.exch === sym.exch &&
-          x.token === sym.token
+        x => x.exch === sym.exch && x.token === sym.token
       )
         ? prev
         : [...prev, sym]
     );
+    // Desktop notifications: prompt (user gesture) when the first
+    // script is added so BUY/SELL alerts reach the desktop.
+    if (isNew && customSyms.length === 0) {
+      requestDesktopNotifications();
+    }
   }
 
   function removeCustomSym(sym: SelectedSymbol) {
@@ -428,18 +503,15 @@ function App() {
     );
   }
 
-  const [landingView, setLandingView] =
-    useState<"home" | "signin" | "register">(() => {
-      const params =
-        new URLSearchParams(window.location.search);
-      const hash =
-        window.location.hash;
-      return params.get("trial") === "1" ||
-        hash === "#trial" ||
-        hash === "#start-trial"
-        ? "register"
-        : "home";
-    });
+
+
+  const [showAdmin, setShowAdmin] = useState(
+    () =>
+      new URLSearchParams(
+        window.location.search
+      ).get("admin") === "1" ||
+      window.location.hash === "#admin"
+  );
 
   /* -------------------------
      DATA EFFECTS
@@ -561,11 +633,13 @@ function App() {
     load(true);
 
 
+    // Faster polling while a fresh script has no candles yet, so a live
+    // candle appears as soon as the next market tick lands (then settle).
     const poll = setInterval(
 
       () => load(false),
 
-      45_000
+      candles.length === 0 ? 8_000 : 45_000
 
     );
 
@@ -739,6 +813,74 @@ function App() {
   }, []);
 
 
+  // Incremental event stream (phase 2): update live prices + candle from
+  // backend events without waiting for the next full state broadcast.
+  useEffect(() => {
+
+    const source = createEventStream(
+      (ev) => {
+        if (ev.type === "tick" && ev.price != null) {
+          setState(prev => {
+            if (!prev?.livePrices) return prev;
+            const token = String(ev.token || "");
+            const live = prev.livePrices as Record<string, any>;
+            const existing = live[token] || {};
+            return {
+              ...prev,
+              livePrices: {
+                ...live,
+                [token]: {
+                  ...existing,
+                  price: ev.price,
+                  tickTime: ev.timestamp || Date.now(),
+                  receivedAt: Date.now(),
+                  exchange: ev.exchange ?? existing?.exchange,
+                  token,
+                },
+              },
+            };
+          });
+        }
+
+        // Contract rollover: swap the selected symbol to the new token so
+        // the chart, candles and signal engine refresh automatically.
+        if (ev.type === "contract_change" && ev.nextToken) {
+          setSelectedSymbol(prev => {
+            if (!prev) return prev;
+            const prevExch = String(prev.exch || "").toUpperCase();
+            const evExch = String(ev.exchange || "").toUpperCase();
+            if (evExch && prevExch && evExch !== prevExch) return prev;
+            const prevRoot = String(prev.tsym || prev.label || "").toUpperCase();
+            const nextRoot = String(ev.nextSymbol || "").toUpperCase();
+            const sameRoot =
+              prevRoot.startsWith(nextRoot) ||
+              nextRoot.startsWith(prevRoot) ||
+              (prevRoot && nextRoot && prevRoot.slice(0, 3) === nextRoot.slice(0, 3));
+            if (prevRoot && nextRoot && !sameRoot) return prev;
+            const nextToken = String(ev.nextToken);
+            const nextSym = ev.nextSymbol ? String(ev.nextSymbol) : prev.tsym;
+            return { ...prev, token: nextToken, tsym: nextSym, label: nextSym };
+          });
+        }
+      },
+      {
+        types: ["tick", "candle_close", "candle_update", "strategy", "contract_change", "connection_status"],
+        onSnapshot: (snap) => {
+          if (snap?.state) setState(snap.state);
+        },
+      }
+    );
+
+
+    return () => {
+
+      source.close();
+
+    };
+
+  }, []);
+
+
   // Clock (1s)
 
   useEffect(() => {
@@ -754,6 +896,262 @@ function App() {
     return () => clearInterval(id);
 
   }, []);
+
+  // Notifications — BUY/SELL for watchlist scripts (in-app + browser push)
+
+  const [notifications, setNotifications] =
+    useState<
+      Array<{
+        id: string;
+        exch: string;
+        token: string;
+        tsym: string;
+        signal: string;
+        price: number | null;
+        time: number;
+        read: boolean;
+      }>
+    >(() => {
+      try {
+        return JSON.parse(
+          localStorage.getItem(
+            "bullionai_notifications"
+          ) || "[]"
+        );
+      } catch {
+        return [];
+      }
+    });
+
+  const [showNotifPanel, setShowNotifPanel] =
+    useState(false);
+
+  const [toast, setToast] = useState<{
+    id: string;
+    signal: string;
+    tsym: string;
+    price: number | null;
+  } | null>(null);
+
+  const prevSignalsRef = useRef<
+    Map<string, string>
+  >(new Map());
+
+  /* Desktop (browser) notification permission state */
+  const [notifyPermission, setNotifyPermission] =
+    useState<NotificationPermission | "unsupported">(() => {
+      if (typeof window === "undefined" || !("Notification" in window)) {
+        return "unsupported";
+      }
+      return Notification.permission;
+    });
+
+  const notifyAvailable =
+    notifyPermission !== "unsupported";
+  const desktopEnabled =
+    notifyPermission === "granted";
+
+  useEffect(() => {
+    if (typeof window === "undefined" || !("Notification" in window)) {
+      setNotifyPermission("unsupported");
+      return;
+    }
+    const sync = () =>
+      setNotifyPermission(Notification.permission);
+    sync();
+    document.addEventListener("visibilitychange", sync);
+    window.addEventListener("focus", sync);
+    return () => {
+      document.removeEventListener("visibilitychange", sync);
+      window.removeEventListener("focus", sync);
+    };
+  }, []);
+
+  const requestDesktopNotifications = useCallback(async () => {
+    if (typeof window === "undefined" || !("Notification" in window)) {
+      alert("Desktop notifications are not supported by this browser.");
+      return;
+    }
+    try {
+      let perm = Notification.permission;
+      if (perm === "default") {
+        // Must be called from a user gesture to be allowed.
+        perm = await Notification.requestPermission();
+      } else if (perm === "denied") {
+        setNotifyPermission("denied");
+        setToast({
+          id: `denied:${Date.now()}`,
+          signal: "DENIED",
+          tsym: "Desktop notifications blocked",
+          price: null,
+        });
+        setTimeout(() => setToast(null), 6000);
+        return;
+      }
+      setNotifyPermission(perm);
+      if (perm === "granted") {
+        // Send a test notification so the user knows it's live.
+        try {
+          new Notification("BullionAI desktop alerts ON", {
+            body: "You'll now get BUY/SELL notifications for your watchlist scripts.",
+            icon: "/vite.svg",
+          });
+        } catch {}
+      }
+    } catch {}
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem(
+      "bullionai_notifications",
+      JSON.stringify(
+        notifications.slice(0, 50)
+      )
+    );
+  }, [notifications]);
+
+  useEffect(() => {
+    if (!authUser) return;
+    if (
+      typeof window === "undefined" ||
+      !("Notification" in window)
+    )
+      return;
+    // Permission is requested from a user gesture (watchlist add or the
+    // "Enable desktop alerts" button) — see requestDesktopNotifications.
+  }, [authUser]);
+
+  // Poll strategy for each watchlist script and notify on signal flip
+  useEffect(() => {
+    if (
+      filteredCustomSyms.length === 0
+    )
+      return;
+
+    let cancelled = false;
+
+    async function checkSignals() {
+      for (const sym of filteredCustomSyms) {
+        const key = `${sym.exch}:${sym.token}`;
+        // MCX signals are always 15m per requirement
+        const tfForSym =
+          String(sym.exch || "")
+            .trim()
+            .toUpperCase() === "MCX"
+            ? "15m"
+            : selectedTimeframe;
+        try {
+          const res =
+            await fetchStrategy(
+              tfForSym,
+              undefined,
+              sym
+            );
+          if (cancelled) return;
+          const sig = String(
+            res.strategy?.signal || "NONE"
+          )
+            .trim()
+            .toUpperCase();
+          const prev =
+            prevSignalsRef.current.get(
+              key
+            );
+
+          if (
+            prev === undefined
+          ) {
+            // Baseline — don't notify on first fetch
+            if (
+              sig === "BUY" ||
+              sig === "SELL"
+            ) {
+              prevSignalsRef.current.set(
+                key,
+                sig
+              );
+            } else {
+              prevSignalsRef.current.set(
+                key,
+                sig
+              );
+            }
+            continue;
+          }
+
+          if (
+            sig !== prev &&
+            (sig === "BUY" ||
+              sig === "SELL")
+          ) {
+            const price =
+              res.strategy?.entryPrice ??
+              null;
+            const notif = {
+              id: `${key}:${Date.now()}`,
+              exch: sym.exch,
+              token: sym.token,
+              tsym: sym.tsym,
+              signal: sig,
+              price,
+              time: Date.now(),
+              read: false,
+            };
+            setNotifications(prevN => [
+              notif,
+              ...prevN,
+            ].slice(0, 50));
+            setToast({
+              id: notif.id,
+              signal: sig,
+              tsym: sym.tsym,
+              price,
+            });
+            setTimeout(
+              () => setToast(null),
+              4000
+            );
+            // Desktop push — only when permission is granted.
+            if (
+              typeof window !== "undefined" &&
+              "Notification" in window &&
+              Notification.permission === "granted"
+            ) {
+              try {
+                const str = res.strategy as any;
+                const parts: string[] = [`${sym.exch} ${sym.tsym}`];
+                if (price != null) parts.push(`Entry ${price}`);
+                if (str?.target1 != null) parts.push(`T1 ${str.target1}`);
+                if (str?.target2 != null) parts.push(`T2 ${str.target2}`);
+                new Notification(`BullionAI ${sig} — ${sym.tsym}`, {
+                  body: parts.join(" · "),
+                  icon: "/vite.svg",
+                  tag: `bullionai:${sym.exch}:${sym.token}`,
+                });
+              } catch {}
+            }
+          }
+          prevSignalsRef.current.set(
+            key,
+            sig
+          );
+        } catch {}
+      }
+    }
+
+    checkSignals();
+    const id = setInterval(
+      checkSignals,
+      30_000
+    );
+    return () => {
+      cancelled = true;
+      clearInterval(id);
+    };
+  }, [
+    filteredCustomSyms,
+    selectedTimeframe,
+  ]);
 
 
   /* -------------------------
@@ -782,6 +1180,13 @@ function App() {
 
   const isTradeOpen =
     status === "OPEN";
+
+  const isMCXSelected =
+    String(
+      selectedSymbol?.exch || ""
+    )
+      .trim()
+      .toUpperCase() === "MCX";
 
 
   /* Last 5 signals, newest first —
@@ -956,6 +1361,34 @@ function App() {
     [Math.floor(nowMs / 60_000)]
   );
 
+  /* Exchange-aware market status for the selected segment (SSE-backed). */
+  const selectedExchangeStatus = useMemo(() => {
+    const exch = String(selectedSymbol?.exch || "").trim().toUpperCase() || "MCX";
+    const ms = (state as any)?.marketStatus;
+    const fallbackOpen = exch === "MCX" ? marketOpenIST : marketOpenIST;
+    if (ms && ms[exch]) {
+      const s = ms[exch];
+      return {
+        current: {
+          exchange: exch,
+          status: s.status || (s.open ? "OPEN" : "CLOSED"),
+          label: s.label || s.status || "Closed",
+          open: !!(s.open || s.status === "OPEN"),
+        },
+        all: ms,
+      };
+    }
+    return {
+      current: {
+        exchange: exch,
+        status: fallbackOpen ? "OPEN" : "CLOSED",
+        label: fallbackOpen ? "Open" : "Closed",
+        open: fallbackOpen,
+      },
+      all: ms || null,
+    };
+  }, [state, selectedSymbol, marketOpenIST]);
+
 
   /* Watchlist active row */
 
@@ -1082,11 +1515,11 @@ function App() {
       ? Math.min(dayStats.low, livePrice)
       : dayStats?.low ?? null;
 
-  /* Ticker rows fused with SSE live prices — user-added scripts only */
+  /* Ticker rows fused with SSE live prices — filtered by user segments */
 
   const customTickerRows =
     useMemo(() => {
-      return customSyms.map(sym => {
+      return filteredCustomSyms.map(sym => {
         const lp =
           (state as any)?.livePrices?.[sym.token] ?? null;
         const price =
@@ -1111,7 +1544,7 @@ function App() {
           changePct,
         };
       });
-    }, [customSyms, state, customLastCloses, customPrevCloses]);
+    }, [filteredCustomSyms, state, customLastCloses, customPrevCloses]);
 
   const importantIndices = useMemo(
     () => [
@@ -1151,37 +1584,197 @@ function App() {
   }, []);
 
   
-  /* ================= AUTH / ACCESS GATES ================= */
+  const navigate = useNavigate();
+  const location = useLocation();
 
-  if (!authUser) {
-    if (landingView === "home") {
-      return (
-        <HomePage
-          onStartTrial={() => setLandingView("register")}
-          onSignIn={() => setLandingView("signin")}
-        />
-      );
-    }
+  // keep ?admin=1 support
+  useEffect(() => {
+    const p = new URLSearchParams(location.search);
+    if (p.get("admin") === "1" || location.hash === "#admin") setShowAdmin(true);
+  }, [location.search, location.hash]);
+
+  /* ================= ADMIN VIEW (full-page) ================= */
+  if (showAdmin) {
     return (
-      <AuthScreen
-        key={landingView}
-        initialMode={landingView === "register" ? "register" : "login"}
-        onAuthed={u => { setAuthUser(u); setLandingView("home"); }}
+      <AdminDashboard
+        onExit={() => {
+          setShowAdmin(false);
+          navigate("/");
+        }}
       />
     );
   }
 
-  if (authUser.hasAccess === false) {
-    return <TrialExpired user={authUser} />;
-  }
+  // Auto-redirect authenticated users away from auth pages
+  useEffect(() => {
+    if (authUser && (location.pathname === "/login" || location.pathname === "/register")) {
+      navigate("/dashboard", { replace: true });
+    }
+  }, [authUser, location.pathname]);
 
   /* -------------------------
-     RENDER
+     RENDER — Multi-page via React Router
      ------------------------- */
 
   return (
-
-    <div className="page-glow flex min-h-screen flex-col text-slate-900 lg:h-screen lg:overflow-hidden">
+    <Routes>
+      {/* ===== MARKETING SITE (public, SEO) ===== */}
+      <Route
+        path="/"
+        element={
+          <Layout>
+            <MarketingHomePage />
+          </Layout>
+        }
+      />
+      <Route
+        path="/features"
+        element={
+          <Layout>
+            <FeaturesPage />
+          </Layout>
+        }
+      />
+      <Route
+        path="/pricing"
+        element={
+          <Layout>
+            <PricingPage />
+          </Layout>
+        }
+      />
+      <Route
+        path="/how-it-works"
+        element={
+          <Layout>
+            <HowItWorksPage />
+          </Layout>
+        }
+      />
+      <Route
+        path="/subscribe"
+        element={<PaymentPage />}
+      />
+      <Route
+        path="/payment"
+        element={<PaymentPage />}
+      />
+      <Route
+        path="/blog"
+        element={
+          <Layout>
+            <BlogPage />
+          </Layout>
+        }
+      />
+      <Route
+        path="/blog/:slug"
+        element={
+          <Layout>
+            <BlogArticleRoute />
+          </Layout>
+        }
+      />
+      <Route
+        path="/faq"
+        element={
+          <Layout>
+            <FAQPage />
+          </Layout>
+        }
+      />
+      <Route
+        path="/about"
+        element={
+          <Layout>
+            <AboutPage />
+          </Layout>
+        }
+      />
+      <Route
+        path="/contact"
+        element={
+          <Layout>
+            <ContactPage />
+          </Layout>
+        }
+      />
+      <Route
+        path="/terms"
+        element={
+          <Layout>
+            <LegalPage doc={TERMS_DOC} />
+          </Layout>
+        }
+      />
+      <Route
+        path="/privacy"
+        element={
+          <Layout>
+            <LegalPage doc={PRIVACY_DOC} />
+          </Layout>
+        }
+      />
+      <Route
+        path="/risk-disclosure"
+        element={
+          <Layout>
+            <LegalPage doc={RISK_DOC} />
+          </Layout>
+        }
+      />
+      <Route
+        path="/refund-policy"
+        element={
+          <Layout>
+            <LegalPage doc={REFUND_DOC} />
+          </Layout>
+        }
+      />
+      {/* ===== DASHBOARD APP (auth-protected) ===== */}
+      <Route
+        path="/login"
+        element={
+          authUser ? (
+            <Navigate to="/dashboard" replace />
+          ) : (
+            <AuthScreen
+              key="login"
+              initialMode="login"
+              onAuthed={u => {
+                setAuthUser(u);
+                navigate("/dashboard");
+              }}
+            />
+          )
+        }
+      />
+      <Route
+        path="/register"
+        element={
+          authUser ? (
+            <Navigate to="/dashboard" replace />
+          ) : (
+            <AuthScreen
+              key="register"
+              initialMode="register"
+              onAuthed={u => {
+                setAuthUser(u);
+                navigate("/dashboard");
+              }}
+            />
+          )
+        }
+      />
+      <Route
+        path="/dashboard"
+        element={
+          !authUser ? (
+            <Navigate to="/login" replace />
+          ) : authUser.hasAccess === false ? (
+            <TrialExpired user={authUser} />
+          ) : (
+            <div className="page-glow flex min-h-screen flex-col text-slate-900 lg:h-screen lg:overflow-hidden">
 
       {/* ================= HEADER ================= */}
 
@@ -1248,7 +1841,206 @@ function App() {
           </span>
 
 
+          {/* Notifications bell — filtered by user segments */}
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() =>
+                setShowNotifPanel(v => !v)
+              }
+              className={`relative flex h-8 w-8 items-center justify-center rounded-full border transition ${
+                desktopEnabled
+                  ? "border-emerald-200 bg-emerald-50 text-emerald-600 hover:bg-emerald-100"
+                  : "border-slate-200 bg-white text-slate-500 hover:bg-slate-50"
+              }`}
+              title={
+                desktopEnabled
+                  ? "Desktop notifications ON"
+                  : notifyAvailable
+                    ? "Desktop notifications off"
+                    : "Notifications not supported"
+              }
+              aria-label={`Notifications, desktop alerts ${
+                desktopEnabled ? "on" : "off"
+              }`}
+            >
+              {desktopEnabled ? (
+                <BellRing className="h-4 w-4" />
+              ) : notifyAvailable ? (
+                <Bell className="h-4 w-4" />
+              ) : (
+                <BellOff className="h-4 w-4" />
+              )}
+              {notifications.filter(
+                n => !n.read
+              ).length > 0 && (
+                <span className="absolute -right-1 -top-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-rose-500 px-1 text-[9px] font-bold text-white">
+                  {
+                    notifications.filter(
+                      n => !n.read
+                    ).length
+                  }
+                </span>
+              )}
+              {!desktopEnabled &&
+                notifyAvailable &&
+                notifications.filter(n => !n.read).length > 0 && (
+                  <span className="absolute -bottom-1 -right-1 flex h-3 w-3 items-center justify-center rounded-full bg-slate-300">
+                    <BellOff className="h-2 w-2 text-slate-600" />
+                  </span>
+                )}
+            </button>
+            {showNotifPanel && (
+              <div className="absolute right-0 top-9 z-50 max-h-80 w-80 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_20px_60px_-16px_rgba(15,23,42,0.3)]">
+                <div className="flex items-center justify-between border-b border-slate-100 px-3 py-2">
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-slate-600">
+                    Notifications
+                  </span>
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={() =>
+                        setNotifications(prev =>
+                          prev.map(n => ({
+                            ...n,
+                            read: true,
+                          }))
+                        )
+                      }
+                      className="rounded-full px-2 py-1 text-[10px] font-semibold text-blue-600 hover:bg-blue-50"
+                    >
+                      Mark read
+                    </button>
+                    <button
+                      onClick={() =>
+                        setShowNotifPanel(
+                          false
+                        )
+                      }
+                      className="rounded-full p-1 text-slate-400 hover:bg-slate-100"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Desktop notification toggle */}
+                {notifyAvailable && (
+                  <div className="flex items-center justify-between gap-2 border-b border-slate-100 bg-slate-50/70 px-3 py-2.5">
+                    <div className="min-w-0">
+                      <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                        Desktop alerts
+                      </div>
+                      <div className="truncate text-[10px] text-slate-400">
+                        {desktopEnabled
+                          ? "BUY/SELL alerts reach your desktop"
+                          : notifyPermission === "denied"
+                            ? "Blocked in browser settings — unblock to enable"
+                            : "Get signal alerts as desktop notifications"}
+                      </div>
+                    </div>
+                    {desktopEnabled ? (
+                      <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1 text-[10px] font-bold text-emerald-700 ring-1 ring-emerald-200">
+                        <BellRing className="h-3 w-3" /> ON
+                      </span>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={requestDesktopNotifications}
+                        className="shrink-0 rounded-full bg-accent px-3 py-1.5 text-[10px] font-bold text-white transition hover:bg-accent-dark"
+                      >
+                        Enable
+                      </button>
+                    )}
+                  </div>
+                )}
+
+                <div className="max-h-64 overflow-y-auto">
+                  {notifications.length ===
+                    0 && (
+                    <div className="px-4 py-8 text-center text-[11px] text-slate-400">
+                      No signals yet. Add
+                      scripts to your watchlist.
+                    </div>
+                  )}
+                  {notifications.map(n => (
+                    <div
+                      key={n.id}
+                      className={[
+                        "flex items-center gap-2 border-b border-slate-50 px-3 py-2 last:border-0",
+                        !n.read
+                          ? "bg-blue-50/60"
+                          : "",
+                      ].join(" ")}
+                    >
+                      <span
+                        className={[
+                          "flex h-6 w-10 shrink-0 items-center justify-center rounded-md text-[10px] font-black",
+                          n.signal === "BUY"
+                            ? "bg-emerald-100 text-emerald-700"
+                            : "bg-rose-100 text-rose-700",
+                        ].join(" ")}
+                      >
+                        {n.signal}
+                      </span>
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate text-[11px] font-semibold text-slate-800">
+                          {n.tsym} · {n.exch}
+                        </span>
+                        <span className="block text-[10px] text-slate-400">
+                          {n.price != null
+                            ? fmt(n.price)
+                            : ""}{" "}
+                          ·{" "}
+                          {new Date(
+                            n.time
+                          ).toLocaleTimeString(
+                            "en-IN",
+                            {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            }
+                          )}
+                        </span>
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {(authUser as any)?.isAdmin && (
+            <button
+              onClick={() => setShowAdmin(true)}
+              title="Admin Dashboard"
+              className="hidden items-center gap-1.5 rounded-full border border-amber-200 bg-amber-50 px-3 py-1.5 text-xs font-bold text-amber-700 hover:bg-amber-100 md:flex"
+            >
+              <ShieldCheck className="h-3.5 w-3.5" />
+              Admin
+            </button>
+          )}
+
           <TrialBadge user={authUser} />
+
+          {authUser?.segments &&
+            authUser.segments.length > 0 && (
+              <span className="hidden items-center gap-1 md:flex">
+                {authUser.segments.map(seg => {
+                  const m = (state as any)?.marketStatus?.[seg];
+                  const open = m ? m.status === "OPEN" : seg === "MCX" ? marketOpenIST : marketOpenIST;
+                  return (
+                    <span
+                      key={seg}
+                      className="flex items-center gap-1 rounded-full bg-slate-900 px-2 py-0.5 text-[9px] font-bold tracking-wider text-white"
+                      title={`${seg} market ${m ? (m.status || (open ? "OPEN" : "CLOSED")) : open ? "OPEN" : "CLOSED"}`}
+                    >
+                      {seg}
+                      <span className={`h-1.5 w-1.5 rounded-full ${open ? "bg-emerald-400" : "bg-red-400"}`} />
+                    </span>
+                  );
+                })}
+              </span>
+            )}
 
           <span className="hidden h-5 w-px bg-slate-200 md:block" />
 
@@ -1260,6 +2052,46 @@ function App() {
         </div>
 
       </header>
+
+      {/* Toast for BUY/SELL notifications */}
+      {toast && (
+        <div className="pointer-events-none fixed right-4 top-20 z-[100] flex max-w-sm items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-[0_20px_60px_-16px_rgba(15,23,42,0.3)]">
+          <span
+            className={[
+              "flex h-8 w-12 shrink-0 items-center justify-center rounded-lg text-[11px] font-black",
+              toast.signal === "BUY"
+                ? "bg-emerald-100 text-emerald-700"
+                : toast.signal === "SELL"
+                  ? "bg-rose-100 text-rose-700"
+                  : "bg-slate-100 text-slate-600",
+            ].join(" ")}
+          >
+            {toast.signal === "BUY" || toast.signal === "SELL" ? (
+              toast.signal
+            ) : (
+              <BellOff className="h-4 w-4" />
+            )}
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block text-[12px] font-bold text-slate-800">
+              {toast.tsym}
+            </span>
+            <span className="block text-[11px] text-slate-500">
+              {toast.signal === "BLOCKED"
+                ? "Notifications are blocked in your browser. Enable them to get watchlist alerts."
+                : toast.signal === "DENIED"
+                  ? "Enable notifications in browser settings to receive alerts."
+                  : `${toast.price != null ? fmt(toast.price) : ""} · Watchlist alert`}
+            </span>
+          </span>
+          <button
+            onClick={() => setToast(null)}
+            className="pointer-events-auto rounded-full p-1 text-slate-400 hover:bg-slate-100"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+      )}
 
 
       {/* ================= LIVE TICKER ================= */}
@@ -1431,7 +2263,90 @@ function App() {
 
               {/* ============ STRATEGY TABLE ============ */}
 
-              <table className="mt-2 w-full border-collapse text-[12px]">
+              {isMCXSelected ? (
+                <table className="mt-2 w-full border-collapse text-[12px]">
+                  <tbody>
+                    {[
+                        ["Entry", fmt(entryPrice), ""],
+                        ["SL", fmt(trailSL), "text-amber-600"],
+                        [
+                          "TGT-1",
+                          (strategy as any)?.target1 ?? "-",
+                          (strategy as any)?.target1 &&
+                          String((strategy as any).target1).includes(
+                            "ACHIEVED"
+                          )
+                            ? "text-emerald-600"
+                            : "",
+                        ],
+                        [
+                          "TGT-2",
+                          (strategy as any)?.target2 ?? "-",
+                          (strategy as any)?.target2 &&
+                          String((strategy as any).target2).includes(
+                            "ACHIEVED"
+                          )
+                            ? "text-emerald-600"
+                            : "",
+                        ],
+                        [
+                          "Current P/L",
+                          fmtSigned(currentPL),
+                          currentPL == null
+                            ? "text-slate-400"
+                            : currentPL >= 0
+                              ? "text-emerald-600"
+                              : "text-rose-600",
+                        ],
+                        [
+                          "Max Points",
+                          (strategy as any)?.maxPointsText ??
+                            ((strategy as any)?.maxPoints !=
+                            null
+                              ? fmt(
+                                  (strategy as any)
+                                    .maxPoints
+                                )
+                              : "-"),
+                          "",
+                        ],
+                        [
+                          "Entry Time",
+                          entryTimeLabel ?? "-",
+                          "",
+                        ],
+                        [
+                          "Exit Time",
+                          exitTimeLabel ?? "-",
+                          "",
+                        ],
+                        [
+                          "Result",
+                          (strategy as any)?.result ??
+                            "-",
+                          "",
+                        ],
+                      ].map(([label, value, tone]) => (
+                      <tr
+                        key={label as string}
+                        className="border-b border-slate-100 last:border-0"
+                      >
+                        <td className="py-[7px] pl-2 font-bold text-slate-700">
+                          {label}
+                        </td>
+                        <td className="py-[7px] pr-2 text-right">
+                          <span
+                            className={`font-mono font-bold tabular-nums ${tone || "text-slate-900"}`}
+                          >
+                            {value}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              ) : (
+                <table className="mt-2 w-full border-collapse text-[12px]">
 
                 <tbody>
 
@@ -1499,7 +2414,7 @@ function App() {
 
                 </tbody>
               </table>
-
+              )}
 
               {strategyError && (
                 <div className="mt-2 rounded-lg border border-amber-200 bg-amber-50/70 px-2.5 py-2 text-[10px] font-medium leading-4 text-amber-700">
@@ -1551,6 +2466,8 @@ function App() {
                 const buy =
                   ev.signal === "BUY";
 
+                const pl = (ev as any).realizedPL ?? null;
+
                 return (
 
                   <div
@@ -1599,6 +2516,24 @@ function App() {
 
                       </span>
 
+                    </span>
+
+                    <span className="text-right leading-tight">
+                      <span
+                        className={[
+                          "block font-mono text-[10px] font-bold tabular-nums",
+                          pl == null
+                            ? "text-slate-400"
+                            : pl >= 0
+                              ? "text-emerald-600"
+                              : "text-rose-600",
+                        ].join(" ")}
+                      >
+                        {pl != null ? fmtSigned(pl) : "—"}
+                      </span>
+                      <span className="block text-[8px] font-medium uppercase tracking-wider text-slate-400">
+                        P/L
+                      </span>
                     </span>
 
                   </div>
@@ -1667,18 +2602,16 @@ function App() {
               )}
 
 
-              {candleError && (
+              {candleError && candles.length === 0 && (
                 <div className="absolute inset-0 z-10 flex items-center justify-center">
 
-                  <div className="rounded-xl border border-red-200 bg-red-50 px-5 py-4 text-center shadow-sm">
+                  <div className="rounded-xl border border-amber-200 bg-amber-50 px-5 py-4 text-center shadow-sm">
 
-                    <div className="text-[12px] font-semibold text-red-700">
-
-                      Unable to load candles
-
+                    <div className="text-[12px] font-semibold text-amber-700">
+                      Loading candle data
                     </div>
 
-                    <div className="mt-1 text-[10px] text-red-500/80">
+                    <div className="mt-1 text-[10px] text-amber-600/80">
                       {candleError}
                     </div>
 
@@ -1755,6 +2688,15 @@ function App() {
             {/* Bottom bar: intervals + countdown + clock */}
 
             <div className="flex shrink-0 items-center justify-between gap-2 border-t border-slate-100 px-3 py-1.5">
+
+              {selectedSymbol &&
+                String(
+                  selectedSymbol.exch || ""
+                ).toUpperCase() === "MCX" && (
+                  <span className="mr-2 hidden shrink-0 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-700 sm:inline">
+                    MCX signals: 15m only
+                  </span>
+                )}
 
               <div className="flex items-center gap-0.5 overflow-x-auto">
 
@@ -1876,11 +2818,13 @@ function App() {
 
             <div className="p-1">
 
-              {customSyms.length ===
+              {filteredCustomSyms.length ===
                 0 && (
                 <div className="px-3 py-6 text-center text-[11px] leading-relaxed text-slate-400">
 
-                  No scripts added yet.
+                  {customSyms.length === 0
+                    ? "No scripts added yet."
+                    : "No scripts match your segments."}
 
                   <br />
 
@@ -1892,7 +2836,7 @@ function App() {
 
                           {/* CUSTOM SYMBOL ROWS */}
 
-              {customSyms.map(sym => {
+              {filteredCustomSyms.map(sym => {
                 const lp =
                   state &&
                   (state as any)?.livePrices ?
@@ -2139,7 +3083,7 @@ function App() {
                   className={[
                     "h-2 w-2",
 
-                    marketOpenIST
+                    selectedExchangeStatus.current.open
 
                       ? "fill-emerald-500 text-emerald-500"
 
@@ -2148,11 +3092,9 @@ function App() {
                 />
 
 
-                {marketOpenIST
-
-                  ? "Market open"
-
-                  : "Market closed"}
+                {selectedExchangeStatus.current.open
+                  ? `${selectedExchangeStatus.current.exchange} · ${selectedExchangeStatus.current.status}`
+                  : `${selectedExchangeStatus.current.exchange} · ${selectedExchangeStatus.current.status || "CLOSED"}`}
 
               </span>
 
@@ -2236,6 +3178,11 @@ function App() {
       </main>
 
     </div>
+          )
+        }
+      />
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
   );
 }
 

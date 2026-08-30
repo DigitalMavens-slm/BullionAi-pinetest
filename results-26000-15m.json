@@ -229,477 +229,6 @@
           "value": false
         },
         {
-          "value": true,
-          "options": {
-            "text": "BUY",
-            "textcolor": "#FFFFFF",
-            "color": "#4CAF50",
-            "shape": "shape_label_up",
-            "location": "BelowBar"
-          }
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": true,
-          "options": {
-            "text": "BUY",
-            "textcolor": "#FFFFFF",
-            "color": "#4CAF50",
-            "shape": "shape_label_up",
-            "location": "BelowBar"
-          }
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": true,
-          "options": {
-            "text": "SELL",
-            "textcolor": "#FFFFFF",
-            "color": "#F23645",
-            "shape": "shape_label_down",
-            "location": "AboveBar"
-          }
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
-          "value": false
-        },
-        {
           "value": false
         },
         {
@@ -1502,1003 +1031,553 @@
           }
         },
         {
-          "value": 24157.9512299988,
+          "value": null,
           "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 24170.5225707132,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 24176.6298870908,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 24176.6298870908,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 24176.734826114,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 24181.2805528202,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 24205.6355133329,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 24209.5883338091,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 24211.4320242514,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 24211.4320242514,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 24211.4320242514,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 24211.4320242514,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 24212.1480768337,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 24212.1480768337,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 24212.1480768337,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 24212.1480768337,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 24245.683372747,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 24245.683372747,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 24245.683372747,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 24245.683372747,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 24245.683372747,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 24245.683372747,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 24245.683372747,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 24245.683372747,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 24245.683372747,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 24245.683372747,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 24245.683372747,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 24245.683372747,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 24245.683372747,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 24245.683372747,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 24245.683372747,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 24245.683372747,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 24245.683372747,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 24245.683372747,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 24245.683372747,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 24245.683372747,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 24245.683372747,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 24245.683372747,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 24245.683372747,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 24245.683372747,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 24245.683372747,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 24253.5722616019,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 24253.5722616019,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 24253.5722616019,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 24253.5722616019,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 24253.5722616019,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 24253.5722616019,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 24253.5722616019,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 24253.5722616019,
-          "options": {
-            "color": "#00E676"
-          }
-        },
-        {
-          "value": 24245.3197658531,
-          "options": {
-            "color": "#F23645"
-          }
-        },
-        {
-          "value": 24236.7701397207,
-          "options": {
-            "color": "#F23645"
-          }
-        },
-        {
-          "value": 24222.6365583121,
-          "options": {
-            "color": "#F23645"
-          }
-        },
-        {
-          "value": 24216.3053755755,
-          "options": {
-            "color": "#F23645"
-          }
-        },
-        {
-          "value": 24216.3053755755,
-          "options": {
-            "color": "#F23645"
-          }
-        },
-        {
-          "value": 24216.3053755755,
-          "options": {
-            "color": "#F23645"
-          }
-        },
-        {
-          "value": 24213.4976440012,
-          "options": {
-            "color": "#F23645"
-          }
-        },
-        {
-          "value": 24213.1835265725,
-          "options": {
-            "color": "#F23645"
-          }
-        },
-        {
-          "value": 24199.247203246,
-          "options": {
-            "color": "#F23645"
-          }
-        },
-        {
-          "value": 24199.247203246,
-          "options": {
-            "color": "#F23645"
-          }
-        },
-        {
-          "value": 24199.247203246,
-          "options": {
-            "color": "#F23645"
-          }
-        },
-        {
-          "value": 24190.3869918117,
-          "options": {
-            "color": "#F23645"
-          }
-        },
-        {
-          "value": 24182.9075638252,
-          "options": {
-            "color": "#F23645"
-          }
-        },
-        {
-          "value": 24182.9075638252,
-          "options": {
-            "color": "#F23645"
-          }
-        },
-        {
-          "value": 24182.9075638252,
-          "options": {
-            "color": "#F23645"
-          }
-        },
-        {
-          "value": 24182.9075638252,
-          "options": {
-            "color": "#F23645"
-          }
-        },
-        {
-          "value": 24182.9075638252,
-          "options": {
-            "color": "#F23645"
-          }
-        },
-        {
-          "value": 24182.9075638252,
-          "options": {
-            "color": "#F23645"
-          }
-        },
-        {
-          "value": 24182.9075638252,
-          "options": {
-            "color": "#F23645"
-          }
-        },
-        {
-          "value": 24182.9075638252,
-          "options": {
-            "color": "#F23645"
-          }
-        },
-        {
-          "value": 24180.596095014,
-          "options": {
-            "color": "#F23645"
-          }
-        },
-        {
-          "value": 24180.596095014,
-          "options": {
-            "color": "#F23645"
-          }
-        },
-        {
-          "value": 24167.1702298844,
-          "options": {
-            "color": "#F23645"
-          }
-        },
-        {
-          "value": 24167.1702298844,
-          "options": {
-            "color": "#F23645"
-          }
-        },
-        {
-          "value": 24167.1702298844,
-          "options": {
-            "color": "#F23645"
-          }
-        },
-        {
-          "value": 24167.1702298844,
-          "options": {
-            "color": "#F23645"
-          }
-        },
-        {
-          "value": 24167.1702298844,
-          "options": {
             "color": "#F23645"
           }
         },
         {
-          "value": 24167.1702298844,
+          "value": null,
           "options": {
             "color": "#F23645"
           }
         },
         {
-          "value": 24167.1702298844,
+          "value": null,
           "options": {
             "color": "#F23645"
           }
         },
         {
-          "value": 24167.1702298844,
+          "value": null,
           "options": {
             "color": "#F23645"
           }
         },
         {
-          "value": 24167.1702298844,
+          "value": null,
           "options": {
             "color": "#F23645"
           }
         },
         {
-          "value": 24167.1702298844,
+          "value": null,
           "options": {
             "color": "#F23645"
           }
         },
         {
-          "value": 24167.1702298844,
+          "value": null,
           "options": {
             "color": "#F23645"
           }
         },
         {
-          "value": 24167.1702298844,
+          "value": null,
           "options": {
             "color": "#F23645"
           }
         },
         {
-          "value": 24167.1702298844,
+          "value": null,
           "options": {
             "color": "#F23645"
           }
         },
         {
-          "value": 24167.1702298844,
+          "value": null,
           "options": {
             "color": "#F23645"
           }
         },
         {
-          "value": 24167.1702298844,
+          "value": null,
           "options": {
             "color": "#F23645"
           }
         },
         {
-          "value": 24167.1702298844,
+          "value": null,
           "options": {
             "color": "#F23645"
           }
         },
         {
-          "value": 24167.1702298844,
+          "value": null,
           "options": {
             "color": "#F23645"
           }
         },
         {
-          "value": 24167.5399422946,
+          "value": 24167.399351789,
           "options": {
             "color": "#00E676"
           }
         },
         {
-          "value": 24209.1317321306,
+          "value": 24209.0011838042,
           "options": {
             "color": "#00E676"
           }
         },
         {
-          "value": 24216.3276798356,
+          "value": 24216.2064563896,
           "options": {
             "color": "#00E676"
           }
         },
         {
-          "value": 24292.4828455617,
+          "value": 24292.3702809331,
           "options": {
             "color": "#00E676"
           }
         },
         {
-          "value": 24299.4626423072,
+          "value": 24299.3581180094,
           "options": {
             "color": "#00E676"
           }
         },
         {
-          "value": 24319.8920964281,
+          "value": 24319.7950381515,
           "options": {
             "color": "#00E676"
           }
         },
         {
-          "value": 24319.8920964281,
+          "value": 24319.7950381515,
           "options": {
             "color": "#00E676"
           }
         },
         {
-          "value": 24319.8920964281,
+          "value": 24319.7950381515,
           "options": {
             "color": "#00E676"
           }
         },
         {
-          "value": 24319.8920964281,
+          "value": 24319.7950381515,
           "options": {
             "color": "#00E676"
           }
         },
         {
-          "value": 24275.829752345,
+          "value": 24275.7575927907,
           "options": {
             "color": "#00E676"
           }
         },
         {
-          "value": 24275.829752345,
+          "value": 24275.7575927907,
           "options": {
             "color": "#00E676"
           }
         },
         {
-          "value": 24281.9127711545,
+          "value": 24281.8505519471,
           "options": {
             "color": "#00E676"
           }
         },
         {
-          "value": 24281.9127711545,
+          "value": 24281.8505519471,
           "options": {
             "color": "#00E676"
           }
         },
         {
-          "value": 24281.9127711545,
+          "value": 24281.8505519471,
           "options": {
             "color": "#00E676"
           }
         },
         {
-          "value": 24281.9127711545,
+          "value": 24281.8505519471,
           "options": {
             "color": "#00E676"
           }
         },
         {
-          "value": 24281.9127711545,
+          "value": 24281.8505519471,
           "options": {
             "color": "#00E676"
           }
         },
         {
-          "value": 24281.9127711545,
+          "value": 24281.8505519471,
           "options": {
             "color": "#00E676"
           }
         },
         {
-          "value": 24281.9127711545,
+          "value": 24281.8505519471,
           "options": {
             "color": "#00E676"
           }
         },
         {
-          "value": 24281.9127711545,
+          "value": 24281.8505519471,
           "options": {
             "color": "#00E676"
           }
         },
         {
-          "value": 24281.9127711545,
+          "value": 24281.8505519471,
           "options": {
             "color": "#00E676"
           }
         },
         {
-          "value": 24281.9127711545,
+          "value": 24281.8505519471,
           "options": {
             "color": "#00E676"
           }
         },
         {
-          "value": 24299.4360146574,
+          "value": 24299.4656682722,
           "options": {
             "color": "#F23645"
           }
         },
         {
-          "value": 24299.4360146574,
+          "value": 24299.4656682722,
           "options": {
             "color": "#F23645"
           }
         },
         {
-          "value": 24299.4360146574,
+          "value": 24299.4656682722,
           "options": {
             "color": "#F23645"
           }
         },
         {
-          "value": 24299.4360146574,
+          "value": 24299.4656682722,
           "options": {
             "color": "#F23645"
           }
         },
         {
-          "value": 24299.4360146574,
+          "value": 24299.4656682722,
           "options": {
             "color": "#F23645"
           }
         },
         {
-          "value": 24299.4360146574,
+          "value": 24299.4656682722,
           "options": {
             "color": "#F23645"
           }
         },
         {
-          "value": 24299.4360146574,
+          "value": 24299.4656682722,
           "options": {
             "color": "#F23645"
           }
         },
         {
-          "value": 24299.4360146574,
+          "value": 24299.4656682722,
           "options": {
             "color": "#F23645"
           }
         },
         {
-          "value": 24247.6460680392,
+          "value": 24247.66245884,
           "options": {
             "color": "#F23645"
           }
         },
         {
-          "value": 24247.6460680392,
+          "value": 24247.66245884,
           "options": {
             "color": "#F23645"
           }
         },
         {
-          "value": 24243.8675280542,
+          "value": 24243.8816609386,
           "options": {
             "color": "#F23645"
           }
         },
         {
-          "value": 24229.2359189074,
+          "value": 24229.2490423002,
           "options": {
             "color": "#F23645"
           }
         },
         {
-          "value": 24226.3851389856,
+          "value": 24226.3973249931,
           "options": {
             "color": "#F23645"
           }
         },
         {
-          "value": 24212.3254862008,
+          "value": 24212.3368017793,
           "options": {
             "color": "#F23645"
           }
         },
         {
-          "value": 24202.5361657579,
+          "value": 24202.5466730807,
           "options": {
             "color": "#F23645"
           }
         },
         {
-          "value": 24197.8478682038,
+          "value": 24197.8576250035,
           "options": {
             "color": "#F23645"
           }
         },
         {
-          "value": 24185.3623061893,
+          "value": 24185.3713660747,
           "options": {
             "color": "#F23645"
           }
         },
         {
-          "value": 24185.3623061893,
+          "value": 24185.3713660747,
           "options": {
             "color": "#F23645"
           }
         },
         {
-          "value": 24185.3623061893,
+          "value": 24185.3713660747,
           "options": {
             "color": "#F23645"
           }
         },
         {
-          "value": 24185.3623061893,
+          "value": 24185.3713660747,
           "options": {
             "color": "#F23645"
           }
         },
         {
-          "value": 24185.3623061893,
+          "value": 24185.3713660747,
           "options": {
             "color": "#F23645"
           }
         },
         {
-          "value": 24185.3623061893,
+          "value": 24185.3713660747,
           "options": {
             "color": "#F23645"
           }
         },
         {
-          "value": 24185.3623061893,
+          "value": 24185.3713660747,
           "options": {
             "color": "#F23645"
           }
         },
         {
-          "value": 24185.3623061893,
+          "value": 24185.3713660747,
           "options": {
             "color": "#F23645"
           }
         },
         {
-          "value": 24185.3623061893,
+          "value": 24185.3713660747,
           "options": {
             "color": "#F23645"
           }
         },
         {
-          "value": 24185.3623061893,
+          "value": 24185.3713660747,
           "options": {
             "color": "#F23645"
           }
         },
         {
-          "value": 24185.3623061893,
+          "value": 24185.3713660747,
           "options": {
             "color": "#F23645"
           }
         },
         {
-          "value": 24171.0624944645,
+          "value": 24171.0665039735,
           "options": {
             "color": "#F23645"
           }
         },
         {
-          "value": 24171.0624944645,
+          "value": 24171.0665039735,
           "options": {
             "color": "#F23645"
           }
         },
         {
-          "value": 24171.0624944645,
+          "value": 24171.0665039735,
           "options": {
             "color": "#F23645"
           }
         },
         {
-          "value": 24171.0624944645,
+          "value": 24171.0665039735,
           "options": {
             "color": "#F23645"
           }
         },
         {
-          "value": 24171.0624944645,
+          "value": 24171.0665039735,
           "options": {
             "color": "#F23645"
           }
         },
         {
-          "value": 24164.0006442298,
+          "value": 24164.0034122405,
           "options": {
             "color": "#F23645"
           }
         },
         {
-          "value": 24164.0006442298,
+          "value": 24164.0034122405,
           "options": {
             "color": "#F23645"
           }
         },
         {
-          "value": 24164.0006442298,
+          "value": 24164.0034122405,
           "options": {
             "color": "#F23645"
           }
         },
         {
-          "value": 24164.0006442298,
+          "value": 24164.0034122405,
           "options": {
             "color": "#F23645"
           }
         },
         {
-          "value": 24164.0006442298,
+          "value": 24164.0034122405,
           "options": {
             "color": "#F23645"
           }
         },
         {
-          "value": 24164.0006442298,
+          "value": 24164.0034122405,
           "options": {
             "color": "#F23645"
           }
         },
         {
-          "value": 24164.0006442298,
+          "value": 24164.0034122405,
           "options": {
             "color": "#F23645"
           }
         },
         {
-          "value": 24164.0006442298,
+          "value": 24164.0034122405,
           "options": {
             "color": "#F23645"
           }
         },
         {
-          "value": 24164.0006442298,
+          "value": 24164.0034122405,
           "options": {
             "color": "#F23645"
           }
         },
         {
-          "value": 24164.0006442298,
+          "value": 24164.0034122405,
           "options": {
             "color": "#F23645"
           }
         },
         {
-          "value": 24149.402801206,
+          "value": 24149.4041204373,
           "options": {
             "color": "#F23645"
           }
         },
         {
-          "value": 24127.2454582627,
+          "value": 24127.2466832632,
           "options": {
             "color": "#F23645"
           }
         },
         {
-          "value": 24127.2454582627,
+          "value": 24127.2466832632,
           "options": {
             "color": "#F23645"
           }
         },
         {
-          "value": 24127.2454582627,
+          "value": 24127.2466832632,
           "options": {
             "color": "#F23645"
           }
         },
         {
-          "value": 24127.2454582627,
+          "value": 24127.2466832632,
           "options": {
             "color": "#F23645"
           }
         },
         {
-          "value": 24127.2454582627,
+          "value": 24127.2466832632,
           "options": {
             "color": "#F23645"
           }
         },
         {
-          "value": 24127.2454582627,
+          "value": 24127.2466832632,
           "options": {
             "color": "#F23645"
           }
         },
         {
-          "value": 24127.2454582627,
+          "value": 24127.2466832632,
           "options": {
             "color": "#F23645"
           }
         },
         {
-          "value": 24127.2454582627,
+          "value": 24127.2466832632,
           "options": {
             "color": "#F23645"
           }
         },
         {
-          "value": 24127.2454582627,
+          "value": 24127.2466832632,
           "options": {
             "color": "#F23645"
           }
         },
         {
-          "value": 24127.2454582627,
+          "value": 24127.2466832632,
           "options": {
             "color": "#F23645"
           }
         },
         {
-          "value": 24127.2454582627,
+          "value": 24127.2466832632,
           "options": {
             "color": "#F23645"
           }
         },
         {
-          "value": 24127.2454582627,
+          "value": 24127.2466832632,
           "options": {
             "color": "#F23645"
           }
         },
         {
-          "value": 24127.2454582627,
+          "value": 24127.2466832632,
           "options": {
             "color": "#F23645"
           }
         },
         {
-          "value": 24127.2454582627,
+          "value": 24127.2466832632,
           "options": {
             "color": "#F23645"
           }
         },
         {
-          "value": 24137.4913098912,
+          "value": 24137.4908758302,
           "options": {
             "color": "#00E676"
           }

@@ -75,11 +75,122 @@ class MarketDataService {
                 code
             );
 
-        const session =
-            await this.client.generateAccessToken({
-                code,
-                checksum,
-            });
+        // Diagnostic + IP handling for INVALID_IP
+        const redirectCfg =
+            process.env.SHOONYA_REDIRECT_URL ||
+            "not set";
+        const whitelistedIp =
+            process.env.SHOONYA_WHITELISTED_IP ||
+            process.env.SHOONYA_CLIENT_IP ||
+            "";
+        if (whitelistedIp) {
+            console.log(
+                `[Shoonya] Using whitelisted IP override: ${whitelistedIp} (via X-Forwarded-For)`
+            );
+            // Patch ShoonyaClient to send whitelisted IP for GenAcsTok
+            this.client._post = async (path, data) => {
+                const url = `${this.client._base}${path}`;
+                const body = `jData=${JSON.stringify(data)}`;
+                const headers = {
+                    "Content-Type":
+                        "application/x-www-form-urlencoded",
+                    "X-Forwarded-For": whitelistedIp,
+                    "X-Real-IP": whitelistedIp,
+                };
+                if (this.client._token)
+                    headers["Authorization"] =
+                        `Bearer ${this.client._token}`;
+                const res = await fetch(url, {
+                    method: "POST",
+                    headers,
+                    body,
+                });
+                if (!res.ok) {
+                    let Err = Error;
+                    try {
+                        Err =
+                            require("shoonya-api-js/src/client")
+                                .ShoonyaApiError || Error;
+                    } catch {}
+                    throw new Err(
+                        `HTTP ${res.status}: ${res.statusText}`
+                    );
+                }
+                let json;
+                try {
+                    json = await res.json();
+                } catch {
+                    throw new Error(
+                        "Invalid JSON response from server"
+                    );
+                }
+                if (json && json.stat === "Not_Ok") {
+                    const err = new Error(
+                        json.emsg || "API error"
+                    );
+                    err.response = json;
+                    throw err;
+                }
+                return json;
+            };
+        }
+
+        console.log(
+            "[Shoonya] GenAcsTok →",
+            `client=${this.clientId}`,
+            `code=${String(code).slice(0, 8)}...`,
+            `checksum=${checksum.slice(0, 8)}...`,
+            `redirect=${redirectCfg}`,
+            `whitelistedIp=${whitelistedIp || "none (using egress IP)"}`,
+            `base=${this.client._base || "https://api.shoonya.com"}`
+        );
+
+        let session;
+        try {
+            session =
+                await this.client.generateAccessToken({
+                    code,
+                    checksum,
+                });
+        } catch (error) {
+            const msg = String(error?.message || error || "");
+            const respStr = JSON.stringify(error?.response || "");
+            const isIpError =
+                msg.includes("INVALID_IP") ||
+                respStr.includes("INVALID_IP");
+
+            console.error(
+                "[Shoonya] GenAcsTok FAILED:",
+                error?.message || error,
+                "| response:",
+                JSON.stringify(
+                    error?.response || {}
+                ).slice(0, 800)
+            );
+            if (isIpError) {
+                console.error(
+                    `  >>> INVALID_IP FIX: Add this server's egress IP to Shoonya portal Allowed IPs.`
+                );
+                console.error(
+                    `  >>> Check GET /api/shoonya/config for requestIp/egressIp.`
+                );
+                console.error(
+                    `  >>> Or set SHOONYA_WHITELISTED_IP=<your whitelisted IP> in .env and restart to send X-Forwarded-For.`
+                );
+                console.error(
+                    `  >>> Also ensure SHOONYA_REDIRECT_URL exactly matches the URL you use to login (including trailing slash). Current: ${redirectCfg}`
+                );
+            } else {
+                console.error(
+                    `  Config check: SHOONYA_CLIENT_ID=${this.clientId} ` +
+                        `SHOONYA_REDIRECT_URL=${redirectCfg} ` +
+                        `code_len=${String(code).length} checksum_len=${checksum.length}`
+                );
+            }
+            throw error;
+        } finally {
+            // patched _post will be re-created next call if needed
+        }
 
         this.session = session;
 

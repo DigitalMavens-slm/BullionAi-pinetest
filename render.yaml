@@ -1,0 +1,23 @@
+# Render Blueprint — backend (always-on Node host)
+# Deploy: push to GitHub, add blueprint in Render, it builds + runs this.
+services:
+  - type: web
+    name: bullionai-api
+    runtime: node
+    plan: free
+    buildCommand: npm ci --omit=dev
+    startCommand: node src/server/bullionai-api.js
+    envVars:
+      - key: PORT
+        value: 8787
+      - key: NODE_ENV
+        value: production
+      - key: SHOONYA_CLIENT_ID
+        sync: false
+      - key: SHOONYA_SECRET_CODE
+        sync: false
+      - key: SHOONYA_REDIRECT_URL
+        value: https://bullionai.in/
+      - key: SHOONYA_EXCHANGE
+        value: MCX
+    autoDeploy: true
