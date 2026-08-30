@@ -6,8 +6,7 @@ databases:
     user: bullionai
     plan: free
     # Render injects DATABASE_URL into the web service automatically.
-    postgresVersion: "16"
-
+    
 services:
   - type: web
     name: bullionai-api
