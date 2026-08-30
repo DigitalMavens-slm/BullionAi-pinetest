@@ -13,6 +13,7 @@
     "@opus-aether-ai/pine-transpiler": "^0.4.11",
     "dotenv": "^17.4.2",
     "norenrestapi": "github:Shoonya-Dev/ShoonyaApi-js",
+    "pg": "^8.23.0",
     "pinets-cli": "^0.1.15",
     "shoonya-api-js": "^1.2.2"
   }

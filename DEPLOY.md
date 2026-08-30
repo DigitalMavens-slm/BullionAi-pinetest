@@ -104,3 +104,48 @@ The redirect URL **must match the exact HTTPS URL you browse to when logging in.
 - `Procfile` (Render/Railway fallback)
 - `ecosystem.config.js` (PM2)
 - `.env.example` (template, uses `bullionai.in`)
+
+---
+
+## Database & Admin (users / subscriptions)
+
+Users, auth and subscriptions are backed by **PostgreSQL** when `DATABASE_URL` is set,
+otherwise a JSON file (`data/bullionai-users.json`). The schema is auto-created on boot.
+
+### 1. Add PostgreSQL (recommended for scale)
+On Render: **New → PostgreSQL** (or Railway → Postgres / Neon / Supabase). Copy the
+**Internal Connection String** (or external URL) into the backend's env:
+
+```
+DATABASE_URL=postgres://user:password@host:5432/bullionai?sslmode=require
+DATABASE_SSL=true
+```
+
+Postgres tables are created automatically:
+- `users(email, name, mobile, segments jsonb, is_admin, plan, trial_ends_at, access_until, salt, password_hash, created_at)`
+- `subscriptions(id, email, plan, amount, period, started_at, ends_at)`
+
+### 2. Set an admin (first registered user is auto-admin; or force via env)
+```
+ADMIN_EMAILS=you@example.com
+```
+Or seed/update an admin directly after deploy (works with Postgres or JSON):
+```
+node scripts/seed-admin.js you@example.com YourPassword "Name" MCX,NSE,BSE
+```
+
+### 3. Manage users
+- **UI:** Log in → Dashboard → **Admin** button (see `?admin=1` / `#admin`).
+- **API** (header `X-Admin-Key: <key>` from `data/bullionai-admin-key.txt`, or an admin Bearer token):
+  - `GET /api/admin/users` — list
+  - `POST /api/admin/users` — create `{email,name,password,segments,isAdmin}`
+  - `POST /api/admin/users/<email>/renew` — `{days}`
+  - `POST /api/admin/users/<email>/reset-password`
+  - `PUT /api/admin/users/<email>` — update name/segments/plan/accessUntil/isAdmin
+  - `DELETE /api/admin/users/<email>`
+  - `POST /api/admin/clear-users` — destructively delete all users
+  - `POST /api/admin/clear-cache` — clear in-memory strategy/segment caches
+
+### 4. Back up the DB
+Postgres is the durable store — enable automated backups on your DB provider.
+JSON files (candles, session) also live in `data/` on the host; back those up too.

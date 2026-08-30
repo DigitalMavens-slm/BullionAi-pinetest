@@ -4052,7 +4052,7 @@ const allowedTimeframes =
         ) {
             try {
                 const body = await readBody(request);
-                const user = registerUser(body);
+                const user = await registerUser(body);
                 this.sendJson(response, 200, {
                     ok: true,
                     token: signToken(user.email),
@@ -4073,7 +4073,7 @@ const allowedTimeframes =
         ) {
             try {
                 const body = await readBody(request);
-                const user = loginUser(body);
+                const user = await loginUser(body);
                 this.sendJson(response, 200, {
                     ok: true,
                     token: signToken(user.email),
@@ -4109,7 +4109,7 @@ const allowedTimeframes =
                     loadUsersPublic,
                 } = require("../auth/users");
                 const user =
-                    loadUsersPublic(
+                    await loadUsersPublic(
                         data.email
                     );
                 this.sendJson(response, 200, {
@@ -4135,7 +4135,7 @@ const allowedTimeframes =
                 "/api/admin/"
             );
 
-        const checkAdmin = () => {
+        const checkAdmin = async () => {
             // 1) Legacy secret key (back-compat)
             const hdr =
                 request.headers["x-admin-key"] ||
@@ -4182,11 +4182,11 @@ const allowedTimeframes =
                         } = require(
                             "../auth/users"
                         );
-                        if (
-                            isAdminEmail(
+                        const admin =
+                            await isAdminEmail(
                                 data.email
-                            )
-                        ) {
+                            );
+                        if (admin) {
                             return true;
                         }
                     } catch {}
@@ -4196,7 +4196,7 @@ const allowedTimeframes =
         };
 
         if (isAdminRoute) {
-            if (!checkAdmin()) {
+            if (!(await checkAdmin())) {
                 this.sendJson(response, 401, {
                     ok: false,
                     error: "Admin authorization required. Login as admin or provide X-Admin-Key.",
@@ -4226,7 +4226,7 @@ const allowedTimeframes =
                     listUsersPublic,
                 } = require("../auth/users");
                 const users =
-                    listUsersPublic();
+                    await listUsersPublic();
                 this.sendJson(response, 200, {
                     ok: true,
                     users,
@@ -4353,7 +4353,7 @@ const allowedTimeframes =
                         resetUserPassword,
                     } = require("../auth/users");
                     const user =
-                        resetUserPassword(
+                        await resetUserPassword(
                             email,
                             newPass
                         );
@@ -4382,7 +4382,7 @@ const allowedTimeframes =
                     listUsersPublic,
                 } = require("../auth/users");
                 const users =
-                    listUsersPublic();
+                    await listUsersPublic();
                 const now = Date.now();
                 const stats = {
                     total: users.length,
@@ -4444,7 +4444,7 @@ const allowedTimeframes =
                 const {
                     renewUser,
                 } = require("../auth/users");
-                const user = renewUser(
+                const user = await renewUser(
                     email,
                     days
                 );
@@ -4472,7 +4472,7 @@ const allowedTimeframes =
                         loadUsersPublic,
                     } = require("../auth/users");
                     const user =
-                        loadUsersPublic(email);
+                        await loadUsersPublic(email);
                     this.sendJson(response, 200, {
                         ok: true,
                         user,
@@ -4487,7 +4487,7 @@ const allowedTimeframes =
                     const {
                         updateUser,
                     } = require("../auth/users");
-                    const user = updateUser(
+                    const user = await updateUser(
                         email,
                         body
                     );
@@ -4503,13 +4503,64 @@ const allowedTimeframes =
                     const {
                         deleteUser,
                     } = require("../auth/users");
-                    deleteUser(email);
+                    await deleteUser(email);
                     this.sendJson(response, 200, {
                         ok: true,
                     });
                     return;
                 }
             }
+        }
+
+        // ADMIN — clear server in-memory caches
+        if (
+            url.pathname === "/api/admin/clear-cache" &&
+            request.method === "POST" &&
+            isAdminRoute
+        ) {
+            try {
+                if (!(await checkAdmin())) {
+                    this.sendJson(response, 401, { ok: false, error: "Admin authorization required." });
+                    return;
+                }
+                // Purge in-memory strategy + segment caches.
+                const cleared = {
+                    strategyCache: (this.strategyCache?.size ?? 0),
+                    strategyInflight: (this.strategyInflight?.size ?? 0),
+                    jsSignals: (this.jsSignals?.size ?? 0),
+                    segmentSnapshot: this.segmentSnapshot ? 1 : 0,
+                };
+                this.strategyCache?.clear?.();
+                this.strategyInflight?.clear?.();
+                this.jsSignals?.clear?.();
+                this.segmentSnapshot = null;
+                console.log("[admin] cache cleared:", JSON.stringify(cleared));
+                this.sendJson(response, 200, { ok: true, cleared });
+            } catch (error) {
+                this.sendJson(response, 400, { ok: false, error: error?.message || String(error) });
+            }
+            return;
+        }
+
+        // ADMIN — clear ALL users (destructive)
+        if (
+            url.pathname === "/api/admin/clear-users" &&
+            request.method === "POST" &&
+            isAdminRoute
+        ) {
+            try {
+                if (!(await checkAdmin())) {
+                    this.sendJson(response, 401, { ok: false, error: "Admin authorization required." });
+                    return;
+                }
+                const { clearAllUsers } = require("../auth/db");
+                await clearAllUsers();
+                console.log("[admin] users cleared");
+                this.sendJson(response, 200, { ok: true });
+            } catch (error) {
+                this.sendJson(response, 400, { ok: false, error: error?.message || String(error) });
+            }
+            return;
         }
 
         // HISTORICAL CANDLES
@@ -4852,6 +4903,12 @@ const allowedTimeframes =
          * /health and /api/candles work without
          * waiting for an interactive login.
          */
+
+        // Initialize the users/subscriptions database (Postgres if
+        // DATABASE_URL is set, JSON fallback otherwise).
+        require("../auth/db").init()
+            .then(info => console.log("[db] engine:", info?.engine || "unknown"))
+            .catch(err => console.error("[db] init failed:", err?.message || err));
 
         this.startCoordinator().catch(
             error => {

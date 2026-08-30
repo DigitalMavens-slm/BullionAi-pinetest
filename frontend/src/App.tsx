@@ -2244,7 +2244,7 @@ function App() {
               <div className="max-h-[55vh] overflow-y-auto">
                 {filteredCustomSyms.length === 0 && (
                   <div className="px-4 py-10 text-center text-[12px] text-slate-400">
-                    No symbols in watchlist. Add one from the Watchlist tab.
+                    No symbols in watchlist yet. Add scripts using the search box above.
                   </div>
                 )}
                 <div className="divide-y divide-slate-50">
@@ -2910,15 +2910,6 @@ function App() {
 
         <aside className={`flex w-full shrink-0 flex-col gap-2 lg:w-[360px] lg:min-h-0 order-1 lg:order-3 ${mobileTab === "watchlist" ? "flex" : "hidden"} lg:flex`}>
 
-          {/* Add scripts (mobile-only; desktop uses header search) */}
-          <div className="lg:hidden">
-            <Card className="p-2.5">
-              <InstrumentPicker
-                onAdd={(sym: any) => addCustomSym(sym)}
-              />
-            </Card>
-          </div>
-
           {/* MCX SESSION */}
           {/* WATCHLIST */}
 
@@ -2958,7 +2949,7 @@ function App() {
             <div className="divide-y divide-slate-100 lg:hidden">
               {filteredCustomSyms.length === 0 && (
                 <div className="px-4 py-10 text-center text-[12px] text-slate-400">
-                  No scripts yet. Add one below.
+                  No symbols yet. Add scripts using the search box above.
                 </div>
               )}
               {filteredCustomSyms.map((sym, i) => {
@@ -3013,12 +3004,6 @@ function App() {
                   </div>
                 );
               })}
-              <button
-                onClick={() => document.getElementById("mobile-add-symbol")?.scrollIntoView({ behavior: "smooth", block: "center" })}
-                className="flex w-full items-center justify-center gap-1.5 py-3.5 text-[13px] font-bold text-slate-600"
-              >
-                + Add Symbol
-              </button>
             </div>
 
             {/* DESKTOP table (unchanged) */}

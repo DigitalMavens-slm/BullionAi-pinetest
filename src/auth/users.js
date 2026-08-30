@@ -2,12 +2,12 @@
  * =========================================================
  * EMAIL AUTH — users store + password hashing + tokens
  *
- * Zero-dependency implementation using node:crypto.
- *
- * Storage : data/bullionai-users.json  (swap for a DB later)
  * Hashing : scryptSync(password, salt, 64)
  * Tokens  : base64url(payload).hmac-sha256 signature,
  *           secret auto-generated at data/bullionai-auth-secret.txt
+ *
+ * Storage : PostgreSQL when DATABASE_URL is set (see ./db),
+ *           otherwise a JSON file data/bullionai-users.json.
  * =========================================================
  */
 
@@ -15,11 +15,7 @@ const fs = require("fs");
 const path = require("path");
 const crypto = require("crypto");
 
-const USERS_FILE = path.resolve(
-    process.cwd(),
-    "data",
-    "bullionai-users.json"
-);
+const db = require("./db");
 
 const SECRET_FILE = path.resolve(
     process.cwd(),
@@ -69,51 +65,8 @@ function getSecret() {
 
 
 // ---------------------------------------------------------
-// USERS STORE
+// EMAIL VALIDATION
 // ---------------------------------------------------------
-
-function loadUsers() {
-
-    try {
-
-        const parsed =
-            JSON.parse(
-                fs.readFileSync(
-                    USERS_FILE,
-                    "utf8"
-                )
-            );
-
-        if (
-            Array.isArray(parsed.users)
-        ) {
-            return parsed;
-        }
-
-    } catch {
-        // first run
-    }
-
-    return { users: [] };
-
-}
-
-
-function saveUsers(db) {
-
-    fs.mkdirSync(
-        path.dirname(USERS_FILE),
-        { recursive: true }
-    );
-
-    fs.writeFileSync(
-        USERS_FILE,
-        JSON.stringify(db, null, 2),
-        "utf8"
-    );
-
-}
-
 
 function normalizeEmail(email) {
 
@@ -171,16 +124,11 @@ function getAdminEmails() {
 
 function isAdminEmail(email) {
     const norm = normalizeEmail(email);
-    if (getAdminEmails().has(norm)) return true;
+    if (getAdminEmails().has(norm)) return Promise.resolve(true);
     // also check DB flag
-    try {
-        const db = loadUsers();
-        const u = db.users.find(
-            x => x.email === norm
-        );
-        if (u && u.isAdmin) return true;
-    } catch {}
-    return false;
+    return db.findUserByEmail(norm)
+        .then(u => Boolean(u && u.isAdmin))
+        .catch(() => false);
 }
 
 
@@ -321,64 +269,52 @@ function registerUser({
     }
 
 
-    const db = loadUsers();
+    // Async-safe duplicate check via DB best-effort.
+    return (async () => {
+        const found = await db.findUserByEmail(norm);
+        if (found) {
+            throw new Error(
+                "An account with this email already exists."
+            );
+        }
 
-    if (
-        db.users.some(
-            u => u.email === norm
-        )
-    ) {
-        throw new Error(
-            "An account with this email already exists."
-        );
-    }
+        const salt =
+            crypto.randomBytes(16)
+                .toString("hex");
 
+        const seedEmails = getAdminEmails();
 
-    const salt =
-        crypto.randomBytes(16)
-            .toString("hex");
+        const list = await db.listUsers();
+        const isFirstUser = list.length === 0;
+        const shouldBeAdmin =
+            isFirstUser ||
+            seedEmails.has(norm);
 
-    const isFirstUser =
-        db.users.length === 0;
+        const createdAt =
+            new Date().toISOString();
 
-    const adminEmails = getAdminEmails();
+        const user = {
+            email: norm,
+            name:
+                String(name || "")
+                    .trim() ||
+                norm.split("@")[0],
+            mobile: mob,
+            segments: segs,
+            isAdmin: shouldBeAdmin,
+            salt,
+            passwordHash:
+                hashPassword(
+                    password,
+                    salt
+                ),
+            createdAt,
+        };
 
-    const shouldBeAdmin =
-        isFirstUser ||
-        adminEmails.has(norm);
+        await db.createUser(user);
 
-    const user = {
-        email: norm,
-
-        name:
-            String(name || "")
-                .trim() ||
-            norm.split("@")[0],
-
-        mobile: mob,
-
-        segments: segs,
-
-        isAdmin: shouldBeAdmin,
-
-        salt,
-
-        passwordHash:
-            hashPassword(
-                password,
-                salt
-            ),
-
-        createdAt:
-            new Date().toISOString(),
-    };
-
-    db.users.push(user);
-
-    saveUsers(db);
-
-    return publicUser(user);
-
+        return publicUser(user);
+    })();
 }
 
 
@@ -390,32 +326,29 @@ function loginUser({
     const norm =
         normalizeEmail(email);
 
-    const db = loadUsers();
+    return (async () => {
+        const user = await db.findUserByEmail(norm);
 
-    const user = db.users.find(
-        u => u.email === norm
-    );
+        if (!user) {
+            throw new Error(
+                "User does not exist. Please register."
+            );
+        }
 
-    if (!user) {
-        throw new Error(
-            "User does not exist. Please register."
+        const ok = verifyPassword(
+            password || "",
+            user.salt,
+            user.passwordHash
         );
-    }
 
-    const ok = verifyPassword(
-        password || "",
-        user.salt,
-        user.passwordHash
-    );
+        if (!ok) {
+            throw new Error(
+                "Invalid password."
+            );
+        }
 
-    if (!ok) {
-        throw new Error(
-            "Invalid password."
-        );
-    }
-
-    return publicUser(user);
-
+        return publicUser(user);
+    })();
 }
 
 
@@ -524,32 +457,37 @@ function renewUser(email, days) {
 
     const norm = normalizeEmail(email);
 
-    const db = loadUsers();
+    return (async () => {
+        const user = await db.findUserByEmail(norm);
+        if (!user) throw new Error("User not found.");
 
-    const user = db.users.find(
-        u => u.email === norm
-    );
+        const base =
+            Math.max(
+                Date.now(),
+                Number(user.accessUntil) || 0
+            );
 
-    if (!user) {
-        throw new Error("User not found.");
-    }
+        user.accessUntil =
+            base +
+            Number(days || 30) * 86400000;
 
-    const base =
-        Math.max(
-            Date.now(),
-            Number(user.accessUntil) || 0
+        user.plan = "full";
+
+        await db.updateUser(norm, {
+            accessUntil: user.accessUntil,
+            plan: "full",
+        });
+
+        await db.recordSubscription(norm, {
+            plan: "full",
+            period: `${days || 30}d`,
+            endsAt: user.accessUntil,
+        });
+
+        return publicUser(
+            await db.findUserByEmail(norm)
         );
-
-    user.accessUntil =
-        base +
-        Number(days || 30) * 86400000;
-
-    user.plan = "full";
-
-    saveUsers(db);
-
-    return publicUser(user);
-
+    })();
 }
 
 function resetUserPassword(email, newPassword) {
@@ -565,31 +503,30 @@ function resetUserPassword(email, newPassword) {
 
     const norm = normalizeEmail(email);
 
-    const db = loadUsers();
+    return (async () => {
+        const user = await db.findUserByEmail(norm);
+        if (!user) throw new Error("User not found.");
 
-    const user = db.users.find(
-        u => u.email === norm
-    );
+        const salt = crypto
+            .randomBytes(16)
+            .toString("hex");
 
-    if (!user) {
-        throw new Error("User not found.");
-    }
+        user.salt = salt;
 
-    const salt = crypto
-        .randomBytes(16)
-        .toString("hex");
+        user.passwordHash = hashPassword(
+            newPassword,
+            salt
+        );
 
-    user.salt = salt;
+        await db.updateUser(norm, {
+            salt,
+            passwordHash: user.passwordHash,
+        });
 
-    user.passwordHash = hashPassword(
-        newPassword,
-        salt
-    );
-
-    saveUsers(db);
-
-    return publicUser(user);
-
+        return publicUser(
+            await db.findUserByEmail(norm)
+        );
+    })();
 }
 
 
@@ -726,28 +663,19 @@ function readBody(request) {
 
 function loadUsersPublic(email) {
 
-    const db = loadUsers();
-
-    const user = db.users.find(
-        u => u.email === normalizeEmail(email)
-    );
-
-    if (!user) {
-        throw new Error("User not found.");
-    }
-
-    return publicUser(user);
-
+    return (async () => {
+        const user = await db.findUserByEmail(normalizeEmail(email));
+        if (!user) throw new Error("User not found.");
+        return publicUser(user);
+    })();
 }
 
 function listUsersPublic() {
 
-    const db = loadUsers();
-
-    return db.users.map(u =>
-        publicUser(u)
-    );
-
+    return (async () => {
+        const users = await db.listUsers();
+        return users.map(u => publicUser(u));
+    })();
 }
 
 function deleteUser(email) {
@@ -755,24 +683,9 @@ function deleteUser(email) {
     const norm =
         normalizeEmail(email);
 
-    const db = loadUsers();
-
-    const idx = db.users.findIndex(
-        u => u.email === norm
-    );
-
-    if (idx === -1) {
-        throw new Error(
-            "User not found."
-        );
-    }
-
-    db.users.splice(idx, 1);
-
-    saveUsers(db);
-
-    return true;
-
+    return (async () => {
+        return db.deleteUser(norm);
+    })();
 }
 
 function updateUser(
@@ -783,134 +696,130 @@ function updateUser(
     const norm =
         normalizeEmail(email);
 
-    const db = loadUsers();
+    return (async () => {
+        const user = await db.findUserByEmail(norm);
+        if (!user) throw new Error("User not found.");
 
-    const user = db.users.find(
-        u => u.email === norm
-    );
+        const patch = {};
 
-    if (!user) {
-        throw new Error(
-            "User not found."
-        );
-    }
-
-    if (
-        updates.name !== undefined
-    ) {
-        const n =
-            String(updates.name || "").trim();
-        if (n) user.name = n;
-    }
-
-    if (
-        updates.mobile !== undefined
-    ) {
-        const m =
-            normalizeMobile(
-                updates.mobile
-            );
-        if (!m) {
-            throw new Error(
-                "Mobile number is required."
-            );
-        }
-        if (!isValidMobile(m)) {
-            throw new Error(
-                "Invalid mobile number. Use 10 digits."
-            );
-        }
-        user.mobile = m;
-    }
-
-    if (
-        updates.segments !== undefined
-    ) {
-        const segs =
-            normalizeSegments(
-                updates.segments
-            );
         if (
-            segs.length === 0
+            updates.name !== undefined
         ) {
-            throw new Error(
-                "Select at least one segment (MCX, NSE, BSE)."
-            );
+            const n =
+                String(updates.name || "").trim();
+            if (n) patch.name = n;
         }
-        user.segments = segs;
-    }
 
-    if (
-        updates.plan !== undefined
-    ) {
-        const p =
-            String(
-                updates.plan || ""
-            )
-                .trim()
-                .toLowerCase();
         if (
-            ["trial", "full"].includes(p)
+            updates.mobile !== undefined
         ) {
-            user.plan = p;
+            const m =
+                normalizeMobile(
+                    updates.mobile
+                );
+            if (!m) {
+                throw new Error(
+                    "Mobile number is required."
+                );
+            }
+            if (!isValidMobile(m)) {
+                throw new Error(
+                    "Invalid mobile number. Use 10 digits."
+                );
+            }
+            patch.mobile = m;
         }
-    }
 
-    if (
-        updates.trialEndsAt !== undefined
-    ) {
-        const v =
-            updates.trialEndsAt === null
-                ? null
-                : Number(
-                      updates.trialEndsAt
-                  );
         if (
-            v !== null &&
-            Number.isFinite(v)
+            updates.segments !== undefined
         ) {
-            user.trialEndsAt = v;
-        } else if (v === null) {
-            delete user.trialEndsAt;
-        }
-    }
-
-    if (
-        updates.accessUntil !== undefined
-    ) {
-        const v =
-            updates.accessUntil === null
-                ? null
-                : Number(
-                      updates.accessUntil
-                  );
-        if (
-            v !== null &&
-            Number.isFinite(v)
-        ) {
-            user.accessUntil = v;
-        } else if (v === null) {
-            delete user.accessUntil;
+            const segs =
+                normalizeSegments(
+                    updates.segments
+                );
             if (
-                user.plan === "full"
+                segs.length === 0
             ) {
-                user.plan = "trial";
+                throw new Error(
+                    "Select at least one segment (MCX, NSE, BSE)."
+                );
+            }
+            patch.segments = segs;
+        }
+
+        if (
+            updates.plan !== undefined
+        ) {
+            const p =
+                String(
+                    updates.plan || ""
+                )
+                    .trim()
+                    .toLowerCase();
+            if (
+                ["trial", "full"].includes(p)
+            ) {
+                patch.plan = p;
             }
         }
-    }
 
-    if (
-        updates.isAdmin !== undefined
-    ) {
-        user.isAdmin = Boolean(
-            updates.isAdmin
+        if (
+            updates.trialEndsAt !== undefined
+        ) {
+            const v =
+                updates.trialEndsAt === null
+                    ? null
+                    : Number(
+                          updates.trialEndsAt
+                      );
+            if (
+                v !== null &&
+                Number.isFinite(v)
+            ) {
+                patch.trialEndsAt = v;
+            } else if (v === null) {
+                patch.trialEndsAt = null;
+            }
+        }
+
+        if (
+            updates.accessUntil !== undefined
+        ) {
+            const v =
+                updates.accessUntil === null
+                    ? null
+                    : Number(
+                          updates.accessUntil
+                      );
+            if (
+                v !== null &&
+                Number.isFinite(v)
+            ) {
+                patch.accessUntil = v;
+            } else if (v === null) {
+                patch.accessUntil = null;
+                if (
+                    user.plan === "full"
+                ) {
+                    patch.plan = "trial";
+                }
+            }
+        }
+
+        if (
+            updates.isAdmin !== undefined
+        ) {
+            patch.isAdmin = Boolean(
+                updates.isAdmin
+            );
+        }
+
+        await db.updateUser(norm, patch);
+
+        return publicUser(
+            await db.findUserByEmail(norm)
         );
-    }
-
-    saveUsers(db);
-
-    return publicUser(user);
-
+    })();
 }
 
 
