@@ -4170,11 +4170,14 @@ const allowedTimeframes =
                     const html =
                         "<!doctype html>" +
                         '<html><head><meta charset="utf-8">' +
-                        "<title>Shoonya Login</title></head>" +
+                        "<title>Shoonya Login</title>" +
+                        "<style>body{font-family:sans-serif;max-width:720px;margin:48px auto;padding:0 16px}</style>" +
+                        '<script>function __warm(){try{fetch("/health",{method:"GET",cache:"no-store"}).catch(function(){})}catch(e){}};__warm();setInterval(__warm,2500);</script>' +
+                        "</head>" +
                         '<body style="font-family:sans-serif;max-width:720px;margin:48px auto">' +
                         "<h2>Shoonya Login</h2>" +
                         "<p>Paste the fresh Shoonya redirect URL below.</p>" +
-                        '<form method="GET" action="/api/shoonya/login">' +
+                        '<form method="GET" action="/api/shoonya/login" onsubmit="__warm();">' +
                         '<input name="url" style="width:80%;padding:8px" ' +
                         'placeholder="https://...?code=..." autofocus>' +
                         ' <button style="padding:8px 16px">Login</button>' +

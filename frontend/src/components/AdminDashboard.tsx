@@ -445,7 +445,21 @@ export function AdminDashboard({ onExit }: { onExit: () => void }) {
             </div>
             <div className="flex items-center gap-2">
               <button
-                onClick={() => window.open("https://bullionai-pinetest.onrender.com/api/shoonya/login", "_blank")}
+                onClick={async () => {
+                  // Warm the backend first so it's not sleeping when the
+                  // single-use Shoonya code is submitted (avoids a 502 that
+                  // would burn the ~30s code).
+                  try {
+                    await fetch(
+                      "https://bullionai-pinetest.onrender.com/health",
+                      { method: "GET" }
+                    );
+                  } catch {}
+                  window.open(
+                    "https://bullionai-pinetest.onrender.com/api/shoonya/login",
+                    "_blank"
+                  );
+                }}
                 className="rounded-xl bg-purple-600 py-2 text-white text-sm hover:bg-purple-700"
               >
                 Shoonya Login
