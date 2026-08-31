@@ -6,6 +6,15 @@ const {
     formatISTDateTime,
 } = require("../utils/ist-time");
 
+// Postgres-backed session store (survives Render restarts). When
+// DATABASE_URL is set the session token persists to the shoonya_sessions
+// table; otherwise it falls back to the local JSON file.
+const {
+    saveShoonyaSession,
+    getShoonyaSession,
+    clearShoonyaSession,
+} = require("./db");
+
 class ShoonyaSessionManager {
     constructor(marketDataService) {
         if (!marketDataService) {
@@ -152,6 +161,9 @@ class ShoonyaSessionManager {
             return false;
         }
 
+        // Persist to the durable store (Postgres in production) so a valid
+        // session survives Render restarts/redeploys. The local file is kept
+        // as a fallback for zero-config development.
         try {
 
             fs.writeFileSync(
@@ -180,52 +192,70 @@ class ShoonyaSessionManager {
 
             );
 
-            return true;
-
         } catch (
             error
         ) {
 
             console.error(
-                "Failed to persist session:",
+                "Failed to persist session file:",
                 error.message
             );
 
-            return false;
-
         }
+
+        return saveShoonyaSession({
+            accessToken: snap.accessToken,
+            uid: snap.uid,
+            actid: snap.actid,
+            savedAt: Date.now(),
+        });
 
     }
 
 
-    restoreSession() {
+    async restoreSession() {
 
         const file =
             this.getSessionFilePath();
 
+        let data = null;
 
-        if (
-            !fs.existsSync(file)
-        ) {
+        // Prefer the durable store (Postgres survives Render restarts); fall
+        // back to the local JSON file for zero-config development.
+        const durable =
+            await getShoonyaSession().catch(
+                () => null
+            );
+
+        if (durable?.accessToken && durable?.uid) {
+
+            data = {
+                accessToken: durable.accessToken,
+                uid: durable.uid,
+                actid: durable.actid,
+                savedAt: durable.savedAt,
+            };
+
+        } else if (fs.existsSync(file)) {
+
+            try {
+
+                data =
+                    JSON.parse(
+                        fs.readFileSync(
+                            file,
+                            "utf8"
+                        )
+                    );
+
+            } catch {
+                return false;
+            }
+
+        } else {
+
             return false;
-        }
 
-
-        let data;
-
-
-        try {
-
-            data =
-                JSON.parse(
-                    fs.readFileSync(
-                        file,
-                        "utf8"
-                    )
-                );
-
-        } catch {
-            return false;
         }
 
 
@@ -262,6 +292,14 @@ class ShoonyaSessionManager {
 
         }
 
+        return this.applyStoredSession(data);
+
+    }
+
+
+    // Apply a validated session snapshot (durable or file) to the market
+    // service and set local authenticated state.
+    applyStoredSession(data) {
 
         try {
 
@@ -322,6 +360,10 @@ class ShoonyaSessionManager {
         } catch {
             // Best effort.
         }
+
+        // Also clear the durable (Postgres) store so a dead session is never
+        // resurrected on the next restart.
+        clearShoonyaSession().catch(() => {});
 
     }
 

@@ -413,6 +413,34 @@ export type CurrentContract = {
   error?: string;
 };
 
+// Backend Shoonya session lifecycle status (no secrets exposed).
+export type ApiSessionStatus = {
+  ok?: boolean;
+  server?: string;
+  authenticated?: boolean;
+  feedConnected?: boolean;
+  status?: "connected" | "disconnected" | "login_required";
+  loginRequired?: boolean;
+  uid?: string | null;
+  actid?: string | null;
+  authenticatedAt?: number | null;
+  expiresAt?: number | null;
+  expired?: boolean;
+  lastTickAt?: number | null;
+  started?: boolean;
+  liveConnected?: boolean;
+  market?: { connected?: boolean; price?: number | null } | null;
+};
+
+export async function getApiSessionStatus(): Promise<ApiSessionStatus> {
+  try {
+    const r = await fetch(`${API_BASE}/api/session/status`);
+    return (await r.json()) as ApiSessionStatus;
+  } catch {
+    return { ok: false, status: "disconnected" };
+  }
+}
+
 // Resolve the CURRENT active contract for an instrument (e.g. "silver",
 // "gold") from the backend registry — never a hardcoded expiry.
 export async function getCurrentContract(

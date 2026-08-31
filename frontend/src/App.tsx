@@ -53,6 +53,8 @@ import {
   fetchCandles,
   fetchStrategy,
   getCurrentContract,
+  getApiSessionStatus,
+  type ApiSessionStatus,
   type BullionState,
   type Candle,
   type DayStats,
@@ -263,6 +265,51 @@ function CardTitle({
 
 
 /* =============================================================
+   SHOONYA STATUS PILL — connected / disconnected / login required
+   ============================================================= */
+
+function ShoonyaStatusPill({
+  status,
+}: {
+  status: ApiSessionStatus | null;
+}) {
+  const st =
+    status?.status ||
+    (status?.feedConnected
+      ? "connected"
+      : status?.authenticated
+        ? "disconnected"
+        : "login_required");
+
+  const cfg =
+    st === "connected"
+      ? {
+          label: "Live",
+          dot: "fill-emerald-500 text-emerald-500",
+          text: "text-emerald-600",
+        }
+      : st === "disconnected"
+        ? {
+            label: "Feed Down",
+            dot: "fill-amber-500 text-amber-500",
+            text: "text-amber-600",
+          }
+        : {
+            label: "Login Required",
+            dot: "fill-rose-500 text-rose-500",
+            text: "text-rose-600",
+          };
+
+  return (
+    <span className="flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-2 py-0.5 text-[10px] font-semibold">
+      <Circle className={["h-2 w-2", cfg.dot].join(" ")} />
+      <span className={cfg.text}>{cfg.label}</span>
+    </span>
+  );
+}
+
+
+/* =============================================================
    APP
    ============================================================= */
 
@@ -300,6 +347,11 @@ function App() {
   ] = useState<string | null>(
     null
   );
+
+  // Backend Shoonya session lifecycle (Connected / Disconnected /
+  // Login Required). Polled so the dashboard reflects the live state.
+  const [apiStatus, setApiStatus] =
+    useState<ApiSessionStatus | null>(null);
 
   const [
     viewStrategy,
@@ -858,6 +910,29 @@ function App() {
 
       source.close();
 
+    };
+
+  }, []);
+
+
+  // Poll the backend Shoonya session lifecycle so the dashboard reflects
+  // Connected / Disconnected / Login Required (also updates when the
+  // process restarts with a restored session).
+  useEffect(() => {
+
+    let cancelled = false;
+
+    async function poll() {
+      const s = await getApiSessionStatus();
+      if (!cancelled) setApiStatus(s);
+    }
+
+    poll();
+    const id = setInterval(poll, 15_000);
+
+    return () => {
+      cancelled = true;
+      clearInterval(id);
     };
 
   }, []);
@@ -3323,6 +3398,9 @@ function App() {
                   : `${selectedExchangeStatus.current.exchange} · ${selectedExchangeStatus.current.status || "CLOSED"}`}
 
               </span>
+
+              {/* Shoonya connection state — Connected / Disconnected / Login Required */}
+              <ShoonyaStatusPill status={apiStatus} />
 
             </div>
 

@@ -100,6 +100,19 @@ async function init() {
         `);
         await p.query(`CREATE INDEX IF NOT EXISTS idx_users_email ON users(email)`);
         await p.query(`CREATE INDEX IF NOT EXISTS idx_subscriptions_email ON subscriptions(email)`);
+        // Shoonya session token — persists the (non-password) access session
+        // across Render restarts so a valid login survives re-deploys. Only a
+        // session identifier + uid/actid are stored; NEVER passwords/OTPs/TOTP.
+        await p.query(`
+            CREATE TABLE IF NOT EXISTS shoonya_sessions (
+                id INTEGER PRIMARY KEY DEFAULT 1,
+                access_token TEXT,
+                uid TEXT,
+                actid TEXT,
+                saved_at BIGINT,
+                updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+            )
+        `);
         ready = true;
         console.log("[db] PostgreSQL schema ready");
         return { engine: "postgres" };
@@ -240,6 +253,108 @@ async function recordSubscription(email, { plan, amount, period, endsAt }) {
     );
 }
 
+// =========================================================
+// SHOONYA SESSION PERSISTENCE
+//
+// Stores the Shoonya access session (a non-password session token) so a
+// valid login survives Render restarts/redeploys. Persists only the session
+// identifier + uid/actid — NEVER passwords, OTPs or TOTP secrets.
+//
+// JSON fallback (local, no DATABASE_URL): data/shoonya-session.json
+// Postgres (production): shoonya_sessions single-row table.
+// =========================================================
+
+const SHOONYA_SESSION_FILE = path.resolve(
+    process.cwd(),
+    "data",
+    "shoonya-session.json"
+);
+
+async function saveShoonyaSession({ accessToken, uid, actid, savedAt }) {
+    if (!accessToken || !uid) return false;
+
+    if (!pgEnabled()) {
+        try {
+            fs.mkdirSync(path.dirname(SHOONYA_SESSION_FILE), { recursive: true });
+            fs.writeFileSync(
+                SHOONYA_SESSION_FILE,
+                JSON.stringify(
+                    { accessToken, uid, actid: actid || uid, savedAt: savedAt || Date.now() },
+                    null,
+                    2
+                ),
+                "utf8"
+            );
+            return true;
+        } catch {
+            return false;
+        }
+    }
+
+    try {
+        await init();
+        await getPool().query(
+            `INSERT INTO shoonya_sessions (id, access_token, uid, actid, saved_at, updated_at)
+             VALUES (1, $1, $2, $3, $4, now())
+             ON CONFLICT (id) DO UPDATE SET
+               access_token=EXCLUDED.access_token,
+               uid=EXCLUDED.uid,
+               actid=EXCLUDED.actid,
+               saved_at=EXCLUDED.saved_at,
+               updated_at=now()`,
+            [accessToken, uid, actid || uid, savedAt || Date.now()]
+        );
+        return true;
+    } catch (error) {
+        console.error("[db] saveShoonyaSession failed:", error?.message || error);
+        return false;
+    }
+}
+
+async function getShoonyaSession() {
+    if (!pgEnabled()) {
+        try {
+            const parsed = JSON.parse(fs.readFileSync(SHOONYA_SESSION_FILE, "utf8"));
+            if (parsed?.accessToken && parsed?.uid) return parsed;
+        } catch {}
+        return null;
+    }
+
+    try {
+        await init();
+        const r = await getPool().query(
+            `SELECT access_token, uid, actid, saved_at FROM shoonya_sessions WHERE id=1`
+        );
+        const row = r.rows[0];
+        if (!row?.access_token || !row?.uid) return null;
+        return {
+            accessToken: row.access_token,
+            uid: row.uid,
+            actid: row.actid || row.uid,
+            savedAt: Number(row.saved_at) || null,
+        };
+    } catch (error) {
+        console.error("[db] getShoonyaSession failed:", error?.message || error);
+        return null;
+    }
+}
+
+async function clearShoonyaSession() {
+    if (!pgEnabled()) {
+        try {
+            fs.unlinkSync(SHOONYA_SESSION_FILE);
+        } catch {}
+        return true;
+    }
+    try {
+        await init();
+        await getPool().query(`DELETE FROM shoonya_sessions WHERE id=1`);
+    } catch (error) {
+        console.error("[db] clearShoonyaSession failed:", error?.message || error);
+    }
+    return true;
+}
+
 module.exports = {
     pgEnabled,
     init,
@@ -251,6 +366,9 @@ module.exports = {
     deleteUser,
     clearAllUsers,
     recordSubscription,
+    saveShoonyaSession,
+    getShoonyaSession,
+    clearShoonyaSession,
     rowToUser,
     jsonRowToUser,
 };

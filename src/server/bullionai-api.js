@@ -3910,26 +3910,26 @@ const allowedTimeframes =
             "/api/session/status"
         ) {
 
-            let session =
-                null;
-
-            let coordinatorState =
+            let status =
                 null;
 
             try {
 
-                session =
-                    this.coordinator?.session?.getState() ||
-                    null;
-
-                coordinatorState =
-                    this.coordinator?.getState() ||
+                status =
+                    this.coordinator?.getSessionStatus?.() ||
                     null;
 
             } catch {
-                session =
+                status =
                     null;
             }
+
+            const authenticated = Boolean(
+                status?.authenticated
+            );
+            const feedConnected = Boolean(
+                status?.feedConnected
+            );
 
             this.sendJson(
                 response,
@@ -3937,24 +3937,52 @@ const allowedTimeframes =
                 {
                     ok:
                         true,
+
+                    // HTTP_SERVER_READY is always true — the API is up.
+                    server:
+                        "ready",
+
+                    // SHOONYA state machine
+                    authenticated,
+                    feedConnected,
+                    status:
+                        status?.status ||
+                        (authenticated
+                            ? feedConnected
+                                ? "connected"
+                                : "disconnected"
+                            : "login_required"),
+                    loginRequired:
+                        Boolean(status?.loginRequired),
+
+                    // session detail (non-secret)
+                    uid:
+                        status?.uid ?? null,
+                    actid:
+                        status?.actid ?? null,
+                    authenticatedAt:
+                        status?.authenticatedAt ?? null,
+                    expiresAt:
+                        status?.expiresAt ?? null,
+                    expired:
+                        Boolean(status?.expired),
+                    lastTickAt:
+                        status?.lastTickAt ?? null,
+
+                    // legacy fields kept for compatibility
                     started:
                         Boolean(
                             this.started
                         ),
                     liveConnected:
                         Boolean(
-                            coordinatorState?.market?.connected
+                            feedConnected
                         ),
-                    session,
+                    session:
+                        status?.session ?? null,
                     market:
-                        coordinatorState?.market
-                            ? {
-                                connected:
-                                    coordinatorState.market.connected,
-                                price:
-                                    coordinatorState.market.price,
-                            }
-                            : null,
+                        this.coordinator?.getState?.()?.market ||
+                            null,
                 }
             );
 

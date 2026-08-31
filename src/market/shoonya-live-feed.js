@@ -95,6 +95,30 @@ class ShoonyaLiveFeed extends EventEmitter {
 
         this.authFailed =
             false;
+
+        /*
+         * Application-level reconnect backoff. The shoonya-api-js SDK has a
+         * naive internal reconnect; we add our own bounded, exponential
+         * backoff with duplicate-timer and duplicate-connection guards.
+         */
+
+        this.reconnectAttempt =
+            0;
+
+        this.reconnectTimer =
+            null;
+
+        this.maxReconnectAttempts =
+            Number(
+                process.env.SHOONYA_MAX_RECONNECT ||
+                20
+            );
+
+        this.reconnectBaseMs =
+            Number(
+                process.env.SHOONYA_RECONNECT_BASE_MS ||
+                3000
+            );
     }
 
 
@@ -194,6 +218,12 @@ class ShoonyaLiveFeed extends EventEmitter {
 
                 this.connected =
                     true;
+
+                // Connected -> reset the reconnect backoff.
+                this.reconnectAttempt =
+                    0;
+
+                this.clearReconnect();
 
                 console.log(
                     "Shoonya WebSocket connected."
@@ -357,6 +387,10 @@ class ShoonyaLiveFeed extends EventEmitter {
                     "disconnected",
                     reason
                 );
+
+                // Application-level reconnect with backoff — only for
+                // unexpected drops (valid session, not an auth failure).
+                this.scheduleReconnect(reason);
 
             }
         );
@@ -866,6 +900,127 @@ class ShoonyaLiveFeed extends EventEmitter {
     }
 
 
+    // Lightweight machine-readable snapshot (no secrets).
+    getState() {
+
+        return {
+            connected:
+                this.connected,
+            subscribed:
+                this.subscribed,
+            authFailed:
+                this.authFailed,
+            reconnectAttempt:
+                this.reconnectAttempt,
+            lastTickTime:
+                this.lastTick?.time ?? null,
+            lastTickPrice:
+                this.lastTick?.price ?? null,
+        };
+
+    }
+
+
+    // =========================================================
+    // RECONNECT (bounded exponential backoff)
+    //
+    // The shoonya-api-js SDK attempts its own Naive reconnect. We add a
+    // guard so we never open a duplicate socket or stack timers, and we
+    // back off exponentially (never hammering Shoonya) up to a hard cap.
+    // =========================================================
+
+    clearReconnect() {
+
+        if (this.reconnectTimer) {
+
+            clearTimeout(
+                this.reconnectTimer
+            );
+
+            this.reconnectTimer =
+                null;
+
+        }
+
+    }
+
+
+    scheduleReconnect(reason) {
+
+        // Auth failures are handled by the coordinator's re-auth flow, not
+        // here. Never auto-retry a rejected session.
+        if (this.authFailed) {
+            return;
+        }
+
+        // Never open two reconnect timers.
+        if (this.reconnectTimer) {
+            return;
+        }
+
+        if (
+            this.reconnectAttempt >=
+            this.maxReconnectAttempts
+        ) {
+
+            console.log(
+                "Reconnect attempts exhausted; stopping auto-reconnect."
+            );
+
+            return;
+
+        }
+
+        const base =
+            this.reconnectBaseMs;
+
+        const delay =
+            Math.min(
+                base * Math.pow(
+                    2,
+                    this.reconnectAttempt
+                ),
+                60 * 1000
+            );
+
+        this.reconnectAttempt++;
+
+        console.log(
+            `Scheduling Shoonya reconnect in ${Math.round(delay / 1000)}s (attempt ${this.reconnectAttempt}/${this.maxReconnectAttempts})`
+        );
+
+        this.reconnectTimer =
+            setTimeout(
+                () => {
+                    this.reconnectTimer =
+                        null;
+
+                    if (
+                        this.connected ||
+                        this.authFailed ||
+                        !this.market.isAuthenticated()
+                    ) {
+                        return;
+                    }
+
+                    this.connect()
+                        .catch(error => {
+                            console.error(
+                                "Shoonya reconnect failed:",
+                                error?.message ||
+                                error
+                            );
+                            this.scheduleReconnect(
+                                error
+                            );
+                        });
+                },
+                delay
+            );
+
+    }
+
+
     // =========================================================
     // SUBSCRIPTION STATUS
     // =========================================================
@@ -882,6 +1037,8 @@ class ShoonyaLiveFeed extends EventEmitter {
     // =========================================================
 
     async disconnect() {
+
+        this.clearReconnect();
 
         if (!this.socket) {
             return;

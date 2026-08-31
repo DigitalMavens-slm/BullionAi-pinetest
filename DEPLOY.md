@@ -65,8 +65,20 @@ The redirect URL **must match the exact HTTPS URL you browse to when logging in.
 4. Confirm: `GET /api/state` returns a signal (e.g. `signal: SELL`).
 
 ### Re-authentication cadence
-- **You do NOT log in daily.** Shoonya tokens are persisted to `data/shoonya-session.json` and auto-restored on boot (`restoreSession()`), so live prices keep working across restarts.
+- **You do NOT log in daily.** Shoonya tokens are persisted to the **durable Postgres store** (`shoonya_sessions` table) and auto-restored on boot (`restoreSession()`), so live prices keep working across Render restarts/redeploys. The local file (`data/shoonya-session.json`) is only a zero-config fallback.
 - Shoonya tokens are issued per-trading-day and capped at ~12h (`restoreSession()` refuses sessions older than 12h). So re-login is **once per trading day**, not on every restart/deploy.
+- **If a restored token is rejected by Shoonya** it is invalidated and the system enters `SHOONYA_LOGIN_REQUIRED` — the HTTP API stays healthy, and the dashboard shows a clear "Login Required" state with the `/api/shoonya/login` action.
+
+### Session lifecycle states
+The API exposes a machine-readable state at `GET /api/session/status`:
+```json
+{ "ok": true, "server": "ready", "authenticated": true, "feedConnected": true,
+  "status": "connected", "lastTickAt": 1788..., "uid": "FN215549" }
+```
+- `server: "ready"` — HTTP is always up, independent of Shoonya.
+- `status: "connected"` → authenticated + WebSocket feed live.
+- `status: "disconnected"` → authenticated but feed dropped (auto-reconnect with backoff).
+- `status: "login_required"` → needs a fresh manual login via `/api/shoonya/login`.
 - **You still must paste a code once a day** — Shoonya's OAuth has no password/refresh login, so a cron cannot mint a code. It can only *detect* expiry and alert you.
 
 ### Daily session-check cron (auto-alert)
@@ -143,6 +155,7 @@ DATABASE_SSL=true
 Postgres tables are created automatically:
 - `users(email, name, mobile, segments jsonb, is_admin, plan, trial_ends_at, access_until, salt, password_hash, created_at)`
 - `subscriptions(id, email, plan, amount, period, started_at, ends_at)`
+- `shoonya_sessions(id, access_token, uid, actid, saved_at, updated_at)` — persists the Shoonya session across restarts. Only a non-password session token + uid/actid are stored; never passwords/OTP/TOTP.
 
 ### 2. Set an admin (first registered user is auto-admin; or force via env)
 ```

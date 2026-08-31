@@ -164,6 +164,11 @@ class BullionAILiveCoordinator extends EventEmitter {
         this.reauthenticating =
             false;
 
+        // SHOONYA_LOGIN_REQUIRED: set when no valid session exists and a
+        // manual login is required. Cleared on successful authentication.
+        this.loginRequired =
+            false;
+
         this.initializingPromise =
             null;
 
@@ -317,6 +322,9 @@ class BullionAILiveCoordinator extends EventEmitter {
             !this.clientId
         ) {
 
+            this.loginRequired =
+                true;
+
             throw new Error(
                 "Shoonya client ID is missing."
             );
@@ -327,6 +335,9 @@ class BullionAILiveCoordinator extends EventEmitter {
         if (
             !this.secretCode
         ) {
+
+            this.loginRequired =
+                true;
 
             throw new Error(
                 "Shoonya secret code is missing."
@@ -423,7 +434,7 @@ class BullionAILiveCoordinator extends EventEmitter {
 
                 restored =
 
-                    this.session
+                    await this.session
                         .restoreSession();
 
             } catch (
@@ -479,6 +490,9 @@ class BullionAILiveCoordinator extends EventEmitter {
         if (
             this.session.isAuthenticated()
         ) {
+            // Valid session resolved -> authenticated. Clear login-required.
+            this.loginRequired =
+                false;
             return;
         }
 
@@ -675,6 +689,9 @@ class BullionAILiveCoordinator extends EventEmitter {
                     authWaitMs * 4
                 ) {
 
+                    this.loginRequired =
+                        true;
+
                     throw new Error(
                         "Shoonya login timed out (no session provided). Re-authenticate at /api/shoonya/login."
                     );
@@ -688,6 +705,12 @@ class BullionAILiveCoordinator extends EventEmitter {
                     authWaitMs
 
             ) {
+
+                // No valid session and no interactive prompt available:
+                // set SHOONYA_LOGIN_REQUIRED so the dashboard can surface a
+                // clear "Login to Shoonya" action instead of a silent hang.
+                this.loginRequired =
+                    true;
 
                 throw new Error(
                     "Shoonya login timed out (no session, non-interactive). Re-authenticate at /api/shoonya/login to start live pricing."
@@ -738,6 +761,11 @@ class BullionAILiveCoordinator extends EventEmitter {
             );
 
         }
+
+        // Reached a valid session via drop-file/console/loop: clear login
+        // required so the dashboard reflects the authenticated state.
+        this.loginRequired =
+            false;
 
     }
 
@@ -795,6 +823,13 @@ class BullionAILiveCoordinator extends EventEmitter {
         await this.session.authenticateFromRedirect(
             redirectUrl
         );
+
+        // Successful OAuth code exchange -> SHOONYA_AUTHENTICATED. Clear the
+        // login-required flag so the dashboard shows Connected / live data.
+        if (this.session.isAuthenticated()) {
+            this.loginRequired =
+                false;
+        }
 
 
         if (
@@ -1292,6 +1327,65 @@ class BullionAILiveCoordinator extends EventEmitter {
     getState() {
 
         return this.display.getState();
+    }
+
+
+    // Session lifecycle snapshot for the dashboard (no secrets).
+    getSessionStatus() {
+
+        const market =
+            this.display?.getState?.()?.market ||
+            null;
+
+        const session =
+            this.session?.getState?.() ||
+            null;
+
+        const feed =
+            this.liveMarket?.feed?.getState?.() ||
+            null;
+
+        const authenticated = Boolean(
+            session?.authenticated &&
+            !session?.expired
+        );
+
+        const feedConnected = Boolean(
+            market?.connected ||
+            feed?.connected
+        );
+
+        let status;
+        if (!authenticated) {
+            status = "login_required"; // SHOONYA_LOGIN_REQUIRED
+        } else if (feedConnected) {
+            status = "connected"; // SHOONYA_FEED_CONNECTED
+        } else {
+            status = "disconnected";
+        }
+
+        return {
+            authenticated,
+            feedConnected,
+            status,
+            loginRequired:
+                Boolean(this.loginRequired),
+            uid: authenticated ? session.uid : null,
+            actid: authenticated ? session.actid : null,
+            authenticatedAt: session?.authenticatedAt ?? null,
+            expiresAt: session?.expiresAt ?? null,
+            expired: Boolean(session?.expired),
+            lastTickAt: market?.tickTime ?? null,
+            feed: feed
+                ? {
+                      connected: feed.connected,
+                      subscribed: feed.subscribed,
+                      authFailed: feed.authFailed,
+                      reconnectAttempt: feed.reconnectAttempt,
+                  }
+                : null,
+            session,
+        };
     }
 
 

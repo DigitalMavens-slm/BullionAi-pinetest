@@ -111,8 +111,12 @@ class LiveMarketState extends EventEmitter {
                 tokens:
                     this.tokens,
 
+                // The SDK's naive internal reconnect would race with our own
+                // bounded exponential backoff (scheduleReconnect) and could
+                // open duplicate sockets. Disable it; the application-level
+                // backoff handles all reconnects with duplicate guards.
                 reconnect:
-                    true,
+                    false,
 
                 reconnectDelay:
                     3000,
