@@ -637,10 +637,63 @@ class BullionAILiveCoordinator extends EventEmitter {
             dropFile
         );
 
+        /*
+         * Non-interactive hosts (Render, cron, CI) have no console and no
+         * drop-file watcher. We must NOT block forever waiting for a login —
+         * otherwise every API endpoint that awaits the coordinator hangs and
+         * the browser reports "failed to fetch" / "CORS blocked" (timeout).
+         *
+         * Wait a short bounded window for a login to arrive (so a manual
+         * authentication within that window still connects), then give up so
+         * the API can respond promptly with a "no-session" state.
+         */
+
+        const authWaitStart =
+            Date.now();
+
+        const authWaitMs =
+            Number(
+                process.env.SHOONYA_AUTH_WAIT_MS ||
+                60000
+            );
+
         while (
             !this.session
                 .isAuthenticated()
         ) {
+
+            if (
+                isInteractive &&
+                Date.now() - authWaitStart >=
+                    authWaitMs
+            ) {
+
+                // Interactive consoles can still wait indefinitely-ish,
+                // but cap it so a stuck loop never hangs the process.
+                if (
+                    Date.now() - authWaitStart >=
+                    authWaitMs * 4
+                ) {
+
+                    throw new Error(
+                        "Shoonya login timed out (no session provided). Re-authenticate at /api/shoonya/login."
+                    );
+
+                }
+
+            } else if (
+
+                !isInteractive &&
+                Date.now() - authWaitStart >=
+                    authWaitMs
+
+            ) {
+
+                throw new Error(
+                    "Shoonya login timed out (no session, non-interactive). Re-authenticate at /api/shoonya/login to start live pricing."
+                );
+
+            }
 
             let consumed = false;
 

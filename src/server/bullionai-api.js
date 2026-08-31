@@ -384,7 +384,9 @@ class BullionAIApi {
             this.coordinatorStartPromise
         ) {
 
-            return this.coordinatorStartPromise;
+            // Already starting (in the background). Do not block the
+            // caller waiting on it — serve whatever state exists now.
+            return;
 
         }
 
@@ -397,16 +399,26 @@ class BullionAIApi {
                 .catch(
                     error => {
 
+                        console.error(
+                            "[coordinator] start failed:",
+                            error?.message || error
+                        );
+
                         this.coordinatorStartPromise =
                             null;
-
-                        throw error;
 
                     }
                 );
 
 
-        return this.coordinatorStartPromise;
+        /*
+         * Do NOT await the coordinator here. Starting the coordinator
+         * can block while waiting for a Shoonya session; if we awaited it
+         * the API endpoints would hang and the browser would report
+         * "failed to fetch" / CORS-timeout errors. Kick it off in the
+         * background and let it populate this.state whenconnected.
+         */
+        return;
 
     }
 
