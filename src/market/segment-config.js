@@ -132,42 +132,8 @@ const SEGMENTS = {
         tickHandling: "price-volume",
         contractBased: false,
     },
-    SPOT: {
-        id: "SPOT",
-        name: "Spot — Gold & Silver (USD)",
-        exchange: "SPOT",
-        // Spot gold/silver quoted in USD per ounce. Backed by COMEX futures
-        // (GC=F / SI=F) from Yahoo Finance since Yahoo's public API doesn't
-        // expose the literal XAU/USD / XAG/USD spot rate. These trade on the
-        // US COMEX floor (CME Group, New York), roughly 18:00 ET Sun–Fri near
-        // 24h with a ~17:00–18:00 ET settlement break. Modeled Mon–Sat in IST.
-        tradingDays: [1, 2, 3, 4, 5, 6],
-        sessions: [
-            {
-                label: "Regular",
-                status: "OPEN",
-                // approx 03:30 IST to 23:30 IST (ET day)
-                ranges: [["03:30", "23:30"]],
-            },
-            {
-                label: "Settlement Break",
-                status: "PRE-OPEN",
-                ranges: [["01:30", "03:30"]],
-            },
-        ],
-        defaultTimeframe: "15m",
-        instrumentTypes: ["FUT", "FUTCOM", "FUTMET"],
-        tickHandling: "price-volume",
-        contractBased: true,
-        // Data for Spot comes from Yahoo Finance (GC=F, SI=F) — Shoonya does
-        // not trade US COMEX futures. Historical + snapshot only.
-        dataSource: "yahoo",
-        yahooSymbols: {
-            GOLD: "GC=F",
-            SILVER: "SI=F",
-        },
-        currency: "USD",
-    },
+    // SPOT removed — gold/silver spot will be provided later via a dedicated
+    // metals API (not a Yahoo-backed exchange).
 };
 
 // Backwards-compatible alias: getExchangeRows / lookup by id.

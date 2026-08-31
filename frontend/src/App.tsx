@@ -423,10 +423,8 @@ function App() {
     });
 
   // Segment-based display filtering — user segments from registration.
-  // MCX/NSE/BSE/SPOT are always supported exchanges; SPOT was added as a
-  // first-class exchange, so always include it even if a user registered
-  // before SPOT existed (otherwise SPOT scripts would silently not add
-  // to the watchlist).
+  // MCX/NSE/BSE are always supported exchanges; merge with the user's
+  // segments so scripts always add to the watchlist.
   const allowedSegments = useMemo(
     () =>
       new Set(
@@ -434,7 +432,6 @@ function App() {
           "MCX",
           "NSE",
           "BSE",
-          "SPOT",
           ...(
             authUser?.segments || []
           ),
@@ -1311,7 +1308,7 @@ function App() {
     status === "OPEN";
 
   const isContractBasedSelected =
-    ["MCX", "SPOT"].includes(
+    ["MCX"].includes(
       String(
         selectedSymbol?.exch || ""
       )
@@ -1320,7 +1317,7 @@ function App() {
     );
 
   /* Which info-panel layout: backend reports it via strategy.panel.
-     Fallback to the MCX/SPOT+15m rule when the panel field is absent. */
+     Fallback to the MCX+15m rule when the panel field is absent. */
   const usesFixedTargets =
     (viewStrategy as any)?.panel === "fixed-target" ||
     ((viewStrategy as any)?.panel == null &&

@@ -39,20 +39,8 @@ const INDEX_MAP = {
     "BSE:6": "^BSESN",           // SENSEX 500 proxy
 };
 
-/*
- * SPOT (gold/silver $/oz) maps to Yahoo continuous futures tickers. Yahoo's
- * public API doesn't expose XAU/USD / XAG/USD spot, so we use the closest
- * $/oz proxies it DOES serve: GC=F (COMEX gold) and SI=F (COMEX silver).
- * Keyed by "<EXCH>:<SYMBOL>" (token == root symbol) for resolution.
- */
-const SPOT_YAHOO_MAP = {
-    "SPOT:GOLD": "GC=F",
-    "SPOT:SILVER": "SI=F",
-};
-
 const NSE_EQUITY_RE = /-(EQ|BE|BZ|T|Z|SM|ST)$/i;
 const BSE_EQUITY_RE = /^[A-Z0-9&.-]+$/i;
-const SPOT_FUT_RE = /^(GC|SI|GOLD|SILVER)$/i;
 
 function stripSeriesSuffix(tsym) {
     // "RELIANCE-EQ" -> "RELIANCE", "RELIANCE1" -> keep
@@ -85,19 +73,8 @@ function toYahooSymbol({ exchange, token, symbol, tsym }) {
         return null;
     }
 
-    // SPOT: map via the explicit table, otherwise try the raw symbol/token.
-    if (exch === "SPOT") {
-        const key = `${exch}:${String(symbol || tsym || token || "").trim().toUpperCase()}`;
-        const mapped = SPOT_YAHOO_MAP[key];
-        if (mapped) return mapped;
-
-        const sym = String(symbol || tsym || token || "").trim().toUpperCase();
-        if (SPOT_FUT_RE.test(sym)) {
-            const m = SPOT_YAHOO_MAP[`${exch}:${sym.replace(/^=/i, "")}`];
-            if (m) return m;
-        }
-        return null;
-    }
+    // SPOT removed — gold/silver spot will come from a dedicated metals API
+    // later. No Yahoo symbol mapping here.
 
     return null;
 }
