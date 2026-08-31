@@ -4325,7 +4325,7 @@ const allowedTimeframes =
                     exchange: exch.toUpperCase(),
                     count: rows.length,
                     instruments: rows.map(r => ({
-                        exchange: r.exchange,
+                        exchange: r.exchange || r.exch || exch,
                         token: r.token,
                         symbol: r.symbol,
                         tradingSymbol: r.tsym || r.tradingSymbol,

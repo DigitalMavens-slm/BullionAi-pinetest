@@ -217,13 +217,23 @@ function getCandlesWithPreviousFallback({ exchange, token, tfKey, getRegistryRow
     const curRow = getRegistryRows.find(r => String(r.token) === String(token));
     if (!curRow) return cur;
 
-    const prev = findPreviousContract(getRegistryRows, curRow);
-    if (!prev) return cur;
+    // Walk back through previous contracts (nearest first) and return the
+    // first one that actually has cached candles. The nearest previous
+    // contract may have no data (e.g. a lightly-traded expiry), so we keep
+    // walking until we find a dataset the chart/signal engine can use.
+    let prev = findPreviousContract(getRegistryRows, curRow);
+    let guard = 0;
+    while (prev && guard < 20) {
+        guard++;
+        const prevCandles = loadCandlesForToken(exchange, prev.token, tfKey);
+        if (prevCandles.length) {
+            return prevCandles;
+        }
+        // No data for this previous contract — look one further back.
+        prev = findPreviousContract(getRegistryRows.filter(r => String(r.token) !== String(prev.token)), prev);
+    }
 
-    const prevCandles = loadCandlesForToken(exchange, prev.token, tfKey);
-    if (!prevCandles.length) return cur;
-
-    return prevCandles;
+    return cur;
 }
 
 module.exports = {
