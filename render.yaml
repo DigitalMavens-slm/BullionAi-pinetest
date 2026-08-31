@@ -32,7 +32,7 @@ services:
         sync: false
 
       - key: SHOONYA_REDIRECT_URL
-        value: https://bullionai.digitalmavens.in
+        value: https://bullionai.in/
 
       # Whitelist the backend egress IP in the Shoonya portal. Without this the
       # API service calls Shoonya from an unapproved IP and gets INVALID_IP
