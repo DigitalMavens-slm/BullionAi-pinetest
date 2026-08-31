@@ -21,7 +21,7 @@ type Entry = {
   name?: string;
 };
 
-const EXCHANGES = ["MCX", "NSE", "BSE", "COMEX"];
+const EXCHANGES = ["MCX", "NSE", "BSE", "SPOT"];
 
 
 export function InstrumentPicker({

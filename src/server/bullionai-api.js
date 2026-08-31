@@ -1547,8 +1547,8 @@ const allowedTimeframes =
     async tryYahooFallback({ exchange, token, symbol, tsym, tf, filePath }) {
         const exch = String(exchange || "MCX").toUpperCase();
         // Yahoo is the data source for NSE/BSE equities/indices AND for all
-        // COMEX metals (Shoonya does not trade COMEX).
-        if (!["NSE", "BSE", "COMEX"].includes(exch)) return [];
+        // SPOT gold/silver (Shoonya does not trade US COMEX futures).
+        if (!["NSE", "BSE", "SPOT"].includes(exch)) return [];
 
         // Map interval: Yahoo accepts minute buckets like "1m","3m","5m","15m","30m","60m",
         // and "1d" for daily. We only fall back for minute timeframes.
@@ -1652,12 +1652,14 @@ const allowedTimeframes =
 
 
         // -----------------------------------------------------
-        // COMEX PRIMARY DATA SOURCE (Yahoo Finance)
+        // SPOT PRIMARY DATA SOURCE (Yahoo Finance)
         //
-        // COMEX is a US exchange not traded on Shoonya, so historical OHLCV
-        // comes directly from Yahoo Finance (GC=F, SI=F, HG=F, PL=F, PA=F).
-        // Read the cached file first; if missing/stale, fetch from Yahoo and
-        // persist to the same per-(exchange,token,tf) file shape.
+        // SPOT (gold/silver $/oz) is not traded on Shoonya, so historical
+        // OHLCV comes directly from Yahoo Finance (GC=F, SI=F) — the closest
+        // free $/oz proxies Yahoo serves (true XAU/USD & XAG/USD 404 on
+        // Yahoo's public API). Read the cached file first; if missing/stale,
+        // fetch from Yahoo and persist to the same per-(exchange,token,tf)
+        // file shape.
         // -----------------------------------------------------
 
         if (
@@ -1668,10 +1670,10 @@ const allowedTimeframes =
             )
                 .trim()
                 .toUpperCase() ===
-            "COMEX"
+            "SPOT"
         ) {
 
-            const cachedComex =
+            const cachedSpot =
                 fs.existsSync(filePath)
                     ? (() => {
                           try {
@@ -1691,14 +1693,14 @@ const allowedTimeframes =
                     : [];
 
             if (
-                cachedComex.length
+                cachedSpot.length
             ) {
                 candles =
-                    cachedComex;
+                    cachedSpot;
             } else {
                 const yah =
                     await this.tryYahooFallback({
-                        exchange: "COMEX",
+                        exchange: "SPOT",
                         token: inst.token,
                         symbol: inst.symbol,
                         tsym:
@@ -1710,7 +1712,7 @@ const allowedTimeframes =
                 if (yah.length) {
                     candles = yah;
                     console.log(
-                        `[comex] ${exchange}_${inst.token}_${tf.key} loaded ${yah.length} candles from Yahoo`
+                        `[spot] ${exchange}_${inst.token}_${tf.key} loaded ${yah.length} candles from Yahoo`
                     );
                 }
             }
@@ -2096,10 +2098,10 @@ const allowedTimeframes =
                 market &&
                 market.isAuthenticated() &&
                 Number.isFinite(Number(tf.interval)) &&
-                // COMEX is not traded on Shoonya — skip the Shoonya backfill
+                // SPOT is not traded on Shoonya — skip the Shoonya backfill
                 // and go straight to the Yahoo Finance fallback below.
                 String(inst.exchange || exchange).toUpperCase() !==
-                    "COMEX"
+                    "SPOT"
             ) {
                 try {
                     const upd = await market.updateCandles([], {
@@ -2383,12 +2385,13 @@ const allowedTimeframes =
         instOverride
     ) {
 
-        // MCX (and COMEX) use the fixed-target strategy ONLY on 15m; on other
-        // timeframes (or always for NSE/BSE) they use the trailing/open
-        // strategy. The requested timeframe is honored for every segment.
+        // MCX (and SPOT gold/silver) use the fixed-target strategy ONLY on
+        // 15m; on other timeframes (or always for NSE/BSE) they use the
+        // trailing/open strategy. The requested timeframe is honored for
+        // every segment.
         const _isContractBased =
             instOverride && instOverride.exchange
-                ? ["MCX", "COMEX"].includes(
+                ? ["MCX", "SPOT"].includes(
                       String(
                           instOverride.exchange
                       ).toUpperCase()
@@ -2497,7 +2500,7 @@ const allowedTimeframes =
 
 
         const strategyFileForInst =
-            (exchUpper === "MCX" || exchUpper === "COMEX") &&
+            (exchUpper === "MCX" || exchUpper === "SPOT") &&
             tf.key === "15m"
                 ? "BullionAI-fixedtgt.pine"
                 : "BullionAI.pine";

@@ -40,21 +40,19 @@ const INDEX_MAP = {
 };
 
 /*
- * COMEX metals map to Yahoo continuous futures tickers. Keyed by
- * "<EXCH>:<SYMBOL>" (token == root symbol for COMEX) so the resolver can
- * map a requested COMEX instrument to its Yahoo ticker.
+ * SPOT (gold/silver $/oz) maps to Yahoo continuous futures tickers. Yahoo's
+ * public API doesn't expose XAU/USD / XAG/USD spot, so we use the closest
+ * $/oz proxies it DOES serve: GC=F (COMEX gold) and SI=F (COMEX silver).
+ * Keyed by "<EXCH>:<SYMBOL>" (token == root symbol) for resolution.
  */
-const COMEX_YAHOO_MAP = {
-    "COMEX:GOLD": "GC=F",
-    "COMEX:SILVER": "SI=F",
-    "COMEX:COPPER": "HG=F",
-    "COMEX:PLATINUM": "PL=F",
-    "COMEX:PALLADIUM": "PA=F",
+const SPOT_YAHOO_MAP = {
+    "SPOT:GOLD": "GC=F",
+    "SPOT:SILVER": "SI=F",
 };
 
 const NSE_EQUITY_RE = /-(EQ|BE|BZ|T|Z|SM|ST)$/i;
 const BSE_EQUITY_RE = /^[A-Z0-9&.-]+$/i;
-const COMEX_FUT_RE = /^(GC|SI|HG|PL|PA|GOLD|SILVER|COPPER|PLATINUM|PALLADIUM)$/i;
+const SPOT_FUT_RE = /^(GC|SI|GOLD|SILVER)$/i;
 
 function stripSeriesSuffix(tsym) {
     // "RELIANCE-EQ" -> "RELIANCE", "RELIANCE1" -> keep
@@ -87,15 +85,15 @@ function toYahooSymbol({ exchange, token, symbol, tsym }) {
         return null;
     }
 
-    // COMEX: map via the explicit table, otherwise try the raw symbol/token.
-    if (exch === "COMEX") {
+    // SPOT: map via the explicit table, otherwise try the raw symbol/token.
+    if (exch === "SPOT") {
         const key = `${exch}:${String(symbol || tsym || token || "").trim().toUpperCase()}`;
-        const mapped = COMEX_YAHOO_MAP[key];
+        const mapped = SPOT_YAHOO_MAP[key];
         if (mapped) return mapped;
 
         const sym = String(symbol || tsym || token || "").trim().toUpperCase();
-        if (COMEX_FUT_RE.test(sym)) {
-            const m = COMEX_YAHOO_MAP[`${exch}:${sym.replace(/^=/i, "")}`];
+        if (SPOT_FUT_RE.test(sym)) {
+            const m = SPOT_YAHOO_MAP[`${exch}:${sym.replace(/^=/i, "")}`];
             if (m) return m;
         }
         return null;

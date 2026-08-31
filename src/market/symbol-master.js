@@ -32,29 +32,28 @@ const SYMBOLS_DIR = path.resolve(
 );
 
 const EXCHANGES =
-    ["MCX", "NSE", "BSE", "COMEX"];
+    ["MCX", "NSE", "BSE", "SPOT"];
 
 const CDN =
     "https://api.shoonya.com";
 
 /*
- * COMEX is a US exchange (CME Group). Shoonya does not host a COMEX
- * symbol file, so we define the tradable set here. Data comes from Yahoo
- * Finance (GC=F, SI=F, HG=F, PL=F, PA=F). Expo/root names align with
- * segment-config.com? SEGMENTS.COMEX.yahooSymbols.
+ * SPOT (Gold / Silver in USD). Yahoo's public API does not expose the
+ * literal XAU/USD or XAG/USD spot rate (those symbols 404), so we use the
+ * closest free $/oz proxies it DOES serve: COMEX Gold futures (GC=F) and
+ * COMEX Silver futures (SI=F). These are quoted in raw USD per ounce,
+ * shown on the dashboard as the "Spot" price for gold/silver.
  */
-const COMEX_SYMBOLS = [
+const SPOT_SYMBOLS = [
     {
-        exch: "COMEX",
+        exch: "SPOT",
         token: "GC",
         symbol: "GOLD",
         tradingSymbol: "GOLD",
         tsym: "GOLD",
         instrumentType: "FUTMET",
         instrumentName: "Gold",
-        name: "COMEX Gold",
-        // fixed synthetic expiry (year-end) so the registry treats it like a
-        // contract symbol; auto-roll is not meaningful for a continuous index.
+        name: "Spot Gold (USD/oz)",
         expiry: null,
         expiryRaw: "",
         lotSize: 100,
@@ -62,64 +61,19 @@ const COMEX_SYMBOLS = [
         yahooSymbol: "GC=F",
     },
     {
-        exch: "COMEX",
+        exch: "SPOT",
         token: "SI",
         symbol: "SILVER",
         tradingSymbol: "SILVER",
         tsym: "SILVER",
         instrumentType: "FUTMET",
         instrumentName: "Silver",
-        name: "COMEX Silver",
+        name: "Spot Silver (USD/oz)",
         expiry: null,
         expiryRaw: "",
         lotSize: 5000,
         tickSize: 0.005,
         yahooSymbol: "SI=F",
-    },
-    {
-        exch: "COMEX",
-        token: "HG",
-        symbol: "COPPER",
-        tradingSymbol: "COPPER",
-        tsym: "COPPER",
-        instrumentType: "FUTMET",
-        instrumentName: "Copper",
-        name: "COMEX Copper",
-        expiry: null,
-        expiryRaw: "",
-        lotSize: 25000,
-        tickSize: 0.0005,
-        yahooSymbol: "HG=F",
-    },
-    {
-        exch: "COMEX",
-        token: "PL",
-        symbol: "PLATINUM",
-        tradingSymbol: "PLATINUM",
-        tsym: "PLATINUM",
-        instrumentType: "FUTMET",
-        instrumentName: "Platinum",
-        name: "COMEX Platinum",
-        expiry: null,
-        expiryRaw: "",
-        lotSize: 50,
-        tickSize: 0.1,
-        yahooSymbol: "PL=F",
-    },
-    {
-        exch: "COMEX",
-        token: "PA",
-        symbol: "PALLADIUM",
-        tradingSymbol: "PALLADIUM",
-        tsym: "PALLADIUM",
-        instrumentType: "FUTMET",
-        instrumentName: "Palladium",
-        name: "COMEX Palladium",
-        expiry: null,
-        expiryRaw: "",
-        lotSize: 100,
-        tickSize: 0.05,
-        yahooSymbol: "PA=F",
     },
 ];
 
@@ -694,9 +648,10 @@ async function getRegistry(exch) {
     if (inflight.has(E)) return inflight.get(E);
 
 
-    // COMEX has no Shoonya symbol file — use the built-in static list.
-    if (E === "COMEX") {
-        return COMEX_SYMBOLS;
+    // SPOT has no Shoonya symbol file — use the built-in static list
+    // (gold/silver $/oz via GC=F / SI=F).
+    if (E === "SPOT") {
+        return SPOT_SYMBOLS;
     }
 
 

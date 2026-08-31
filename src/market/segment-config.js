@@ -132,24 +132,21 @@ const SEGMENTS = {
         tickHandling: "price-volume",
         contractBased: false,
     },
-    COMEX: {
-        id: "COMEX",
-        name: "COMEX",
-        exchange: "COMEX",
-        // COMEX metals (CME Group, New York). Sessions are in US Eastern
-        // time. The cash floor opens ~18:00 ET Sunday–Fri and runs near 24h
-        // with a daily 17:00–18:00 ET settlement break. Converted to IST:
-        //   03:30 – 01:30 IST roughly (adjusts on DST via minutes below).
-        // We model as Mon–Sat spanning IST, reflecting the ET session.
+    SPOT: {
+        id: "SPOT",
+        name: "Spot — Gold & Silver (USD)",
+        exchange: "SPOT",
+        // Spot gold/silver quoted in USD per ounce. Backed by COMEX futures
+        // (GC=F / SI=F) from Yahoo Finance since Yahoo's public API doesn't
+        // expose the literal XAU/USD / XAG/USD spot rate. These trade on the
+        // US COMEX floor (CME Group, New York), roughly 18:00 ET Sun–Fri near
+        // 24h with a ~17:00–18:00 ET settlement break. Modeled Mon–Sat in IST.
         tradingDays: [1, 2, 3, 4, 5, 6],
         sessions: [
-            // Regular session in IST (Asia/Kolkata). ET day session 08:20–13:30 ET,
-            // electronic/night session continues. Simplified to a near-continuous
-            // window that covers the daily active market.
             {
                 label: "Regular",
                 status: "OPEN",
-                // approx 03:30 IST to 21:30 IST (ET day) — see IST mapping below
+                // approx 03:30 IST to 23:30 IST (ET day)
                 ranges: [["03:30", "23:30"]],
             },
             {
@@ -162,15 +159,12 @@ const SEGMENTS = {
         instrumentTypes: ["FUT", "FUTCOM", "FUTMET"],
         tickHandling: "price-volume",
         contractBased: true,
-        // Data for COMEX comes from Yahoo Finance (GC=F, SI=F, HG=F, PL=F,
-        // PA=F) — Shoonya does not trade US COMEX. Historical + snapshot only.
+        // Data for Spot comes from Yahoo Finance (GC=F, SI=F) — Shoonya does
+        // not trade US COMEX futures. Historical + snapshot only.
         dataSource: "yahoo",
         yahooSymbols: {
             GOLD: "GC=F",
             SILVER: "SI=F",
-            COPPER: "HG=F",
-            PLATINUM: "PL=F",
-            PALLADIUM: "PA=F",
         },
         currency: "USD",
     },

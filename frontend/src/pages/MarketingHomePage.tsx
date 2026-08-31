@@ -68,7 +68,7 @@ export function MarketingHomePage() {
             <p className="mt-4 text-[12px] font-medium text-slate-500">No card required · 14 days full access · Cancel anytime</p>
 
             <div className="mt-6 flex flex-wrap gap-2">
-              {["MCX", "NSE", "BSE", "COMEX"].map((seg) => (
+              {["MCX", "NSE", "BSE", "SPOT"].map((seg) => (
                 <span key={seg} className="rounded-full bg-white border border-slate-200 px-3 py-1 text-[11px] font-bold text-slate-700 shadow-sm">{seg}</span>
               ))}
               <span className="rounded-full bg-navy px-3 py-1 text-[11px] font-bold text-white">Gold · Silver · Crude</span>

@@ -739,7 +739,7 @@ export function AdminDashboard({ onExit }: { onExit: () => void }) {
                 </h3>
                 <div className="mt-4 space-y-3">
                   {stats &&
-                    (["MCX", "NSE", "BSE", "COMEX"] as const).map(seg => {
+                    (["MCX", "NSE", "BSE", "SPOT"] as const).map(seg => {
                       const count = (stats.segments as any)[seg] || 0;
                       const pct = stats.total ? Math.round((count / stats.total) * 100) : 0;
                       return (
@@ -961,7 +961,7 @@ export function AdminDashboard({ onExit }: { onExit: () => void }) {
               <div>
                 <span className="text-xs font-semibold text-slate-500">Segments *</span>
                 <div className="mt-2 grid grid-cols-3 gap-2">
-                  {["MCX", "NSE", "BSE", "COMEX"].map(seg => {
+                  {["MCX", "NSE", "BSE", "SPOT"].map(seg => {
                     const on = editForm.segments?.includes(seg);
                     return (
                       <button
@@ -1166,7 +1166,7 @@ export function AdminDashboard({ onExit }: { onExit: () => void }) {
               <div>
                 <span className="text-xs font-semibold text-slate-500">Segments *</span>
                 <div className="mt-2 grid grid-cols-3 gap-2">
-                  {["MCX", "NSE", "BSE", "COMEX"].map(seg => {
+                  {["MCX", "NSE", "BSE", "SPOT"].map(seg => {
                     const on = createForm.segments?.includes(seg);
                     return (
                       <button
