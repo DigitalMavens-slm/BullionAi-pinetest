@@ -69,6 +69,13 @@ export type StrategyState = {
   signalHistory?: SignalEvent[] | null;
   trailHistory?: TrailPoint[] | null;
   panel?: "fixed-target" | "trailing" | null;
+  // Fixed-target (BullionAI-fixedtgt.pine) fields.
+  target1?: number | string | null;
+  target2?: number | string | null;
+  sl?: number | string | null;
+  target1Status?: string | null;
+  target2Status?: string | null;
+  maxPoints?: number | null;
 };
 
 export type MarketState = {

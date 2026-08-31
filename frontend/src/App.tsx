@@ -1228,19 +1228,21 @@ function App() {
   const isTradeOpen =
     status === "OPEN";
 
-  const isMCXSelected =
-    String(
-      selectedSymbol?.exch || ""
-    )
-      .trim()
-      .toUpperCase() === "MCX";
+  const isContractBasedSelected =
+    ["MCX", "COMEX"].includes(
+      String(
+        selectedSymbol?.exch || ""
+      )
+        .trim()
+        .toUpperCase()
+    );
 
   /* Which info-panel layout: backend reports it via strategy.panel.
-     Fallback to the MCX+15m rule when the panel field is absent. */
+     Fallback to the MCX/COMEX+15m rule when the panel field is absent. */
   const usesFixedTargets =
     (viewStrategy as any)?.panel === "fixed-target" ||
     ((viewStrategy as any)?.panel == null &&
-      isMCXSelected &&
+      isContractBasedSelected &&
       selectedTimeframe === "15m");
 
 
