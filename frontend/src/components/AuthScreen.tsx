@@ -287,8 +287,8 @@ export function AuthScreen({
                 <p className="mb-2 text-[10px] text-slate-400">
                   Select at least one segment you trade in.
                 </p>
-                <div className="grid grid-cols-3 gap-2">
-                  {["MCX", "NSE", "BSE"].map(seg => {
+                <div className="grid grid-cols-4 gap-2">
+                  {["MCX", "NSE", "BSE", "COMEX"].map(seg => {
                     const active =
                       segments.includes(seg);
                     return (
