@@ -1,70 +1,110 @@
-# Render Blueprint — backend (always-on Node host) + PostgreSQL
-# Deploy: push to GitHub, add a Blueprint in Render, it creates everything below.
-databases:
-  - name: bullionai-db
-    databaseName: bullionai
-    user: bullionai
-    plan: free
-    # Render injects DATABASE_URL into the web service automatically.
-    
+# Render Blueprint — BullionAI backend + daily Shoonya session check
+# PostgreSQL is hosted externally on Neon.
+# Deploy changes through GitHub.
+
 services:
+  # ---------------------------------------------------------
+  # BullionAI API
+  # ---------------------------------------------------------
   - type: web
     name: bullionai-api
     runtime: node
     plan: free
     buildCommand: npm ci --omit=dev
     startCommand: node src/server/bullionai-api.js
+
     envVars:
       - key: PORT
-        value: 8787
+        value: "8787"
+
       - key: NODE_ENV
         value: production
+
+      # Neon PostgreSQL
       - key: DATABASE_URL
-        fromDatabase:
-          name: bullionai-db
-          property: connectionString
+        sync: false
+
+      # Shoonya
       - key: SHOONYA_CLIENT_ID
         value: FN215549_U
+
       - key: SHOONYA_SECRET_CODE
         sync: false
+
       - key: SHOONYA_REDIRECT_URL
-        value: https://bullionai.in/
+        value: https://bullionai.digitalmavens.in
+
       - key: SHOONYA_EXCHANGE
         value: MCX
+
       - key: SHOONYA_GOLD_SYMBOL
         value: GOLD05OCT26
+
       - key: SHOONYA_GOLD_TOKEN
         value: "483079"
+
       - key: SHOONYA_TOKEN
         value: "483079"
+
       - key: SHOONYA_SILVER_SYMBOL
         value: SILVER04SEP26
+
       - key: SHOONYA_SILVER_TOKEN
         value: "471725"
+
+      # Admin
       - key: ADMIN_EMAILS
         value: sheriff.sheikh12@gmail.com
+
+      # Backend URL
+      - key: BACKEND_URL
+        value: https://bullionai-pinetest.onrender.com
+
+      # SendGrid
+      - key: SENDGRID_FROM
+        value: support@bullionai.in
+
+      - key: SENDGRID_TO
+        value: sheriff.sheikh12@gmail.com
+
+      - key: SENDGRID_API_KEY
+        sync: false
+
     autoDeploy: true
 
-  # (type: cron) Daily Shoonya session check — runs before market open.
-  # Checks the backend's Shoonya session; if expired/missing it alerts the
-  # admin (SendGrid SENDGRID_* env vars, or a webhook via ALERT_WEBHOOK_URL).
+  # ---------------------------------------------------------
+  # Daily Shoonya session check
+  # ---------------------------------------------------------
   - type: cron
     name: bullionai-session-check
     runtime: node
     plan: free
     schedule: "20 3 * * 1-5"
+
     buildCommand: npm ci --omit=dev
     startCommand: node scripts/check-session.js
+
     envVars:
       - key: BACKEND_URL
         value: https://bullionai-pinetest.onrender.com
+
+      # Shoonya whitelist
+      - key: SHOONYA_WHITELISTED_IP
+        value: 74.220.49.7
+
+      # SendGrid
       - key: SENDGRID_FROM
-        value: noreply@bullionai.digitalmavens.in
+        value: support@bullionai.in
+
       - key: SENDGRID_TO
         value: sheriff.sheikh12@gmail.com
+
       - key: SENDGRID_API_KEY
         sync: false
+
+      # Optional webhook alerts
       - key: ALERT_WEBHOOK_URL
         sync: false
+
       - key: ALERT_WEBHOOK_TOKEN
         sync: false
