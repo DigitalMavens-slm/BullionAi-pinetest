@@ -1576,6 +1576,50 @@ function App() {
     );
   };
 
+  // --- Per-row decimal formatting (watchlist / ticker) -------------------
+  // Each script formats with its OWN tickSize precision, so decimal scripts
+  // always show decimals and whole scripts always show whole numbers —
+  // independent of which script is currently selected.
+  const decimalsFor = (tickSize: number | null | undefined, v: number) => {
+    if (tickSize != null) {
+      const s = String(tickSize);
+      const dot = s.indexOf(".");
+      return dot >= 0 ? s.length - dot - 1 : 0;
+    }
+    return Math.abs(v % 1) > 1e-9 ? 2 : 0;
+  };
+
+  const fmtRow = (
+    v: number | null | undefined,
+    tickSize: number | null | undefined
+  ) => {
+    if (v == null || !Number.isFinite(v)) {
+      return "—";
+    }
+    const decimals = decimalsFor(tickSize, v);
+    return v.toLocaleString("en-IN", {
+      minimumFractionDigits: decimals,
+      maximumFractionDigits: decimals,
+    });
+  };
+
+  const fmtRowSigned = (
+    v: number | null | undefined,
+    tickSize: number | null | undefined
+  ) => {
+    if (v == null || !Number.isFinite(v)) {
+      return "—";
+    }
+    const decimals = decimalsFor(tickSize, v);
+    return (
+      (v >= 0 ? "+" : "") +
+      v.toLocaleString("en-IN", {
+        minimumFractionDigits: decimals,
+        maximumFractionDigits: decimals,
+      })
+    );
+  };
+
 
   /* Price tick flash direction */
 
@@ -1671,6 +1715,7 @@ function App() {
           price,
           change,
           changePct,
+          tickSize: (sym as any)?.tickSize ?? null,
         };
       });
     }, [filteredCustomSyms, state, customLastCloses, customPrevCloses]);
@@ -1697,6 +1742,7 @@ function App() {
           price: lp.price,
           change: (lp as any).change ?? null,
           changePct: (lp as any).changePercent ?? null,
+          tickSize: (idx as any)?.tickSize ?? null,
         };
       })
       .filter((row): row is NonNullable<typeof row> => row !== null);
@@ -2246,7 +2292,7 @@ function App() {
                     </span>
 
                     <span className="font-mono tabular-nums text-slate-900">
-                      {fmt(row.price)}
+                      {fmtRow(row.price, row.tickSize)}
                     </span>
 
                     <span
@@ -3205,7 +3251,7 @@ function App() {
                         up ? UP : DOWN,
                       ].join(" ")}
                     >
-                      {fmt(price)}
+                      {fmtRow(price, (sym as any)?.tickSize)}
                     </span>
 
                     <span
@@ -3216,7 +3262,7 @@ function App() {
                       ].join(" ")}
                     >
                       {change != null
-                        ? (change >= 0 ? "+" : "") + fmt(change)
+                        ? fmtRowSigned(change, (sym as any)?.tickSize)
                         : "—"}
                     </span>
 
