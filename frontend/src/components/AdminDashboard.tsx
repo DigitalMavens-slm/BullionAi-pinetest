@@ -96,10 +96,7 @@ export function AdminDashboard({ onExit }: { onExit: () => void }) {
   >("overview");
   const pageSize = 10;
 
-  // Shoonya login state (one‑click re‑auth)
-  const [showShoonyaLogin, setShowShoonyaLogin] = useState(false);
-  const [shoonyaResult, setShoonyaResult] = useState<string | null>(null);
-  const [shoonyaUrl, setShoonyaUrl] = useState("");
+  // Shoonya re‑auth: opens the login page in a new tab.
 
   async function doLogin(e?: React.FormEvent) {
     if (e) e.preventDefault();
@@ -684,6 +681,12 @@ export function AdminDashboard({ onExit }: { onExit: () => void }) {
                 <div className="flex items-center justify-between px-4 py-3 text-xs">
                   <span className="text-slate-500">
                     Showing {filtered.length === 0 ? 0 : (currentPage - 1) * pageSize + 1}-{Math.min(currentPage * pageSize, filtered.length)} of {filtered.length}
+  <button
+    onClick={() => window.open("https://bullionai-pinetest.onrender.com/api/shoonya/login", "_blank")}
+    className="rounded-xl bg-purple-600 py-2 text-white text-sm mx-2 hover:bg-purple-700"
+  >
+    Shoonya Login
+  </button>
                   </span>
                   <div className="flex items-center gap-1">
                     <button disabled={currentPage === 1} onClick={() => setCurrentPage(p => Math.max(1, p - 1))} className="rounded-lg border border-slate-200 px-3 py-1 text-xs font-semibold disabled:opacity-40">
