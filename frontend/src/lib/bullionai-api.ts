@@ -205,11 +205,11 @@ export function createStateStream(
   source.addEventListener(
     "state",
     event => {
+      const data = (event as MessageEvent).data;
+      if (!data || data.trim() === "" || data.trim() === "undefined") return;
       try {
         const state =
-          JSON.parse(
-            (event as MessageEvent).data
-          );
+          JSON.parse(data);
 
         onState(state);
       } catch (error) {
@@ -301,6 +301,11 @@ export function createEventStream(
   );
 
   const handle = (raw: string) => {
+    // Guard against empty / malformed payloads (e.g. the "data:" line being
+    // empty or literally "undefined"). Never let a bad frame crash the app.
+    if (!raw || raw.trim() === "" || raw.trim() === "undefined") {
+      return;
+    }
     try {
       const data = JSON.parse(raw);
       if (data?.type === "snapshot" && opts?.onSnapshot) {

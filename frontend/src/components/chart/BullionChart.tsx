@@ -842,18 +842,22 @@ markersRef.current =
       }));
 
 
-    series.setData(
-      formatted
-    );
+    try {
+      series.setData(
+        formatted
+      );
 
-    dataCountRef.current = formatted.length;
+      dataCountRef.current = formatted.length;
 
-    volume.setData(
-      volumes
-    );
-
-
-    // Seed legend with latest bar
+      volume.setData(
+        volumes
+      );
+    } catch (err) {
+      // Defensive: a lightweight-charts internal error (e.g. reportAllChanges
+      // reading an undefined candle) must never take down the whole dashboard.
+      console.error("Chart setData failed:", err);
+      return;
+    }
 
     const last =
       valid[
@@ -1287,17 +1291,21 @@ markersRef.current =
       bar.c = livePrice;
 
 
-      series.update({
-        time: bar.t as Time,
+      try {
+        series.update({
+          time: bar.t as Time,
 
-        open: bar.o,
+          open: bar.o,
 
-        high: bar.h,
+          high: bar.h,
 
-        low: bar.l,
+          low: bar.l,
 
-        close: bar.c,
-      });
+          close: bar.c,
+        });
+      } catch (err) {
+        console.error("Chart update (extend) failed:", err);
+      }
 
     } else {
 
@@ -1318,27 +1326,31 @@ markersRef.current =
       };
 
 
-      series.update({
-        time: nb.t as Time,
+      try {
+        series.update({
+          time: nb.t as Time,
 
-        open: nb.o,
+          open: nb.o,
 
-        high: nb.h,
+          high: nb.h,
 
-        low: nb.l,
+          low: nb.l,
 
-        close: nb.c,
-      });
+          close: nb.c,
+        });
 
 
-      volume?.update({
-        time: curBarStart as Time,
+        volume?.update({
+          time: curBarStart as Time,
 
-        value: 0,
+          value: 0,
 
-        color:
-          "rgba(8,153,129,0.28)",
-      });
+          color:
+            "rgba(8,153,129,0.28)",
+        });
+      } catch (err) {
+        console.error("Chart update (new bar) failed:", err);
+      }
 
 
       lastBarRef.current = nb;
