@@ -52,6 +52,7 @@ import {
   subscribeSymbol,
   fetchCandles,
   fetchStrategy,
+  getCurrentContract,
   type BullionState,
   type Candle,
   type DayStats,
@@ -438,15 +439,30 @@ function App() {
       setSelectedSymbol(first);
       return;
     }
-    // No watchlist yet -> default to MCX GOLD so the chart isn't empty.
-    const defaultSym: SelectedSymbol = {
-      exch: "MCX",
-      token: "483079",
-      tsym: "GOLD",
-      label: "GOLD",
-    };
-    setSelectedSymbol(defaultSym);
-    subscribeSymbol(defaultSym);
+    // No watchlist yet -> default to the CURRENT MCX GOLD contract so the
+    // chart isn't empty. Resolve it from the registry (auto-selected), not
+    // a hardcoded expiry.
+    getCurrentContract("gold").then(ct => {
+      if (ct?.ok && ct?.token) {
+        const sym: SelectedSymbol = {
+          exch: ct.exchange || "MCX",
+          token: ct.token,
+          tsym: ct.symbol || "GOLD",
+          label: ct.symbol || "GOLD",
+        };
+        setSelectedSymbol(sym);
+        subscribeSymbol(sym);
+      }
+    }).catch(() => {
+      const defaultSym: SelectedSymbol = {
+        exch: "MCX",
+        token: "483079",
+        tsym: "GOLD",
+        label: "GOLD",
+      };
+      setSelectedSymbol(defaultSym);
+      subscribeSymbol(defaultSym);
+    });
   }, [selectedSymbol, filteredCustomSyms]);
 
   const [customLastCloses, setCustomLastCloses] = useState<

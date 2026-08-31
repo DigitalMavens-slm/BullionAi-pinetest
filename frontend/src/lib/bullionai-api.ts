@@ -392,3 +392,30 @@ export async function getInstruments(
   const d = await r.json();
   return (d.instruments || []) as InstrumentEntry[];
 }
+
+export type CurrentContract = {
+  ok: boolean;
+  resolved?: "registry" | "default";
+  exchange?: string;
+  instrument?: string;
+  symbol?: string;
+  token?: string;
+  expiry?: number | null;
+  expiryText?: string | null;
+  error?: string;
+};
+
+// Resolve the CURRENT active contract for an instrument (e.g. "silver",
+// "gold") from the backend registry — never a hardcoded expiry.
+export async function getCurrentContract(
+  instrument: string
+): Promise<CurrentContract> {
+  const u = new URL(API_BASE + "/api/contract");
+  u.searchParams.set("instrument", instrument);
+  try {
+    const r = await fetch(u);
+    return (await r.json()) as CurrentContract;
+  } catch {
+    return { ok: false, error: "contract lookup failed" };
+  }
+}

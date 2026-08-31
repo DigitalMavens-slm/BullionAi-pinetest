@@ -912,73 +912,200 @@ async reconcileAll(label) {
                 .trim()
                 .toLowerCase();
 
+        // Fall back to env/config when auto-resolution finds nothing.
         const instrumentConfigs = {
             silver: {
                 key: "silver",
                 name: "Silver Mega",
+                // root symbol used to match the current contract in the registry
+                rootSymbol: "SILVER",
+                exchange: process.env.SHOONYA_EXCHANGE || "MCX",
                 symbol: process.env.SHOONYA_SILVER_SYMBOL || "SILVER04SEP26",
                 token: process.env.SHOONYA_SILVER_TOKEN || "471725",
             },
             copper: {
                 key: "copper",
                 name: "Copper Mega",
+                rootSymbol: "COPPER",
+                exchange: process.env.SHOONYA_EXCHANGE || "MCX",
                 symbol: process.env.SHOONYA_COPPER_SYMBOL || "COPPER30SEP26",
                 token: process.env.SHOONYA_COPPER_TOKEN || "483080",
             },
             lead: {
                 key: "lead",
                 name: "Lead Mega",
+                rootSymbol: "LEAD",
+                exchange: process.env.SHOONYA_EXCHANGE || "MCX",
                 symbol: process.env.SHOONYA_LEAD_SYMBOL || "LEAD30SEP26",
                 token: process.env.SHOONYA_LEAD_TOKEN || "483081",
             },
             natural_gas: {
                 key: "natural_gas",
                 name: "Natural Gas Mega",
+                rootSymbol: "NATURALGAS",
+                exchange: process.env.SHOONYA_EXCHANGE || "MCX",
                 symbol: process.env.SHOONYA_NATURAL_GAS_SYMBOL || "NATURALGAS28SEP26",
                 token: process.env.SHOONYA_NATURAL_GAS_TOKEN || "483082",
             },
             zinc: {
                 key: "zinc",
                 name: "Zinc Mega",
+                rootSymbol: "ZINC",
+                exchange: process.env.SHOONYA_EXCHANGE || "MCX",
                 symbol: process.env.SHOONYA_ZINC_SYMBOL || "ZINC30SEP26",
                 token: process.env.SHOONYA_ZINC_TOKEN || "483083",
             },
             nickel: {
                 key: "nickel",
                 name: "Nickel Mega",
+                rootSymbol: "NICKEL",
+                exchange: process.env.SHOONYA_EXCHANGE || "MCX",
                 symbol: process.env.SHOONYA_NICKEL_SYMBOL || "NICKEL30SEP26",
                 token: process.env.SHOONYA_NICKEL_TOKEN || "483084",
             },
             crude_oil: {
                 key: "crude_oil",
                 name: "Crude Oil Mega",
+                rootSymbol: "CRUDEOIL",
+                exchange: process.env.SHOONYA_EXCHANGE || "MCX",
                 symbol: process.env.SHOONYA_CRUDE_OIL_SYMBOL || "CRUDEOIL19SEP26",
                 token: process.env.SHOONYA_CRUDE_OIL_TOKEN || "483085",
             },
+            gold: {
+                key: "gold",
+                name: "Gold Mega",
+                rootSymbol: "GOLD",
+                exchange: process.env.SHOONYA_EXCHANGE || "MCX",
+                symbol:
+                    process.env.SHOONYA_GOLD_SYMBOL ||
+                    process.env.SHOONYA_TOKEN ||
+                    "GOLD05OCT26",
+                token:
+                    process.env.SHOONYA_GOLD_TOKEN ||
+                    process.env.SHOONYA_TOKEN ||
+                    "483079",
+            },
         };
 
-        if (instrumentConfigs[key]) {
-            return instrumentConfigs[key];
+        const cfg =
+            instrumentConfigs[key] ||
+            instrumentConfigs.gold;
+
+        return cfg;
+
+    }
+
+
+    // =========================================================
+    // AUTO-RESOLVE CURRENT CONTRACT (not hardcoded)
+    //
+    // Queries the live registry (SymbolMaster.getRegistry), which already
+    // selects the CURRENT active contract per root symbol based on expiry
+    // (nearest expiry beyond the rollover buffer). Returns the current
+    // contract's token/symbol/expiry so the app never hardcodes an expiry.
+    // Falls back to the env/default config if the registry is unavailable.
+    // =========================================================
+
+    async resolveCurrentContract(
+        instrument
+    ) {
+
+        const cfg =
+            this.resolveInstrument(
+                instrument
+            );
+
+        const exchange =
+            cfg.exchange ||
+            process.env.SHOONYA_EXCHANGE ||
+            "MCX";
+
+        try {
+
+            const rows =
+                await getRegistry(
+                    exchange
+                ).catch(
+                    () => []
+                );
+
+            if (Array.isArray(rows) && rows.length) {
+
+                const root =
+                    String(
+                        cfg.rootSymbol ||
+                        cfg.symbol ||
+                        ""
+                    )
+                        .trim()
+                        .toUpperCase();
+
+                // Match by root symbol (symbol/tradingSymbol prefix).
+                const match =
+                    rows.find(
+                        r =>
+                            String(
+                                r.symbol ||
+                                r.tradingSymbol ||
+                                ""
+                            )
+                                .trim()
+                                .toUpperCase() === root
+                    ) ||
+                    rows.find(
+                        r =>
+                            String(
+                                r.symbol ||
+                                r.tradingSymbol ||
+                                ""
+                            )
+                                .trim()
+                                .toUpperCase()
+                                .startsWith(root)
+                    );
+
+                if (match) {
+
+                    return {
+                        key: cfg.key,
+                        name: cfg.name,
+                        exchange,
+                        symbol: match.symbol || match.tradingSymbol || cfg.symbol,
+                        token: String(match.token || cfg.token),
+                        expiry: match.expiry ?? null,
+                        expiryText: match.expiryText ?? null,
+                        rootSymbol: root,
+                        instrumentType: match.instrumentType ?? null,
+                        lotSize: match.lotSize ?? null,
+                        tickSize: match.tickSize ?? null,
+                        resolved: "registry",
+                    };
+
+                }
+
+            }
+
+        } catch (error) {
+            console.error(
+                `[contract] resolve ${cfg.key} failed:`,
+                error?.message || error
+            );
         }
 
+        // Registry lookup failed -> use the configured/current default.
         return {
-
-            key:
-                "gold",
-
-            name:
-                "Gold Mega",
-
-            symbol:
-                process.env.SHOONYA_GOLD_SYMBOL ||
-                process.env.SHOONYA_TOKEN ||
-                "GOLD05OCT26",
-
-            token:
-                process.env.SHOONYA_GOLD_TOKEN ||
-                process.env.SHOONYA_TOKEN ||
-                "483079",
-
+            key: cfg.key,
+            name: cfg.name,
+            exchange,
+            symbol: cfg.symbol,
+            token: String(cfg.token),
+            expiry: null,
+            expiryText: null,
+            rootSymbol: cfg.rootSymbol || null,
+            instrumentType: null,
+            lotSize: null,
+            tickSize: null,
+            resolved: "default",
         };
 
     }
@@ -1483,11 +1610,14 @@ const allowedTimeframes =
         instOverride
     ) {
 
+        // Auto-resolve the CURRENT active contract from the live registry so
+        // the app never hardcodes an expiry. Only used when the caller does
+        // not supply an explicit symbol/token override.
         const inst =
-            instOverride ??
-            this.resolveInstrument(
+            instOverride ||
+            (await this.resolveCurrentContract(
                 instrumentKey
-            );
+            ));
 
         const tf =
             getTimeframe(
@@ -4097,6 +4227,54 @@ const allowedTimeframes =
                     ok: false,
                     error: error?.message || String(error),
                 });
+            }
+            return;
+        }
+
+        if (
+            url.pathname === "/api/contract"
+        ) {
+
+            const instrument =
+                url.searchParams.get("instrument") ||
+                "gold";
+
+            try {
+
+                const contract =
+                    await this.resolveCurrentContract(
+                        instrument
+                    );
+
+                this.sendJson(
+                    response,
+                    200,
+                    {
+                        ok: true,
+                        resolved: contract.resolved,
+                        exchange: contract.exchange,
+                        instrument: contract.key,
+                        symbol: contract.symbol,
+                        token:
+                            String(
+                                contract.token
+                            ),
+                        expiry: contract.expiry ?? null,
+                        expiryText: contract.expiryText ?? null,
+                    }
+                );
+
+            } catch (error) {
+                this.sendJson(
+                    response,
+                    500,
+                    {
+                        ok: false,
+                        error:
+                            error?.message ||
+                            String(error),
+                    }
+                );
             }
             return;
         }
