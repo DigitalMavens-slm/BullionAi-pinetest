@@ -444,8 +444,11 @@ export function AdminDashboard({ onExit }: { onExit: () => void }) {
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <button onClick={load} className="hidden items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-50 md:flex">
-                <RefreshCw className="h-3.5 w-3.5" /> Refresh
+              <button
+                onClick={() => window.open("https://bullionai-pinetest.onrender.com/api/shoonya/login", "_blank")}
+                className="rounded-xl bg-purple-600 py-2 text-white text-sm hover:bg-purple-700"
+              >
+                Shoonya Login
               </button>
               <button onClick={onExit} className="flex items-center gap-1.5 rounded-full bg-slate-900 px-3 py-1.5 text-xs font-bold text-white hover:bg-black lg:hidden">
                 <LogOut className="h-3.5 w-3.5" /> Exit
