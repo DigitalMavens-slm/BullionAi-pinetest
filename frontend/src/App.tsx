@@ -422,22 +422,29 @@ function App() {
       }
     });
 
-  // Segment-based display filtering — user segments from registration
+  // Segment-based display filtering — user segments from registration.
+  // MCX/NSE/BSE/COMEX are always supported exchanges; COMEX was added as a
+  // first-class exchange, so always include it even if a user registered
+  // before COMEX existed (otherwise COMEX scripts would silently not add
+  // to the watchlist).
   const allowedSegments = useMemo(
     () =>
       new Set(
-        (
-          authUser?.segments || [
-            "MCX",
-            "NSE",
-            "BSE",
-            "COMEX",
-          ]
-        ).map(s =>
-          String(s)
-            .trim()
-            .toUpperCase()
-        )
+        [
+          "MCX",
+          "NSE",
+          "BSE",
+          "COMEX",
+          ...(
+            authUser?.segments || []
+          ),
+        ]
+          .map(s =>
+            String(s)
+              .trim()
+              .toUpperCase()
+          )
+          .filter(Boolean)
       ),
     [authUser]
   );
