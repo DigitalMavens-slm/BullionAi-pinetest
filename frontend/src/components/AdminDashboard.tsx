@@ -96,6 +96,11 @@ export function AdminDashboard({ onExit }: { onExit: () => void }) {
   >("overview");
   const pageSize = 10;
 
+  // Shoonya login state (one‑click re‑auth)
+  const [showShoonyaLogin, setShowShoonyaLogin] = useState(false);
+  const [shoonyaResult, setShoonyaResult] = useState<string | null>(null);
+  const [shoonyaUrl, setShoonyaUrl] = useState("");
+
   async function doLogin(e?: React.FormEvent) {
     if (e) e.preventDefault();
     if (!email.trim() || !password) {
