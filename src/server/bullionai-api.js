@@ -3669,6 +3669,71 @@ const allowedTimeframes =
 
 
         // -----------------------------------------------------
+        // SHOONYA SESSION STATUS (lightweight, no strategy work)
+        //
+        // Used by the daily cron (scripts/check-session.js) to
+        // detect a missing/expired Shoonya session and alert the
+        // admin before the trading day starts.
+        // -----------------------------------------------------
+
+        if (
+            url.pathname ===
+            "/api/session/status"
+        ) {
+
+            let session =
+                null;
+
+            let coordinatorState =
+                null;
+
+            try {
+
+                session =
+                    this.coordinator?.session?.getState() ||
+                    null;
+
+                coordinatorState =
+                    this.coordinator?.getState() ||
+                    null;
+
+            } catch {
+                session =
+                    null;
+            }
+
+            this.sendJson(
+                response,
+                200,
+                {
+                    ok:
+                        true,
+                    started:
+                        Boolean(
+                            this.started
+                        ),
+                    liveConnected:
+                        Boolean(
+                            coordinatorState?.market?.connected
+                        ),
+                    session,
+                    market:
+                        coordinatorState?.market
+                            ? {
+                                connected:
+                                    coordinatorState.market.connected,
+                                price:
+                                    coordinatorState.market.price,
+                            }
+                            : null,
+                }
+            );
+
+            return;
+        }
+
+
+        // -----------------------------------------------------
         // CURRENT STRATEGY + MARKET STATE
         // -----------------------------------------------------
 

@@ -44,3 +44,27 @@ services:
       - key: ADMIN_EMAILS
         value: sheriff.sheikh12@gmail.com
     autoDeploy: true
+
+  # (type: cron) Daily Shoonya session check — runs before market open.
+  # Checks the backend's Shoonya session; if expired/missing it alerts the
+  # admin (SendGrid SENDGRID_* env vars, or a webhook via ALERT_WEBHOOK_URL).
+  - type: cron
+    name: bullionai-session-check
+    runtime: node
+    plan: free
+    schedule: "20 3 * * 1-5"
+    buildCommand: npm ci --omit=dev
+    startCommand: node scripts/check-session.js
+    envVars:
+      - key: BACKEND_URL
+        value: https://bullionai-pinetest.onrender.com
+      - key: SENDGRID_FROM
+        value: noreply@bullionai.digitalmavens.in
+      - key: SENDGRID_TO
+        value: sheriff.sheikh12@gmail.com
+      - key: SENDGRID_API_KEY
+        sync: false
+      - key: ALERT_WEBHOOK_URL
+        sync: false
+      - key: ALERT_WEBHOOK_TOKEN
+        sync: false

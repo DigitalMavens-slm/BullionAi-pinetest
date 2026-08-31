@@ -1,0 +1,31 @@
+# BullionAI SPA routing — Hostinger (LiteSpeed/Apache compatible).
+# Any client-side route (/, /dashboard, /pricing, /features, ...) must be
+# rewritten to index.html so a hard refresh doesn't return 404.
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /
+
+  # Serve the real index.html directly.
+  RewriteRule ^index\.html$ - [L]
+  RewriteRule ^$ index.html [L]
+
+  # Don't rewrite real files (js/css/images) or real directories.
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+
+  # Everything else -> index.html (the SPA entry point).
+  RewriteRule . /index.html [L]
+</IfModule>
+
+# Do not serve an Apache directory listing.
+Options -Indexes
+
+# Long-lived caching for hashed static assets.
+<IfModule mod_expires.c>
+  ExpiresActive On
+  ExpiresByType application/javascript "access plus 1 month"
+  ExpiresByType text/css "access plus 1 month"
+  ExpiresByType image/svg+xml "access plus 1 month"
+  ExpiresByType image/png "access plus 1 month"
+  ExpiresByType image/x-icon "access plus 1 month"
+</IfModule>

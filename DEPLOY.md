@@ -64,6 +64,25 @@ The redirect URL **must match the exact HTTPS URL you browse to when logging in.
    Code is single-use + expires in ~30s — paste immediately.
 4. Confirm: `GET /api/state` returns a signal (e.g. `signal: SELL`).
 
+### Re-authentication cadence
+- **You do NOT log in daily.** Shoonya tokens are persisted to `data/shoonya-session.json` and auto-restored on boot (`restoreSession()`), so live prices keep working across restarts.
+- Shoonya tokens are issued per-trading-day and capped at ~12h (`restoreSession()` refuses sessions older than 12h). So re-login is **once per trading day**, not on every restart/deploy.
+- **You still must paste a code once a day** — Shoonya's OAuth has no password/refresh login, so a cron cannot mint a code. It can only *detect* expiry and alert you.
+
+### Daily session-check cron (auto-alert)
+`render.yaml` defines `bullionai-session-check` (`type: cron`, 03:20 UTC = 08:50 IST, Mon–Fri) that hits `GET /api/session/status`:
+- Session valid + feed connected → logs `SESSION_OK` (no action).
+- Session missing/expired/feed down → alerts via **SendGrid** (`SENDGRID_*`) or a **webhook** (`ALERT_WEBHOOK_URL`) with a one-click `/api/shoonya/login` link.
+
+Set the cron secrets in Render (Dashboard → cron service → Environment):
+```
+BACKEND_URL=https://bullionai-pinetest.onrender.com
+SENDGRID_API_KEY=... (sync)
+SENDGRID_FROM=noreply@bullionai.digitalmavens.in
+SENDGRID_TO=sheriff.sheikh12@gmail.com
+# or: ALERT_WEBHOOK_URL / ALERT_WEBHOOK_TOKEN
+```
+
 ---
 
 ## Part D — Deploy the frontend to Hostinger (static)
