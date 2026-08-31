@@ -32,15 +32,47 @@ const SYMBOLS_DIR = path.resolve(
 );
 
 const EXCHANGES =
-    ["MCX", "NSE", "BSE"];
+    ["MCX", "NSE", "BSE", "SPOT"];
 
 const CDN =
     "https://api.shoonya.com";
 
 /*
- * SPOT was removed — gold/silver spot data will be provided later via a
- * dedicated metals API. The exchanges are MCX / NSE / BSE.
+ * SPOT (XAU/XAG live spot via gold-api.com). Shoonya has no symbol file for
+ * it; the registry is built-in. Token == Yahoo/gold-api symbol (XAU/XAG).
  */
+const SPOT_SYMBOLS = [
+    {
+        exch: "SPOT",
+        token: "XAU",
+        symbol: "GOLD",
+        tradingSymbol: "GOLD",
+        tsym: "XAU",
+        instrumentType: "FUTMET",
+        instrumentName: "Gold",
+        name: "Spot Gold (USD/oz)",
+        expiry: null,
+        expiryRaw: "",
+        lotSize: null,
+        tickSize: 0.01,
+        dataSymbol: "XAU",
+    },
+    {
+        exch: "SPOT",
+        token: "XAG",
+        symbol: "SILVER",
+        tradingSymbol: "SILVER",
+        tsym: "XAG",
+        instrumentType: "FUTMET",
+        instrumentName: "Silver",
+        name: "Spot Silver (USD/oz)",
+        expiry: null,
+        expiryRaw: "",
+        lotSize: null,
+        tickSize: 0.001,
+        dataSymbol: "XAG",
+    },
+];
 
 /* MCX rollover window (days before expiry) */
 
@@ -613,8 +645,11 @@ async function getRegistry(exch) {
     if (inflight.has(E)) return inflight.get(E);
 
 
-    // SPOT removed — gold/silver spot will come from a dedicated metals API
-    // later. No static symbol list is registered for it here.
+    // SPOT has no Shoonya symbol file — use the built-in static list
+    // (XAU/XAG via gold-api.com).
+    if (E === "SPOT") {
+        return SPOT_SYMBOLS;
+    }
 
 
     const job = (async () => {

@@ -59,6 +59,14 @@ services:
       - key: SHOONYA_SILVER_TOKEN
         value: "471725"
 
+      # Spot gold/silver (gold-api.com). Live XAU/XAG price needs NO key;
+      # historical OHLC backfill needs GOLD_API_KEY (free tier 10 req/hr).
+      - key: GOLD_API_URL
+        value: https://api.gold-api.com
+
+      - key: GOLD_API_KEY
+        sync: false
+
       # Admin
       - key: ADMIN_EMAILS
         value: sheriff.sheikh12@gmail.com

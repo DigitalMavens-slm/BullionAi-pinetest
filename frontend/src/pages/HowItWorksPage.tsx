@@ -49,7 +49,7 @@ const STEPS = [
           <div className="rounded-xl bg-slate-50 p-4">
             <label className="block text-[11px] font-semibold uppercase tracking-wider text-slate-400 mb-2">Trading Segments</label>
             <div className="flex flex-wrap gap-2">
-              {["MCX", "NSE", "BSE"].map((seg) => (
+              {["MCX", "NSE", "BSE", "SPOT"].map((seg) => (
                 <span key={seg} className="rounded-full bg-navy px-3 py-1 text-[11px] font-bold text-white">{seg}</span>
               ))}
             </div>

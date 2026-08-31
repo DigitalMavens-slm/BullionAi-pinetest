@@ -308,6 +308,69 @@ class BullionAIApi {
         }
 
 
+        // -----------------------------------------------------
+        // SPOT LIVE FEED (gold-api.com /price polling)
+        //
+        // Polls XAU/XAG live spot and drives the same aggregator so the
+        // candle engine, strategy and event bus work unchanged.
+        // -----------------------------------------------------
+
+        const { SpotLiveFeed } =
+            require("../market/spot-live-feed");
+
+        this.spotFeed =
+            new SpotLiveFeed({
+                tokens: ["XAU", "XAG"],
+                pollIntervalMs: 2000,
+            });
+
+        this.spotFeed.on(
+            "tick",
+            tick => {
+                this.aggregator.onTick(
+                    tick
+                );
+                this.emitTickEvent(
+                    tick
+                );
+                // Track the latest SPOT price so /api/state livePrices
+                // reflects gold-api.com XAU/XAG.
+                this.spotPrices =
+                    this.spotPrices || {};
+                const t = String(
+                    tick?.token || ""
+                ).toUpperCase();
+                if (t) {
+                    this.spotPrices[t] = {
+                        exchange: "SPOT",
+                        token: t,
+                        price: tick?.price ?? null,
+                        previousPrice:
+                            this.spotPrices[t]
+                                ?.price ?? null,
+                        change:
+                            tick?.price != null &&
+                            this.spotPrices[t]
+                                ?.price != null
+                                ? tick.price -
+                                  this.spotPrices[t]
+                                      .price
+                                : null,
+                        time: tick?.time ?? Date.now(),
+                    };
+                }
+            }
+        );
+
+        this.spotFeed.start().catch(
+            error =>
+                console.error(
+                    "[spot] feed start failed:",
+                    error?.message || error
+                )
+        );
+
+
         this.dynStores = new Map();
 
         this.reconcileTimer =
@@ -601,6 +664,10 @@ class BullionAIApi {
         // Wire all MCX current contracts into the live candle builder
         // so they accumulate history autonomously during market hours.
         this.bootstrapMCXContracts().catch(() => {});
+
+        // Wire the SPOT (XAU/XAG) symbols into the aggregator + SpotLiveFeed
+        // so their live candles build automatically from gold-api.com /price.
+        this.bootstrapSpotSymbols().catch(() => {});
 
         // Detect and execute any pending contract rollover at boot.
         this.rolloverAllActive("startup").catch(() => {});
@@ -1294,10 +1361,18 @@ const allowedTimeframes =
             // already registered is fine
         }
 
-        // Subscribe the token on the live WebSocket feed.
-        const live = this.coordinator?.liveMarket;
-        if (live?.subscribeTokens) {
-            live.subscribeTokens([{ exch, token }]);
+        // Subscribe the token on the live feed.
+        //  - SPOT (XAU/XAG) -> gold-api.com SpotLiveFeed
+        //  - MCX/NSE/BSE    -> Shoonya WebSocket feed
+        if (exch === "SPOT") {
+            if (this.spotFeed?.subscribeToken) {
+                this.spotFeed.subscribeToken(token);
+            }
+        } else {
+            const live = this.coordinator?.liveMarket;
+            if (live?.subscribeTokens) {
+                live.subscribeTokens([{ exch, token }]);
+            }
         }
     }
 
@@ -1334,6 +1409,43 @@ const allowedTimeframes =
         } catch (error) {
             console.error(
                 "[boot] MCX contract bootstrap failed:",
+                error?.message || error
+            );
+            return 0;
+        }
+    }
+
+    // =========================================================
+    // SPOT SYMBOL BOOTSTRAP
+    //
+    // Registers the built-in SPOT symbols (XAU/GOLD, XAG/SILVER) into the
+    // aggregator + SpotLiveFeed so their candles form automatically from
+    // gold-api.com /price polling, independent of a search-box add.
+    // =========================================================
+
+    async bootstrapSpotSymbols() {
+        try {
+            const { getRegistry } = require("../market/symbol-master");
+            const rows = await getRegistry("SPOT").catch(() => []);
+            let wired = 0;
+            for (const row of rows) {
+                if (!row?.token) continue;
+                this.ensureLiveSubscription({
+                    key: row.symbol || row.tradingSymbol || row.token,
+                    symbol: row.symbol || row.tradingSymbol,
+                    name: row.name || row.tradingSymbol,
+                    token: row.token,
+                    exchange: "SPOT",
+                });
+                wired++;
+            }
+            console.log(
+                `[boot] wired ${wired} SPOT symbols into live candle build`
+            );
+            return wired;
+        } catch (error) {
+            console.error(
+                "[boot] SPOT bootstrap failed:",
                 error?.message || error
             );
             return 0;
@@ -1649,6 +1761,129 @@ const allowedTimeframes =
         // previous-contract fallback, so we know to persist the fallback.
         let hadNoCandles = true;
 
+
+        // -----------------------------------------------------
+        // SPOT PRIMARY DATA SOURCE (gold-api.com)
+        //
+        // Live ticks come from the SpotLiveFeed (/price polling). Historical
+        // OHLC comes from /ohlc (requires GOLD_API_KEY; free tier 10 req/hr).
+        // Read the cached file first; backfill from gold-api when missing and
+        // a key is configured.
+        // -----------------------------------------------------
+
+        const isSpot =
+            String(
+                inst.exchange ||
+                exchange ||
+                ""
+            )
+                .trim()
+                .toUpperCase() ===
+            "SPOT";
+
+        if (isSpot) {
+
+            const cachedSpot =
+                fs.existsSync(filePath)
+                    ? (() => {
+                          try {
+                              const p = JSON.parse(
+                                  fs.readFileSync(
+                                      filePath,
+                                      "utf8"
+                                  )
+                              );
+                              return Array.isArray(p)
+                                  ? p
+                                  : [];
+                          } catch {
+                              return [];
+                          }
+                      })()
+                    : [];
+
+            if (
+                cachedSpot.length
+            ) {
+                candles = cachedSpot;
+            } else {
+                // Try to backfill OHLC history (only if an API key is set).
+                const ga = require("../market/gold-api");
+                if (ga.hasApiKey()) {
+                    try {
+                        const nowSec =
+                            Math.floor(Date.now() / 1000);
+                        const startSec =
+                            nowSec - 45 * 86400; // ~45 days
+                        const ohlc =
+                            await ga.fetchSpotCandles({
+                                symbol: inst.token,
+                                startTimestamp: startSec,
+                                endTimestamp: nowSec,
+                            });
+                        if (
+                            ohlc.length
+                        ) {
+                            candles = ohlc;
+                            fs.writeFileSync(
+                                filePath,
+                                JSON.stringify(
+                                    candles,
+                                    null,
+                                    2
+                                ),
+                                "utf8"
+                            );
+                            console.log(
+                                `[spot] backfilled ${exchange}_${inst.token}_${tf.key} with ${candles.length} gold-api candles`
+                            );
+                        }
+                    } catch (e) {
+                        console.error(
+                            `[spot] backfill failed for ${inst.token}:`,
+                            e?.message || e
+                        );
+                    }
+                } else {
+                    console.log(
+                        "[spot] no GOLD_API_KEY set — showing live forming candle only (no historical backfill)"
+                    );
+                }
+            }
+
+            // Merge any live forming candle the aggregator has built from
+            // /price ticks so the chart shows the in-progress bar. forming.time
+            // is in ms and carries open/high/low/close (matches candle shape).
+            const forming =
+                this.aggregator?.getForming?.(
+                    String(inst.token),
+                    tf.key
+                );
+            if (forming && Number.isFinite(Number(forming.time))) {
+                const arr = candles.slice();
+                const idx = arr.findIndex(
+                    c =>
+                        Number(c.time) ===
+                        Number(forming.time)
+                );
+                if (idx >= 0) arr[idx] = forming;
+                else arr.push(forming);
+                arr.sort(
+                    (a, b) => a.time - b.time
+                );
+                candles = arr;
+            }
+
+            return {
+                inst,
+                tf,
+                exchange,
+                filePath,
+                candles,
+                fetched: false,
+            };
+
+        }
 
         // -----------------------------------------------------
         // SPOT removed — gold/silver spot data will be provided later via a
@@ -2314,7 +2549,7 @@ const allowedTimeframes =
         // strategy. The requested timeframe is honored for every segment.
         const _isContractBased =
             instOverride && instOverride.exchange
-                ? ["MCX"].includes(
+                ? ["MCX", "SPOT"].includes(
                       String(
                           instOverride.exchange
                       ).toUpperCase()
@@ -2423,7 +2658,7 @@ const allowedTimeframes =
 
 
         const strategyFileForInst =
-            (exchUpper === "MCX") &&
+            (exchUpper === "MCX" || exchUpper === "SPOT") &&
             tf.key === "15m"
                 ? "BullionAI-fixedtgt.pine"
                 : "BullionAI.pine";
@@ -3208,10 +3443,22 @@ const allowedTimeframes =
             this.coordinator
                 ?.liveMarket;
 
+        // SPOT (gold-api.com) prices are always available, independent of
+        // the Shoonya live market / session.
+        const spot =
+            this.spotPrices || {};
 
         if (!liveMarket) {
 
-            return null;
+            // No Shoonya live market (no session / not started) — still serve
+            // SPOT prices so Gold/Silver spot shows without a Shoonya login.
+            return {
+                connected:
+                    false,
+                ...spot,
+                gold: null,
+                silver: null,
+            };
 
         }
 
@@ -3263,6 +3510,9 @@ const allowedTimeframes =
 
                 prices[silverToken] ??
                 null,
+
+            /* SPOT (gold-api.com) prices, keyed by XAU/XAG */
+            ...(this.spotPrices || {}),
 
         };
 

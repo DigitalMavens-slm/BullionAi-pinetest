@@ -132,8 +132,38 @@ const SEGMENTS = {
         tickHandling: "price-volume",
         contractBased: false,
     },
-    // SPOT removed — gold/silver spot will be provided later via a dedicated
-    // metals API (not a Yahoo-backed exchange).
+    SPOT: {
+        id: "SPOT",
+        name: "Spot — Gold & Silver (USD)",
+        exchange: "SPOT",
+        // Live spot XAU/USD & XAG/USD from gold-api.com. Trades ~24x6 (US
+        // metals market) with a short settlement break. Modeled Mon–Sat in
+        // IST, ~03:30–23:30.
+        tradingDays: [1, 2, 3, 4, 5, 6],
+        sessions: [
+            {
+                label: "Regular",
+                status: "OPEN",
+                ranges: [["03:30", "23:30"]],
+            },
+            {
+                label: "Settlement Break",
+                status: "PRE-OPEN",
+                ranges: [["01:30", "03:30"]],
+            },
+        ],
+        defaultTimeframe: "15m",
+        instrumentTypes: ["FUT", "FUTCOM", "FUTMET"],
+        tickHandling: "price-volume",
+        contractBased: true,
+        // Data comes from gold-api.com (live /price + OHLC /ohlc history).
+        dataSource: "gold-api",
+        dataSymbols: {
+            GOLD: "XAU",
+            SILVER: "XAG",
+        },
+        currency: "USD",
+    },
 };
 
 // Backwards-compatible alias: getExchangeRows / lookup by id.
