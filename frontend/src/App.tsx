@@ -379,6 +379,7 @@ function App() {
             "MCX",
             "NSE",
             "BSE",
+            "COMEX",
           ]
         ).map(s =>
           String(s)

@@ -120,6 +120,7 @@ export type MarketStatus = {
   MCX?: SegmentStatus;
   NSE?: SegmentStatus;
   BSE?: SegmentStatus;
+  COMEX?: SegmentStatus;
   open?: boolean;
 };
 

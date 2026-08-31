@@ -39,8 +39,22 @@ const INDEX_MAP = {
     "BSE:6": "^BSESN",           // SENSEX 500 proxy
 };
 
+/*
+ * COMEX metals map to Yahoo continuous futures tickers. Keyed by
+ * "<EXCH>:<SYMBOL>" (token == root symbol for COMEX) so the resolver can
+ * map a requested COMEX instrument to its Yahoo ticker.
+ */
+const COMEX_YAHOO_MAP = {
+    "COMEX:GOLD": "GC=F",
+    "COMEX:SILVER": "SI=F",
+    "COMEX:COPPER": "HG=F",
+    "COMEX:PLATINUM": "PL=F",
+    "COMEX:PALLADIUM": "PA=F",
+};
+
 const NSE_EQUITY_RE = /-(EQ|BE|BZ|T|Z|SM|ST)$/i;
 const BSE_EQUITY_RE = /^[A-Z0-9&.-]+$/i;
+const COMEX_FUT_RE = /^(GC|SI|HG|PL|PA|GOLD|SILVER|COPPER|PLATINUM|PALLADIUM)$/i;
 
 function stripSeriesSuffix(tsym) {
     // "RELIANCE-EQ" -> "RELIANCE", "RELIANCE1" -> keep
@@ -49,30 +63,42 @@ function stripSeriesSuffix(tsym) {
 
 function toYahooSymbol({ exchange, token, symbol, tsym }) {
     const exch = String(exchange || "").toUpperCase();
-    if (!["NSE", "BSE"].includes(exch)) return null;
+    if (["NSE", "BSE"].includes(exch)) {
+        // 1) Explicit index mapping first.
+        const idxMapped = INDEX_MAP[`${exch}:${String(token).trim()}`];
+        if (idxMapped) return idxMapped;
 
-    // 1) Explicit index mapping first.
-    const idxMapped = INDEX_MAP[`${exch}:${String(token).trim()}`];
-    if (idxMapped) return idxMapped;
+        // 3) Equity / other: pick a base symbol.
+        const base = String(symbol || tsym || "").trim();
+        if (!base) return null;
 
-    // 2) Index-type instruments (no explicit ticker) — skip if unmapped.
-    //    We can't reliably guess the ^ ticker, so return null and let the
-    //    caller fall through to Shoonya/live.
+        // 4) NSE: strip "-EQ" then append .NS
+        if (exch === "NSE") {
+            const s = stripSeriesSuffix(base);
+            return s.endsWith(".NS") ? s : `${s}.NS`;
+        }
 
-    // 3) Equity / other: pick a base symbol.
-    const base = String(symbol || tsym || "").trim();
-    if (!base) return null;
+        // 5) BSE: append .BO (unless already suffixed)
+        if (exch === "BSE") {
+            const s = stripSeriesSuffix(base);
+            return s.endsWith(".BO") ? s : `${s}.BO`;
+        }
 
-    // 4) NSE: strip "-EQ" then append .NS
-    if (exch === "NSE") {
-        const s = stripSeriesSuffix(base);
-        return s.endsWith(".NS") ? s : `${s}.NS`;
+        return null;
     }
 
-    // 5) BSE: append .BO (unless already suffixed)
-    if (exch === "BSE") {
-        const s = stripSeriesSuffix(base);
-        return s.endsWith(".BO") ? s : `${s}.BO`;
+    // COMEX: map via the explicit table, otherwise try the raw symbol/token.
+    if (exch === "COMEX") {
+        const key = `${exch}:${String(symbol || tsym || token || "").trim().toUpperCase()}`;
+        const mapped = COMEX_YAHOO_MAP[key];
+        if (mapped) return mapped;
+
+        const sym = String(symbol || tsym || token || "").trim().toUpperCase();
+        if (COMEX_FUT_RE.test(sym)) {
+            const m = COMEX_YAHOO_MAP[`${exch}:${sym.replace(/^=/i, "")}`];
+            if (m) return m;
+        }
+        return null;
     }
 
     return null;

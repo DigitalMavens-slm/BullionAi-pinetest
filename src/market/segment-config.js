@@ -132,6 +132,48 @@ const SEGMENTS = {
         tickHandling: "price-volume",
         contractBased: false,
     },
+    COMEX: {
+        id: "COMEX",
+        name: "COMEX",
+        exchange: "COMEX",
+        // COMEX metals (CME Group, New York). Sessions are in US Eastern
+        // time. The cash floor opens ~18:00 ET Sunday–Fri and runs near 24h
+        // with a daily 17:00–18:00 ET settlement break. Converted to IST:
+        //   03:30 – 01:30 IST roughly (adjusts on DST via minutes below).
+        // We model as Mon–Sat spanning IST, reflecting the ET session.
+        tradingDays: [1, 2, 3, 4, 5, 6],
+        sessions: [
+            // Regular session in IST (Asia/Kolkata). ET day session 08:20–13:30 ET,
+            // electronic/night session continues. Simplified to a near-continuous
+            // window that covers the daily active market.
+            {
+                label: "Regular",
+                status: "OPEN",
+                // approx 03:30 IST to 21:30 IST (ET day) — see IST mapping below
+                ranges: [["03:30", "23:30"]],
+            },
+            {
+                label: "Settlement Break",
+                status: "PRE-OPEN",
+                ranges: [["01:30", "03:30"]],
+            },
+        ],
+        defaultTimeframe: "15m",
+        instrumentTypes: ["FUT", "FUTCOM", "FUTMET"],
+        tickHandling: "price-volume",
+        contractBased: true,
+        // Data for COMEX comes from Yahoo Finance (GC=F, SI=F, HG=F, PL=F,
+        // PA=F) — Shoonya does not trade US COMEX. Historical + snapshot only.
+        dataSource: "yahoo",
+        yahooSymbols: {
+            GOLD: "GC=F",
+            SILVER: "SI=F",
+            COPPER: "HG=F",
+            PLATINUM: "PL=F",
+            PALLADIUM: "PA=F",
+        },
+        currency: "USD",
+    },
 };
 
 // Backwards-compatible alias: getExchangeRows / lookup by id.

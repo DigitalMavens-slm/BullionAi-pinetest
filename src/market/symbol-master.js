@@ -32,10 +32,96 @@ const SYMBOLS_DIR = path.resolve(
 );
 
 const EXCHANGES =
-    ["MCX", "NSE", "BSE"];
+    ["MCX", "NSE", "BSE", "COMEX"];
 
 const CDN =
     "https://api.shoonya.com";
+
+/*
+ * COMEX is a US exchange (CME Group). Shoonya does not host a COMEX
+ * symbol file, so we define the tradable set here. Data comes from Yahoo
+ * Finance (GC=F, SI=F, HG=F, PL=F, PA=F). Expo/root names align with
+ * segment-config.com? SEGMENTS.COMEX.yahooSymbols.
+ */
+const COMEX_SYMBOLS = [
+    {
+        exch: "COMEX",
+        token: "GC",
+        symbol: "GOLD",
+        tradingSymbol: "GOLD",
+        tsym: "GOLD",
+        instrumentType: "FUTMET",
+        instrumentName: "Gold",
+        name: "COMEX Gold",
+        // fixed synthetic expiry (year-end) so the registry treats it like a
+        // contract symbol; auto-roll is not meaningful for a continuous index.
+        expiry: null,
+        expiryRaw: "",
+        lotSize: 100,
+        tickSize: 0.1,
+        yahooSymbol: "GC=F",
+    },
+    {
+        exch: "COMEX",
+        token: "SI",
+        symbol: "SILVER",
+        tradingSymbol: "SILVER",
+        tsym: "SILVER",
+        instrumentType: "FUTMET",
+        instrumentName: "Silver",
+        name: "COMEX Silver",
+        expiry: null,
+        expiryRaw: "",
+        lotSize: 5000,
+        tickSize: 0.005,
+        yahooSymbol: "SI=F",
+    },
+    {
+        exch: "COMEX",
+        token: "HG",
+        symbol: "COPPER",
+        tradingSymbol: "COPPER",
+        tsym: "COPPER",
+        instrumentType: "FUTMET",
+        instrumentName: "Copper",
+        name: "COMEX Copper",
+        expiry: null,
+        expiryRaw: "",
+        lotSize: 25000,
+        tickSize: 0.0005,
+        yahooSymbol: "HG=F",
+    },
+    {
+        exch: "COMEX",
+        token: "PL",
+        symbol: "PLATINUM",
+        tradingSymbol: "PLATINUM",
+        tsym: "PLATINUM",
+        instrumentType: "FUTMET",
+        instrumentName: "Platinum",
+        name: "COMEX Platinum",
+        expiry: null,
+        expiryRaw: "",
+        lotSize: 50,
+        tickSize: 0.1,
+        yahooSymbol: "PL=F",
+    },
+    {
+        exch: "COMEX",
+        token: "PA",
+        symbol: "PALLADIUM",
+        tradingSymbol: "PALLADIUM",
+        tsym: "PALLADIUM",
+        instrumentType: "FUTMET",
+        instrumentName: "Palladium",
+        name: "COMEX Palladium",
+        expiry: null,
+        expiryRaw: "",
+        lotSize: 100,
+        tickSize: 0.05,
+        yahooSymbol: "PA=F",
+    },
+];
 
 /* MCX rollover window (days before expiry) */
 
@@ -606,6 +692,12 @@ async function getRegistry(exch) {
     if (cache.has(E)) return cache.get(E);
 
     if (inflight.has(E)) return inflight.get(E);
+
+
+    // COMEX has no Shoonya symbol file — use the built-in static list.
+    if (E === "COMEX") {
+        return COMEX_SYMBOLS;
+    }
 
 
     const job = (async () => {
