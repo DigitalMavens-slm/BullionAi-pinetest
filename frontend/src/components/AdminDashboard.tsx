@@ -24,6 +24,7 @@ import {
   BarChart3,
   Settings,
   TrendingUp,
+  Server,
 } from "lucide-react";
 import {
   verifyAdmin,
@@ -34,6 +35,8 @@ import {
   renewAdminUser,
   createAdminUser,
   resetAdminPassword,
+  restartServer,
+  warmupBackend,
 } from "../lib/admin";
 import {
   loginEmail,
@@ -92,7 +95,7 @@ export function AdminDashboard({ onExit }: { onExit: () => void }) {
   const [showResetPassword, setShowResetPassword] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [activeTab, setActiveTab] = useState<
-    "overview" | "users" | "analytics" | "settings"
+    "overview" | "users" | "analytics" | "settings" | "server"
   >("overview");
   const pageSize = 10;
 
@@ -152,6 +155,17 @@ export function AdminDashboard({ onExit }: { onExit: () => void }) {
         .catch(() => {});
     }
   }, []);
+
+  // Auto-warm the backend every 5 minutes while the admin is authed, so the
+  // free-tier Render service stays awake and Shoonya login / admin actions
+  // don't hit a cold-start 502.
+  useEffect(() => {
+    if (!authed) return;
+    const id = setInterval(() => {
+      warmupBackend().catch(() => {});
+    }, 5 * 60 * 1000);
+    return () => clearInterval(id);
+  }, [authed]);
 
   const filtered = useMemo(() => {
     return users.filter(u => {
@@ -384,6 +398,7 @@ export function AdminDashboard({ onExit }: { onExit: () => void }) {
             { id: "users", label: "Users", icon: Users },
             { id: "analytics", label: "Analytics", icon: BarChart3 },
             { id: "settings", label: "Settings", icon: Settings },
+            { id: "server", label: "Server", icon: Server },
           ].map(item => (
             <button
               key={item.id}
@@ -432,6 +447,7 @@ export function AdminDashboard({ onExit }: { onExit: () => void }) {
                   { id: "users", icon: Users },
                   { id: "analytics", icon: BarChart3 },
                   { id: "settings", icon: Settings },
+                  { id: "server", icon: Server },
                 ].map(item => (
                   <button
                     key={item.id}
@@ -844,6 +860,78 @@ export function AdminDashboard({ onExit }: { onExit: () => void }) {
                 <div className="flex justify-between py-2">
                   <span className="font-medium">Support</span>
                   <span className="text-slate-500">support@bullionai.in</span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === "server" && (
+            <div className="rounded-2xl border border-slate-200 bg-white p-6">
+              <h3 className="flex items-center gap-2 text-sm font-black">
+                <Server className="h-4 w-4" /> Server
+              </h3>
+              <p className="mt-2 text-xs text-slate-500">
+                Backend maintenance — keep the Render service awake, authenticate Shoonya, or restart.
+              </p>
+
+              <div className="mt-5 grid gap-4 sm:grid-cols-3">
+                {/* Shoonya Login */}
+                <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-4">
+                  <div className="text-xs font-bold text-slate-700">Shoonya Login</div>
+                  <p className="mt-1 text-[11px] text-slate-500">
+                    Authenticate with a fresh Shoonya redirect URL (single-use, ~30s).
+                  </p>
+                  <button
+                    onClick={async () => {
+                      try { await warmupBackend(); } catch {}
+                      window.open(
+                        "https://bullionai-pinetest.onrender.com/api/shoonya/login",
+                        "_blank"
+                      );
+                    }}
+                    className="mt-3 w-full rounded-xl bg-purple-600 py-2 text-[12px] font-bold text-white hover:bg-purple-700"
+                  >
+                    Login to Shoonya
+                  </button>
+                </div>
+
+                {/* Warmup */}
+                <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-4">
+                  <div className="text-xs font-bold text-slate-700">Warm Up Server</div>
+                  <p className="mt-1 text-[11px] text-slate-500">
+                    Ping /health so the free-tier service doesn't sleep between actions.
+                  </p>
+                  <button
+                    onClick={async () => {
+                      await warmupBackend();
+                      alert("Server warmed (health ping sent).");
+                    }}
+                    className="mt-3 w-full rounded-xl bg-emerald-600 py-2 text-[12px] font-bold text-white hover:bg-emerald-700"
+                  >
+                    Warm Now
+                  </button>
+                </div>
+
+                {/* Restart Server */}
+                <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-4">
+                  <div className="text-xs font-bold text-slate-700">Restart Server</div>
+                  <p className="mt-1 text-[11px] text-slate-500">
+                    Gracefully stop + respawn. Session auto-restores from Postgres.
+                  </p>
+                  <button
+                    onClick={async () => {
+                      if (!confirm("Restart the backend server? It will be unavailable for ~30-60s while Render respawns it.")) return;
+                      try {
+                        await restartServer();
+                        alert("Restart triggered. It will be back online in ~30-60s. You may need to re-authenticate if the session expired.");
+                      } catch (e: any) {
+                        alert(e.message || "Restart failed");
+                      }
+                    }}
+                    className="mt-3 w-full rounded-xl bg-rose-600 py-2 text-[12px] font-bold text-white hover:bg-rose-700"
+                  >
+                    Restart Server
+                  </button>
                 </div>
               </div>
             </div>

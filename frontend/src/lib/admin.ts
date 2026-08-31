@@ -133,3 +133,24 @@ export async function resetAdminPassword(
 export async function verifyAdminWithKey(_key: string) {
   return verifyAdmin();
 }
+
+// Restart the backend server (admin-only). Render respawns it; the Shoonya
+// session persists in Postgres so it auto-restores on boot.
+export async function restartServer() {
+  const r = await fetch(`${API_BASE}/api/admin/restart`, {
+    method: "POST",
+    headers: adminHeaders(),
+  });
+  const d = await r.json();
+  if (!r.ok || !d.ok)
+    throw new Error(d.error || "Restart failed");
+  return d;
+}
+
+// Warm the backend (ping /health) so Render's free tier doesn't sleep
+// between admin actions / Shoonya login.
+export function warmupBackend(host?: string) {
+  const base = host || API_BASE || "https://bullionai-pinetest.onrender.com";
+  const u = base + "/health";
+  return fetch(u, { method: "GET", cache: "no-store" }).catch(() => null);
+}

@@ -4936,6 +4936,33 @@ const allowedTimeframes =
             return;
         }
 
+        // ADMIN — restart the server
+        // Responds 200 first, then gracefully exits. Render's process
+        // supervisor respawns it. The Shoonya session is persisted in
+        // Postgres so it auto-restores on boot.
+        if (
+            url.pathname === "/api/admin/restart" &&
+            request.method === "POST" &&
+            isAdminRoute
+        ) {
+            try {
+                if (!(await checkAdmin())) {
+                    this.sendJson(response, 401, { ok: false, error: "Admin authorization required." });
+                    return;
+                }
+                console.log("[admin] restart requested — exiting for Render to respawn");
+                this.sendJson(response, 200, { ok: true, restarting: true });
+                // Give the response a moment to flush before exiting.
+                setTimeout(() => {
+                    process.exit(0);
+                }, 500);
+                return;
+            } catch (error) {
+                this.sendJson(response, 400, { ok: false, error: error?.message || String(error) });
+                return;
+            }
+        }
+
         // HISTORICAL CANDLES
         // -----------------------------------------------------
 
