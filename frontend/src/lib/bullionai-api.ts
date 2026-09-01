@@ -417,9 +417,21 @@ export type CurrentContract = {
 export type ApiSessionStatus = {
   ok?: boolean;
   server?: string;
+  api?: string;
   authenticated?: boolean;
   feedConnected?: boolean;
-  status?: "connected" | "disconnected" | "login_required";
+  status?:
+    | "connected"
+    | "disconnected"
+    | "login_required"
+    | "connecting"
+    | "reconnecting"
+    | "stale";
+  feedState?: string;
+  shoonya?: "authenticated" | "login_required";
+  feed?: string;
+  feedStarted?: boolean;
+  feedReconnecting?: boolean;
   loginRequired?: boolean;
   uid?: string | null;
   actid?: string | null;

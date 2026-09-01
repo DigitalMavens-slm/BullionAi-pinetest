@@ -169,6 +169,16 @@ class BullionAILiveCoordinator extends EventEmitter {
         this.loginRequired =
             false;
 
+        // Feed lifecycle tracking for the watchdog + status.
+        this.feedStarted =
+            false;
+        this.lastValidTickAt =
+            null;
+        this.feedConnecting =
+            false;
+        this.feedReconnecting =
+            false;
+
         this.initializingPromise =
             null;
 
@@ -398,14 +408,25 @@ class BullionAILiveCoordinator extends EventEmitter {
          *    the drop file until it appears.
          */
 
-        await this.ensureFreshSession();
+        const fresh =
+            await this.ensureFreshSession();
 
-        console.log("");
+        if (
+            this.loginRequired ||
+            !this.session.isAuthenticated()
+        ) {
+            // No valid session (non-interactive) — LOGIN_REQUIRED.
+            this.loginRequired =
+                true;
 
-        console.log(
-            "Session ready:",
-            this.session.isAuthenticated()
-        );
+            console.log(
+                "[shoonya] login required"
+            );
+
+            return "login_required";
+        }
+
+        return "authenticated";
     }
 
 
@@ -450,6 +471,8 @@ class BullionAILiveCoordinator extends EventEmitter {
             }
 
             if (restored) {
+
+                console.log("[shoonya] session restored");
 
                 console.log("");
 
@@ -707,14 +730,18 @@ class BullionAILiveCoordinator extends EventEmitter {
             ) {
 
                 // No valid session and no interactive prompt available:
-                // set SHOONYA_LOGIN_REQUIRED so the dashboard can surface a
-                // clear "Login to Shoonya" action instead of a silent hang.
+                // set SHOONYA_LOGIN_REQUIRED so the dashboard shows a clear
+                // "Login to Shoonya" action and STOP (do not block startup).
+                // The HTTP API stays healthy; a fresh /api/shoonya/login
+                // re-triggers the full startup sequence.
                 this.loginRequired =
                     true;
 
-                throw new Error(
-                    "Shoonya login timed out (no session, non-interactive). Re-authenticate at /api/shoonya/login to start live pricing."
+                console.log(
+                    "[shoonya] login required — no valid session in non-interactive mode"
                 );
+
+                return false;
 
             }
 
@@ -833,17 +860,26 @@ class BullionAILiveCoordinator extends EventEmitter {
 
 
         if (
-            !this.initialized
+            !this.initialized ||
+            !this.liveMarket
         ) {
 
             /*
-             * Boot-time login: complete the normal
-             * startup sequence that was left
-             * pending.
+             * Boot-time login (or re-login after a LOGIN_REQUIRED state where
+             * the feed was never started): complete the normal startup
+             * sequence that was left pending.
              */
 
             this.running =
                 true;
+
+            // Force a fresh init so the feed + subscriptions start now that a
+            // valid session is present.
+            this.initialized =
+                false;
+
+            this.initializingPromise =
+                null;
 
             await this.initialize();
 
@@ -1014,6 +1050,22 @@ class BullionAILiveCoordinator extends EventEmitter {
                     state
                 );
 
+                // Track the last real market tick for the feed watchdog.
+                const tickTime =
+                    Number(
+                        state?.tickTime ||
+                        state?.price?.tickTime ||
+                        0
+                    );
+                if (tickTime > 0) {
+                    this.lastValidTickAt =
+                        tickTime;
+                    this.feedConnecting =
+                        false;
+                    this.feedReconnecting =
+                        false;
+                }
+
             }
         );
 
@@ -1026,10 +1078,14 @@ class BullionAILiveCoordinator extends EventEmitter {
             "connected",
             () => {
 
-                console.log("");
+                this.feedConnecting =
+                    false;
+                this.feedReconnecting =
+                    false;
 
+                console.log("");
                 console.log(
-                    "Live market WebSocket connected."
+                    "[shoonya] websocket connected"
                 );
 
                 this.emit(
@@ -1048,21 +1104,20 @@ class BullionAILiveCoordinator extends EventEmitter {
             "disconnected",
             reason => {
 
-                console.log("");
+                this.feedConnecting =
+                    false;
 
+                console.log("");
                 console.log(
-                    "Live market WebSocket disconnected."
+                    "[shoonya] websocket disconnected — scheduling reconnect"
                 );
 
                 if (reason) {
-
                     console.log(
                         "Reason:",
                         reason
                     );
-
                 }
-
 
                 this.emit(
                     "market-disconnected",
@@ -1118,6 +1173,13 @@ class BullionAILiveCoordinator extends EventEmitter {
             }
         );
 
+
+        // Mark the feed as having been started (used by the watchdog to know
+        // live ticks are expected).
+        this.feedStarted =
+            true;
+        this.feedConnecting =
+            true;
 
         await this.liveMarket.start();
     }
@@ -1216,17 +1278,50 @@ class BullionAILiveCoordinator extends EventEmitter {
 
         try {
 
-            await this.authenticate();
+            const authVerdict =
+                await this.authenticate();
+
+            if (
+                authVerdict ===
+                    "login_required" ||
+                !this.session.isAuthenticated()
+            ) {
+
+                // No valid Shoonya session and we are in a non-interactive
+                // host (Render). Do NOT block startup or fake a feed. Mark
+                // LOGIN_REQUIRED so the HTTP API stays healthy and the
+                // dashboard shows the "Login to Shoonya" action. A fresh
+                // /api/shoonya/login re-triggers this sequence.
+                this.initialized =
+                    true;
+
+                console.log(
+                    "[shoonya] login required — live feed paused until manual authentication"
+                );
+
+                this.emit(
+                    "update",
+                    this.display.getState()
+                );
+
+                return this.display.getState();
+
+            }
 
 
             console.log("");
-
             console.log(
                 "Starting live market feed..."
             );
 
 
             await this.startLiveMarket();
+
+
+            console.log("[shoonya] live feed active");
+            console.log(
+                "[shoonya] subscriptions restored"
+            );
 
 
             console.log("");
@@ -1355,19 +1450,68 @@ class BullionAILiveCoordinator extends EventEmitter {
             feed?.connected
         );
 
+        // Feed lifecycle: derive connecting / reconnecting / stale.
+        const lastTickAt =
+            market?.tickTime ?? null;
+
+        // Stale if authenticated + feed should be running, but no live tick
+        // for the watchdog threshold (e.g. 90s).
+        const staleThresholdMs =
+            Number(
+                process.env.BULLIONAI_FEED_STALE_MS ||
+                90_000
+            );
+        const now = Date.now();
+        const stale =
+            !!(this.feedStarted && authenticated && lastTickAt &&
+                now - lastTickAt > staleThresholdMs);
+
+        let feedState;
+        if (!authenticated) {
+            feedState = "disconnected";
+        } else if (feedConnected) {
+            feedState = "connected";
+        } else if (this.feedReconnecting) {
+            feedState = "reconnecting";
+        } else if (this.feedConnecting) {
+            feedState = "connecting";
+        } else if (stale) {
+            feedState = "stale";
+        } else {
+            feedState = "connecting";
+        }
+
         let status;
         if (!authenticated) {
-            status = "login_required"; // SHOONYA_LOGIN_REQUIRED
+            status = "login_required"; // LOGIN_REQUIRED
+        } else if (stale) {
+            status = "stale"; // FEED_STALE
         } else if (feedConnected) {
-            status = "connected"; // SHOONYA_FEED_CONNECTED
+            status = "connected"; // FEED_CONNECTED
+        } else if (this.feedReconnecting) {
+            status = "reconnecting"; // RECONNECTING
         } else {
-            status = "disconnected";
+            status = "connecting"; // FEED_CONNECTING
         }
 
         return {
+            api: "ready",
             authenticated,
             feedConnected,
             status,
+            feedState,
+            shoonya: authenticated
+                ? "authenticated"
+                : "login_required",
+            feed: feedConnected
+                ? "connected"
+                : this.feedReconnecting
+                    ? "reconnecting"
+                    : this.feedConnecting
+                        ? "connecting"
+                        : stale
+                            ? "stale"
+                            : "disconnected",
             loginRequired:
                 Boolean(this.loginRequired),
             uid: authenticated ? session.uid : null,
@@ -1375,8 +1519,17 @@ class BullionAILiveCoordinator extends EventEmitter {
             authenticatedAt: session?.authenticatedAt ?? null,
             expiresAt: session?.expiresAt ?? null,
             expired: Boolean(session?.expired),
-            lastTickAt: market?.tickTime ?? null,
-            feed: feed
+            lastTickAt:
+                lastTickAt,
+            feedStarted:
+                Boolean(this.feedStarted),
+            feedReconnecting:
+                Boolean(this.feedReconnecting),
+            watchdog: {
+                staleMs: staleThresholdMs,
+                stale,
+            },
+            feedDetails: feed
                 ? {
                       connected: feed.connected,
                       subscribed: feed.subscribed,

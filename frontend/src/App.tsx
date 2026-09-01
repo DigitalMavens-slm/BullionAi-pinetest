@@ -275,10 +275,11 @@ function ShoonyaStatusPill({
 }) {
   const st =
     status?.status ||
+    status?.feedState ||
     (status?.feedConnected
       ? "connected"
       : status?.authenticated
-        ? "disconnected"
+        ? "connecting"
         : "login_required");
 
   const cfg =
@@ -288,22 +289,69 @@ function ShoonyaStatusPill({
           dot: "fill-emerald-500 text-emerald-500",
           text: "text-emerald-600",
         }
-      : st === "disconnected"
+      : st === "reconnecting"
         ? {
-            label: "Feed Down",
+            label: "Reconnecting",
             dot: "fill-amber-500 text-amber-500",
             text: "text-amber-600",
           }
-        : {
-            label: "Login Required",
-            dot: "fill-rose-500 text-rose-500",
-            text: "text-rose-600",
-          };
+        : st === "stale"
+          ? {
+              label: "Feed Stale",
+              dot: "fill-amber-500 text-amber-500",
+              text: "text-amber-600",
+            }
+          : st === "connecting"
+            ? {
+                label: "Connecting",
+                dot: "fill-sky-500 text-sky-500",
+                text: "text-sky-600",
+              }
+            : st === "disconnected"
+              ? {
+                  label: "Feed Down",
+                  dot: "fill-amber-500 text-amber-500",
+                  text: "text-amber-600",
+                }
+              : {
+                  label: "Login Required",
+                  dot: "fill-rose-500 text-rose-500",
+                  text: "text-rose-600",
+                };
 
-  return (
+  const pill = (
     <span className="flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-2 py-0.5 text-[10px] font-semibold">
       <Circle className={["h-2 w-2", cfg.dot].join(" ")} />
       <span className={cfg.text}>{cfg.label}</span>
+    </span>
+  );
+
+  // Show uid + last tick time when available (no secrets).
+  const meta =
+    status?.uid || status?.lastTickAt
+      ? {
+          uid: status.uid ?? null,
+          lastTickAt: status.lastTickAt ?? null,
+        }
+      : null;
+
+  if (!meta) return pill;
+
+  return (
+    <span className="flex items-center gap-2">
+      {pill}
+      <span className="hidden items-center gap-1.5 text-[10px] font-medium text-slate-400 lg:flex">
+        {meta.uid && <span className="font-mono">{meta.uid}</span>}
+        {meta.lastTickAt && (
+          <span className="font-mono">
+            {new Date(meta.lastTickAt).toLocaleTimeString("en-IN", {
+              hour: "2-digit",
+              minute: "2-digit",
+              second: "2-digit",
+            })}
+          </span>
+        )}
+      </span>
     </span>
   );
 }

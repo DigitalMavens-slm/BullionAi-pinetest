@@ -961,6 +961,87 @@ async reconcileAll(label) {
             }, 2 * 60 * 1000);
             this.missingRetryTimer.unref?.();
         }
+
+        // Feed watchdog: if the Shoonya feed is stale/disconnected (but the
+        // session is still valid), reconnect + resubscribe automatically.
+        // Never restarts the HTTP server; never asks for a login unless the
+        // session is genuinely invalid.
+        this.startFeedWatchdog();
+    }
+
+    // =========================================================
+    // FEED WATCHDOG
+    //
+    // Monitors lastValidTickAt. If no live tick arrives within the stale
+    // threshold (while authenticated), flag the feed stale and trigger a
+    // reconnect. Guards against duplicate reconnect attempts and never calls
+    // for a manual login unless authentication is genuinely invalid.
+    // =========================================================
+
+    startFeedWatchdog() {
+        if (this.watchdogTimer) return;
+        this.watchdogTimer = setInterval(() => {
+            this.checkFeedWatchdog().catch(() => {});
+        }, Number(process.env.BULLIONAI_WATCHDOG_INTERVAL_MS || 20_000));
+        this.watchdogTimer.unref?.();
+    }
+
+    async checkFeedWatchdog() {
+        const coord = this.coordinator;
+        if (!coord) return;
+
+        const st = coord.getSessionStatus?.() || {};
+        if (st.shoonya !== "authenticated") {
+            // Not authenticated — nothing to reconnect. LOGIN_REQUIRED already
+            // surfaced; the watchdog must NOT demand a login on its own.
+            return;
+        }
+
+        const feedState = st.feed;
+        const stale = st.watchdog?.stale === true;
+
+        // Only act when the feed is genuinely expected (feedStarted) but
+        // not producing ticks / not connected.
+        if (!st.feedStarted) return;
+
+        if (feedState === "connected") {
+            // Healthy — reset any reconnect backoff naturally.
+            return;
+        }
+
+        if ((feedState === "disconnected" || feedState === "stale" || stale)) {
+            // Guard: never spam reconnects (coordinator reconnectWithCurrentSession
+            // itself is idempotent via the feed's own connected-guard + timer).
+            if (this._watchdogReconnect && Date.now() - this._watchdogReconnect < 15_000) {
+                return;
+            }
+            this._watchdogReconnect = Date.now();
+
+            console.log(
+                `[shoonya] feed ${feedState} — watchdog reconnecting`
+            );
+
+            // Mark reconnecting so the status flips before the socket actually
+            // reconnects.
+            coord.feedReconnecting = true;
+
+            try {
+                const feed = coord?.liveMarket?.feed;
+                if (feed) {
+                    await feed.reconnectWithCurrentSession();
+                } else {
+                    // Feed object missing but session valid — re-run startup.
+                    await coord.start?.();
+                }
+                console.log("[shoonya] websocket reconnected (watchdog)");
+            } catch (error) {
+                console.error(
+                    "[shoonya] watchdog reconnect failed:",
+                    error?.message || error
+                );
+                coord.feedReconnecting = false;
+            }
+        }
     }
 
 // =========================================================
@@ -4048,12 +4129,23 @@ const allowedTimeframes =
             "/health"
         ) {
 
+            let sst = null;
+            try {
+                sst =
+                    this.coordinator?.getSessionStatus?.() || null;
+            } catch {
+                sst = null;
+            }
+
             this.sendJson(
                 response,
                 200,
                 {
                     ok:
                         true,
+
+                    api:
+                        "ready",
 
                     service:
                         "BullionAI API",
@@ -4063,6 +4155,24 @@ const allowedTimeframes =
 
                     started:
                         this.started,
+
+                    shoonya:
+                        sst?.shoonya ||
+                        "login_required",
+
+                    feed:
+                        sst?.feed ||
+                        "disconnected",
+
+                    status:
+                        sst?.status ||
+                        "login_required",
+
+                    uid:
+                        sst?.uid ?? null,
+
+                    lastTickAt:
+                        sst?.lastTickAt ?? null,
 
                     sseClients:
                         this.sseClients.size,
@@ -4128,6 +4238,22 @@ const allowedTimeframes =
                                 ? "connected"
                                 : "disconnected"
                             : "login_required"),
+                    feedState:
+                        status?.feedState ?? null,
+                    shoonya:
+                        status?.shoonya ||
+                        "login_required",
+                    feed:
+                        status?.feed ||
+                        "disconnected",
+                    feedStarted:
+                        Boolean(status?.feedStarted),
+                    feedReconnecting:
+                        Boolean(
+                            status?.feedReconnecting
+                        ),
+                    watchdog:
+                        status?.watchdog ?? null,
                     loginRequired:
                         Boolean(status?.loginRequired),
 

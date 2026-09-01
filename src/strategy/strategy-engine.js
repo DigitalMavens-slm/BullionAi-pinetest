@@ -342,6 +342,15 @@ class StrategyEngine {
 
                 windowsHide:
                     true,
+
+                // Bound the PineTS run so a hung process can never block the
+                // Node event loop indefinitely (which would stall the live
+                // WebSocket tick handler). Results are unchanged.
+                timeout:
+                    Number(
+                        process.env.BULLIONAI_PINETS_TIMEOUT_MS ||
+                        30000
+                    ),
             }
         );
 
