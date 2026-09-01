@@ -1050,16 +1050,30 @@ class BullionAILiveCoordinator extends EventEmitter {
                     state
                 );
 
-                // Track the last real market tick for the feed watchdog.
-                const tickTime =
+                // Track the last VALID market tick for the feed watchdog.
+                // IMPORTANT: use the SERVER receipt time (receivedAt), NOT
+                // Shoonya's market timestamp (tickTime). Shoonya's ft can lag
+                // (or otherwise differ from) the clock, so it is never valid
+                // for a freshness/staleness calculation.
+                const receivedAt =
                     Number(
-                        state?.tickTime ||
-                        state?.price?.tickTime ||
+                        state?.receivedAt ||
+                        state?.price?.receivedAt ||
                         0
                     );
-                if (tickTime > 0) {
+                const hadTick =
+                    Number.isFinite(
+                        Number(
+                            state?.price?.price
+                        )
+                    );
+
+                if (
+                    hadTick &&
+                    receivedAt > 0
+                ) {
                     this.lastValidTickAt =
-                        tickTime;
+                        receivedAt;
                     this.feedConnecting =
                         false;
                     this.feedReconnecting =
@@ -1451,11 +1465,17 @@ class BullionAILiveCoordinator extends EventEmitter {
         );
 
         // Feed lifecycle: derive connecting / reconnecting / stale.
-        const lastTickAt =
+        // marketTickTime = Shoonya's feed timestamp (display only).
+        const marketTickTime =
             market?.tickTime ?? null;
 
-        // Stale if authenticated + feed should be running, but no live tick
-        // for the watchdog threshold (e.g. 90s).
+        // receivedAt = BullionAI server receipt time of the last price update.
+        const receivedAt =
+            market?.receivedAt ?? null;
+
+        // Stale is computed ONLY from the SERVER receipt time of the last
+        // valid tick (lastValidTickAt) — never from Shoonya's market
+        // timestamp, which can lag the wall clock.
         const staleThresholdMs =
             Number(
                 process.env.BULLIONAI_FEED_STALE_MS ||
@@ -1463,8 +1483,13 @@ class BullionAILiveCoordinator extends EventEmitter {
             );
         const now = Date.now();
         const stale =
-            !!(this.feedStarted && authenticated && lastTickAt &&
-                now - lastTickAt > staleThresholdMs);
+            !!(
+                this.feedStarted &&
+                authenticated &&
+                this.lastValidTickAt &&
+                now - this.lastValidTickAt >
+                    staleThresholdMs
+            );
 
         let feedState;
         if (!authenticated) {
@@ -1519,8 +1544,15 @@ class BullionAILiveCoordinator extends EventEmitter {
             authenticatedAt: session?.authenticatedAt ?? null,
             expiresAt: session?.expiresAt ?? null,
             expired: Boolean(session?.expired),
+            // Server receipt time of the last valid tick (watchdog-relevant).
             lastTickAt:
-                lastTickAt,
+                receivedAt ?? null,
+            // Shoonya's market feed timestamp of the last tick (display only).
+            marketTickTime:
+                marketTickTime,
+            // BullionAI server receipt time of the last price update.
+            receivedAt:
+                receivedAt,
             feedStarted:
                 Boolean(this.feedStarted),
             feedReconnecting:
