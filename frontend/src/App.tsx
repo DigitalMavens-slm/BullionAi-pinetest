@@ -59,6 +59,8 @@ import {
   type Candle,
   type DayStats,
   type StrategyState,
+  fetchState,
+  type SseStatus,
 } from "./lib/bullionai-api";
 
 import {
@@ -265,22 +267,31 @@ function CardTitle({
 
 
 /* =============================================================
-   SHOONYA STATUS PILL — connected / disconnected / login required
+   SHOONYA STATUS PILL — LIVE / RECONNECTING / FEED STALE / LOGIN REQUIRED
    ============================================================= */
 
 function ShoonyaStatusPill({
   status,
+  sseStatus,
+  lastSyncAt,
 }: {
   status: ApiSessionStatus | null;
+  sseStatus?: SseStatus | null;
+  lastSyncAt?: number | null;
 }) {
-  const st =
+  // Priority: backend auth/feed health > live SSE reconnect state.
+  const backendSt =
     status?.status ||
     status?.feedState ||
-    (status?.feedConnected
-      ? "connected"
-      : status?.authenticated
-        ? "connecting"
-        : "login_required");
+    "login_required";
+
+  let st: string = backendSt;
+  if (backendSt === "connected") {
+    // SSE is primary: if the SSE link is down, surface RECONNECTING.
+    if (sseStatus === "reconnecting") st = "reconnecting";
+    else if (sseStatus === "disconnected") st = "reconnecting";
+    else st = "connected";
+  }
 
   const cfg =
     st === "connected"
@@ -326,12 +337,13 @@ function ShoonyaStatusPill({
     </span>
   );
 
-  // Show uid + last tick time when available (no secrets).
+  // Show uid + last valid-update time when available (no secrets). This is a
+  // subtle "last update" timestamp, NOT a refresh indicator.
   const meta =
-    status?.uid || status?.lastTickAt
+    status?.uid || lastSyncAt
       ? {
-          uid: status.uid ?? null,
-          lastTickAt: status.lastTickAt ?? null,
+          uid: status?.uid ?? null,
+          lastSyncAt: lastSyncAt ?? null,
         }
       : null;
 
@@ -342,9 +354,9 @@ function ShoonyaStatusPill({
       {pill}
       <span className="hidden items-center gap-1.5 text-[10px] font-medium text-slate-400 lg:flex">
         {meta.uid && <span className="font-mono">{meta.uid}</span>}
-        {meta.lastTickAt && (
+        {meta.lastSyncAt && (
           <span className="font-mono">
-            {new Date(meta.lastTickAt).toLocaleTimeString("en-IN", {
+            {new Date(meta.lastSyncAt).toLocaleTimeString("en-IN", {
               hour: "2-digit",
               minute: "2-digit",
               second: "2-digit",
@@ -400,6 +412,18 @@ function App() {
   // Login Required). Polled so the dashboard reflects the live state.
   const [apiStatus, setApiStatus] =
     useState<ApiSessionStatus | null>(null);
+
+  // SSE connection status for the dashboard pill (LIVE / RECONNECTING).
+  // This is purely a connection-health signal; it never clears UI state.
+  const [sseStatus, setSseStatus] =
+    useState<SseStatus>("connecting");
+
+  // Refs to the live SSE sources so tab-visibility recovery can call
+  // reconnect() without creating a duplicate connection.
+  const sseStateRef =
+    useRef<{ status: () => SseStatus; reconnect: () => void; close: () => void } | null>(null);
+  const sseEventsRef =
+    useRef<{ status: () => SseStatus; reconnect: () => void; close: () => void } | null>(null);
 
   const [
     viewStrategy,
@@ -954,14 +978,18 @@ function App() {
 
   useEffect(() => {
 
-    const source = createStateStream(s => {
-      setState(s);
-    });
+    const source = createStateStream(
+      s => setState(s),
+      undefined,
+      (st) => setSseStatus(st)
+    );
 
+    sseStateRef.current = source;
 
     return () => {
 
       source.close();
+      if (sseStateRef.current === source) sseStateRef.current = null;
 
     };
 
@@ -1046,16 +1074,117 @@ function App() {
         onSnapshot: (snap) => {
           if (snap?.state) setState(snap.state);
         },
+        onStatus: (st) => setSseStatus(st),
       }
     );
 
+    sseEventsRef.current = source;
 
     return () => {
 
       source.close();
+      if (sseEventsRef.current === source) sseEventsRef.current = null;
 
     };
 
+  }, []);
+
+
+  // =========================================================
+  // SILENT BACKGROUND SYNCHRONIZATION (safety net)
+  //
+  // SSE is the PRIMARY real-time mechanism. This background fetch is only a
+  // low-frequency safety net (~60s) that silently refreshes the lightweight
+  // /api/state so the dashboard never drifts. It NEVER reloads the page,
+  // NEVER clears UI state, and NEVER replaces valid values with loading
+  // placeholders. If it fails, existing state is kept intact.
+  // =========================================================
+
+  const lastValidStateAt = useRef<number | null>(null);
+  const [lastSyncAt, setLastSyncAt] = useState<number | null>(null);
+
+  // Mark "last update" whenever a fresh SSE state arrives.
+  useEffect(() => {
+    if (state?.updatedAt || state?.market?.receivedAt) {
+      const ts = Number(state?.market?.receivedAt || state?.updatedAt || Date.now());
+      if (ts > 0) {
+        lastValidStateAt.current = ts;
+        setLastSyncAt(ts);
+      }
+    }
+  }, [state]);
+
+  // Silent background state sync. Only fetches /api/state (lightweight) and
+  // merges it via setState — never clears candles/strategy/selection.
+  useEffect(() => {
+    let cancelled = false;
+
+    async function sync() {
+      // Pause while the tab is hidden to reduce backend load.
+      if (document.visibilityState === "hidden") return;
+      try {
+        const st = await fetchState();
+        if (cancelled || !st) return;
+        // Merge: keep any state we already hold and overlay the freshly
+        // fetched envelope (livePrices, market, marketStatus, strategy).
+        // Never clears candles/strategy/selection/watchlist/chart state.
+        setState(prev => (prev ? { ...prev, ...st } : st));
+        const ts = Number(st?.market?.receivedAt || st?.updatedAt || Date.now());
+        if (ts > 0) {
+          lastValidStateAt.current = ts;
+          setLastSyncAt(ts);
+        }
+      } catch {
+        // Never fatal: keep existing valid state, retry next interval.
+      }
+    }
+
+    sync();
+    const id = setInterval(sync, 60_000);
+    return () => {
+      cancelled = true;
+      clearInterval(id);
+    };
+  }, []);
+
+
+  // =========================================================
+  // TAB VISIBILITY RECOVERY
+  //
+  // When the user returns to a hidden tab, silently: (1) reconnect the SSE
+  // source if it is not connected, (2) do ONE silent state sync. No reload,
+  // no remount, no clearing of UI state.
+  // =========================================================
+
+  useEffect(() => {
+    function onVisible() {
+      if (document.visibilityState !== "visible") return;
+
+      // Reconnect both SSE sources if disconnected (no duplicate — the
+      // resilient wrapper's reconnect() teardown + reopen is single-shot).
+      [sseStateRef.current, sseEventsRef.current].forEach((src) => {
+        if (src && src.status() !== "connected") {
+          try { src.reconnect(); } catch {}
+        }
+      });
+
+      // One silent sync to catch up on anything missed while hidden.
+      (async () => {
+        try {
+          const st = await fetchState();
+          if (!st) return;
+          setState(prev => (prev ? { ...prev, ...st } : st));
+          const ts = Number(st?.market?.receivedAt || st?.updatedAt || Date.now());
+          if (ts > 0) {
+            lastValidStateAt.current = ts;
+            setLastSyncAt(ts);
+          }
+        } catch {}
+      })();
+    }
+
+    document.addEventListener("visibilitychange", onVisible);
+    return () => document.removeEventListener("visibilitychange", onVisible);
   }, []);
 
 
@@ -3499,7 +3628,7 @@ function App() {
               </span>
 
               {/* Shoonya connection state — Connected / Disconnected / Login Required */}
-              <ShoonyaStatusPill status={apiStatus} />
+              <ShoonyaStatusPill status={apiStatus} sseStatus={sseStatus} lastSyncAt={lastSyncAt} />
 
             </div>
 

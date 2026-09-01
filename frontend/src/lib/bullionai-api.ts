@@ -204,36 +204,145 @@ export async function fetchStrategy(
 
 export function createStateStream(
   onState: (state: BullionState) => void,
-  onError?: (error: Event) => void
+  onError?: (error: Event) => void,
+  onStatus?: (s: SseStatus) => void
 ) {
-  const source = new EventSource(
-    `${API_BASE}/api/stream`
-  );
-
-  source.addEventListener(
-    "state",
-    event => {
-      const data = (event as MessageEvent).data;
-      if (!data || data.trim() === "" || data.trim() === "undefined") return;
-      try {
-        const state =
-          JSON.parse(data);
-
-        onState(state);
-      } catch (error) {
-        console.error(
-          "Invalid SSE state:",
-          error
-        );
-      }
+  const r = createResilientSource(
+    `${API_BASE}/api/stream`,
+    (s) => onStatus?.(s),
+    (source) => {
+      source.addEventListener(
+        "state",
+        event => {
+          const data = (event as MessageEvent).data;
+          if (!data || data.trim() === "" || data.trim() === "undefined") return;
+          try {
+            const state = JSON.parse(data);
+            onState(state);
+          } catch (error) {
+            console.error("Invalid SSE state:", error);
+          }
+        }
+      );
+      // Legacy onError hook.
+      source.onerror = event => onError?.(event);
     }
   );
 
-  source.onerror = event => {
-    onError?.(event);
+  // Back-compat: expose .close()/.reconnect()/.status() so existing callers
+  // that call source.close() keep working.
+  return r;
+}
+
+export type SseStatus =
+  | "connected"
+  | "reconnecting"
+  | "disconnected"
+  | "connecting";
+
+// A resilient EventSource wrapper with:
+//   - callbacks for connection status (LIVE / RECONNECTING / DISCONNECTED)
+//   - automatic exponential backoff reconnect (no duplicate connections)
+//   - an explicit `reconnect()` that never reloads the page
+//   - a `connected` flag so callers can guard against duplicate timers
+export type ResilientSource = {
+  source: EventSource;
+  status: () => SseStatus;
+  reconnect: () => void;
+  close: () => void;
+};
+
+function createResilientSource(
+  url: string,
+  onStatus: (s: SseStatus) => void,
+  setup: (src: EventSource) => void
+): ResilientSource {
+  let es: EventSource | null = null;
+  let closed = false;
+  let attempts = 0;
+  let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
+  let status: SseStatus = "disconnected";
+
+  const setStatus = (s: SseStatus) => {
+    if (status !== s) {
+      status = s;
+      // Fire-and-forget; never disrupt React render with a stale callback.
+      queueMicrotask(() => onStatus(s));
+    }
   };
 
-  return source;
+  const open = () => {
+    if (closed) return;
+    if (es) return; // never open a second connection
+    setStatus(attempts > 0 ? "reconnecting" : "disconnected");
+
+    let s: EventSource;
+    try {
+      s = new EventSource(url);
+    } catch {
+      setStatus("disconnected");
+      scheduleReconnect();
+      return;
+    }
+    es = s;
+
+    s.onopen = () => {
+      attempts = 0;
+      setStatus("connected");
+      clearReconnectTimer();
+    };
+
+    s.onerror = () => {
+      setStatus("reconnecting");
+      // EventSource fires error on disconnect; force-clean the current one
+      // so it never keeps retrying with the browser default delay.
+      try { s.close(); } catch {}
+      if (es === s) es = null;
+      scheduleReconnect();
+    };
+
+    setup(s);
+  };
+
+  const clearReconnectTimer = () => {
+    if (reconnectTimer) {
+      clearTimeout(reconnectTimer);
+      reconnectTimer = null;
+    }
+  };
+
+  const scheduleReconnect = () => {
+    if (closed || reconnectTimer) return;
+    attempts += 1;
+    const delay = Math.min(1000 * Math.pow(2, Math.min(attempts - 1, 6)), 30_000);
+    reconnectTimer = setTimeout(() => {
+      reconnectTimer = null;
+      open();
+    }, delay);
+  };
+
+  const api: ResilientSource = {
+    get source() {
+      return es as EventSource;
+    },
+    status: () => status,
+    reconnect: () => {
+      if (closed) return;
+      clearReconnectTimer();
+      // Destroy current connection so open() creates a fresh one (no dup).
+      if (es) { try { es.close(); } catch {} es = null; }
+      attempts = 0;
+      open();
+    },
+    close: () => {
+      closed = true;
+      clearReconnectTimer();
+      if (es) { try { es.close(); } catch {} es = null; }
+    },
+  };
+
+  open();
+  return api;
 }
 
 /* =========================================================
@@ -301,46 +410,48 @@ export type SegmentEvent = {
 
 export function createEventStream(
   onEvent: (event: SegmentEvent) => void,
-  opts?: { types?: SegmentEventType[]; onSnapshot?: (snap: { state: BullionState; marketStatus?: MarketStatus }) => void; onError?: (e: Event) => void }
+  opts?: { types?: SegmentEventType[]; onSnapshot?: (snap: { state: BullionState; marketStatus?: MarketStatus }) => void; onError?: (e: Event) => void; onStatus?: (s: SseStatus) => void }
 ) {
   const types = opts?.types?.join(",") || "";
-  const source = new EventSource(
-    `${API_BASE}/api/events${types ? `?types=${encodeURIComponent(types)}` : ""}`
+  const r = createResilientSource(
+    `${API_BASE}/api/events${types ? `?types=${encodeURIComponent(types)}` : ""}`,
+    (s) => opts?.onStatus?.(s),
+    (source) => {
+      const handle = (raw: string) => {
+        // Guard against empty / malformed payloads (e.g. the "data:" line being
+        // empty or literally "undefined"). Never let a bad frame crash the app.
+        if (!raw || raw.trim() === "" || raw.trim() === "undefined") {
+          return;
+        }
+        try {
+          const data = JSON.parse(raw);
+          if (data?.type === "snapshot" && opts?.onSnapshot) {
+            opts.onSnapshot(data);
+          }
+          onEvent(data as SegmentEvent);
+        } catch (e) {
+          console.error("Invalid SSE event:", e);
+        }
+      };
+
+      source.onmessage = event => {
+        handle((event as MessageEvent).data);
+      };
+
+      // Some browsers deliver named events via addEventListener, so cover both.
+      ["snapshot", "tick", "candle_update", "candle_close", "strategy", "signal", "trade_open", "target1", "target2", "sl_update", "trade_close", "contract_change", "connection_status", "error"].forEach(type => {
+        source.addEventListener(type, (event: Event) => {
+          handle((event as MessageEvent).data);
+        });
+      });
+
+      source.onerror = event => {
+        opts?.onError?.(event);
+      };
+    }
   );
 
-  const handle = (raw: string) => {
-    // Guard against empty / malformed payloads (e.g. the "data:" line being
-    // empty or literally "undefined"). Never let a bad frame crash the app.
-    if (!raw || raw.trim() === "" || raw.trim() === "undefined") {
-      return;
-    }
-    try {
-      const data = JSON.parse(raw);
-      if (data?.type === "snapshot" && opts?.onSnapshot) {
-        opts.onSnapshot(data);
-      }
-      onEvent(data as SegmentEvent);
-    } catch (e) {
-      console.error("Invalid SSE event:", e);
-    }
-  };
-
-  source.onmessage = event => {
-    handle((event as MessageEvent).data);
-  };
-
-  // Some browsers deliver named events via addEventListener, so cover both.
-  ["snapshot", "tick", "candle_update", "candle_close", "strategy", "signal", "trade_open", "target1", "target2", "sl_update", "trade_close", "contract_change", "connection_status", "error"].forEach(type => {
-    source.addEventListener(type, (event: Event) => {
-      handle((event as MessageEvent).data);
-    });
-  });
-
-  source.onerror = event => {
-    opts?.onError?.(event);
-  };
-
-  return source;
+  return r;
 }
 
 export type SymbolRow = {
