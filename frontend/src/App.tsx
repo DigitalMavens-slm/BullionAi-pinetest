@@ -1244,6 +1244,12 @@ function App() {
     Map<string, string>
   >(new Map());
 
+  // In-flight guard for the watchlist signal poller: prevents overlapping
+  // checkSignals() cycles (a slow cycle must never be shadowed by a second
+  // interval tick). Persists across effect re-runs.
+  const signalsCheckingRef =
+    useRef<boolean>(false);
+
   /* Desktop (browser) notification permission state */
   const [notifyPermission, setNotifyPermission] =
     useState<NotificationPermission | "unsupported">(() => {
@@ -1338,15 +1344,21 @@ function App() {
     let cancelled = false;
 
     async function checkSignals() {
-      for (const sym of filteredCustomSyms) {
-        const key = `${sym.exch}:${sym.token}`;
-        // Use the timeframe the user is currently viewing so watchlist
-        // alerts match the chart/panel. (MCX uses the fixed-target
-        // strategy on 15m and the trailing strategy on other timeframes.)
-        const tfForSym = selectedTimeframe;
-        try {
-          const res =
-            await fetchStrategy(
+      // Never allow two checkSignals cycles to run at once. If a cycle is
+      // still in flight when the interval fires, skip this tick.
+      if (signalsCheckingRef.current) return;
+      signalsCheckingRef.current = true;
+
+      try {
+        for (const sym of filteredCustomSyms) {
+          const key = `${sym.exch}:${sym.token}`;
+          // Use the timeframe the user is currently viewing so watchlist
+          // alerts match the chart/panel. (MCX uses the fixed-target
+          // strategy on 15m and the trailing strategy on other timeframes.)
+          const tfForSym = selectedTimeframe;
+          try {
+            const res =
+              await fetchStrategy(
               tfForSym,
               undefined,
               sym
@@ -1440,6 +1452,10 @@ function App() {
             sig
           );
         } catch {}
+        }
+      } finally {
+        // Always release the in-flight guard so the next poll can run.
+        signalsCheckingRef.current = false;
       }
     }
 

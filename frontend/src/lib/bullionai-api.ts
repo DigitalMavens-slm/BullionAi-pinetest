@@ -184,22 +184,127 @@ export async function fetchState(): Promise<BullionState> {
   return response.json();
 }
 
+// =========================================================
+// STRATEGY REQUEST DEDUPLICATION + SHORT-TTL CACHE
+//
+// Two independent frontend pollers (chart strategy + watchlist signals) both
+// call fetchStrategy(). Without protection this amplifies /api/strategy
+// traffic and triggers HTTP 429 rate-limiting.
+//
+// Layer guarantees:
+//   - IN-FLIGHT COALESCING: identical concurrent requests share ONE network
+//     call (single > one /api/strategy request).
+//   - SHORT-TTL CACHE: a cached result is reused within STRATEGY_TTL_MS
+//     (~8s) so back-to-back identical pollers don't double-fetch. TTL stays
+//     small so a fresh BUY/SELL is never hidden for long.
+//   - FULL-IDENTITY KEY: timeframe+instrument+exchange+token+tsym — results
+//     are never shared across different instruments/timeframes.
+//   - 429 HANDLING: a rate-limit response is surfaced as a controlled error
+//     (not retried/stormed); the next normal poll recovers.
+//
+// No long-lived caching, no hidden signal suppression, no behavior change.
+// =========================================================
+
+type StrategyCacheEntry = {
+  promise: Promise<StrategyRunResponse>;
+  at: number;
+};
+
+const strategyCache = new Map<string, StrategyCacheEntry>();
+
+// Small, configurable freshness window. Leave TTL SHORT so a new signal is
+// reflected quickly. ~8s is safe (pollers run at 30s; coalescing handles the
+// in-flight burst). Build-time override via import.meta.env.STRATEGY_TTL_MS.
+const STRATEGY_TTL_MS = Number(
+  (import.meta?.env?.STRATEGY_TTL_MS as string | undefined) || 8000
+);
+
+function strategyIdentity(url: string): string {
+  return url;
+}
+
+// Return a merged Promise for an identical request. If a request is already
+// in-flight, reuse its promise (dedup). If a recent cached result exists and
+// is fresh, return it (short-TTL cache). Otherwise issue the network request.
+function requestStrategy(url: string): Promise<StrategyRunResponse> {
+  const key = strategyIdentity(url);
+
+  const entry = strategyCache.get(key);
+  const now = Date.now();
+
+  if (entry) {
+    // Fresh cached/in-flight result — reuse (never a duplicate network call).
+    if (entry.at && now - entry.at < STRATEGY_TTL_MS) {
+      return entry.promise;
+    }
+    // Expired in-flight? Re-issue but keep coalescing semantics.
+    if (entry.promise && !entry.at) {
+      return entry.promise;
+    }
+  }
+
+  const promise = doFetchStrategy(url)
+    .then((res) => {
+      strategyCache.set(key, { promise, at: Date.now() });
+      return res;
+    })
+    .catch((err) => {
+      // On failure, remove so the next poll retries cleanly (no stale entry).
+      if (strategyCache.get(key)?.promise === promise) {
+        strategyCache.delete(key);
+      }
+      throw err;
+    });
+
+  strategyCache.set(key, { promise, at: 0 });
+
+  return promise;
+}
+
+async function doFetchStrategy(url: string): Promise<StrategyRunResponse> {
+  let response: Response;
+  try {
+    response = await fetch(url);
+  } catch (err) {
+    // Network-level failure (offline, DNS, CORS) — controlled, non-retried.
+    throw new Error(
+      `Strategy network error: ${(err as Error)?.message || "failed"}`
+    );
+  }
+
+  if (response.status === 429) {
+    // Rate-limited: honor Retry-After if present (seconds), else a sensible
+    // default. Do NOT immediately retry — the next normal poll (30s) recovers.
+    const retryAfter = Number(response.headers.get("retry-after"));
+    const wait = Number.isFinite(retryAfter) ? retryAfter : 30;
+    const err = new Error(
+      `Strategy rate-limited (HTTP 429). Retry in ~${wait}s.`
+    ) as Error & { status?: number; retryAfterSec?: number };
+    err.status = 429;
+    err.retryAfterSec = wait;
+    throw err;
+  }
+
+  if (!response.ok) {
+    const err = new Error(
+      `Strategy request failed: ${response.status}`
+    ) as Error & { status?: number };
+    err.status = response.status;
+    throw err;
+  }
+
+  return response.json();
+}
+
 export async function fetchStrategy(
   timeframe: string,
   instrument: Instrument = "gold",
   sym?: { exch: string; token: string; tsym: string } | null
 ): Promise<StrategyRunResponse> {
-  const response = await fetch(
-    `${API_BASE}/api/strategy?timeframe=${encodeURIComponent(timeframe)}&instrument=${encodeURIComponent(instrument)}${sym ? `&exchange=${encodeURIComponent(sym.exch)}&token=${encodeURIComponent(sym.token)}&tsym=${encodeURIComponent(sym.tsym)}` : ''}`
-  );
+  const url =
+    `${API_BASE}/api/strategy?timeframe=${encodeURIComponent(timeframe)}&instrument=${encodeURIComponent(instrument)}${sym ? `&exchange=${encodeURIComponent(sym.exch)}&token=${encodeURIComponent(sym.token)}&tsym=${encodeURIComponent(sym.tsym)}` : ''}`;
 
-  if (!response.ok) {
-    throw new Error(
-      `Strategy request failed: ${response.status}`
-    );
-  }
-
-  return response.json();
+  return requestStrategy(url);
 }
 
 export function createStateStream(
