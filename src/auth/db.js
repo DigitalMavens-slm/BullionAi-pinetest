@@ -113,6 +113,50 @@ async function init() {
                 updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
             )
         `);
+        // Performance ledger — durable record of REAL strategy-generated trades.
+        // One row per trade (unique by trade_uid); updated throughout the trade
+        // lifecycle (entry -> TGT1 -> modified SL -> TGT2/SL -> closed).
+        // Only trade outcomes are stored — never credentials.
+        await p.query(`
+            CREATE TABLE IF NOT EXISTS perf_trades (
+                id BIGSERIAL PRIMARY KEY,
+                trade_uid TEXT UNIQUE NOT NULL,
+                exchange TEXT NOT NULL,
+                symbol TEXT NOT NULL,
+                token TEXT,
+                timeframe TEXT NOT NULL,
+                signal TEXT NOT NULL,
+                entry_price NUMERIC,
+                entry_time BIGINT,
+                initial_sl NUMERIC,
+                active_sl NUMERIC,
+                target1 NUMERIC,
+                target2 NUMERIC,
+                target1_status TEXT,
+                target1_hit_time BIGINT,
+                target1_profit NUMERIC,
+                target2_status TEXT,
+                target2_hit_time BIGINT,
+                target2_profit NUMERIC,
+                exit_price NUMERIC,
+                exit_time BIGINT,
+                exit_reason TEXT,
+                status TEXT NOT NULL DEFAULT 'OPEN',
+                result TEXT,
+                result_points NUMERIC,
+                current_pl NUMERIC,
+                max_points NUMERIC,
+                created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+                updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+            )
+        `);
+        await p.query(`CREATE INDEX IF NOT EXISTS idx_perf_trades_trade_uid ON perf_trades(trade_uid)`);
+        await p.query(`CREATE INDEX IF NOT EXISTS idx_perf_trades_exchange ON perf_trades(exchange)`);
+        await p.query(`CREATE INDEX IF NOT EXISTS idx_perf_trades_symbol ON perf_trades(symbol)`);
+        await p.query(`CREATE INDEX IF NOT EXISTS idx_perf_trades_timeframe ON perf_trades(timeframe)`);
+        await p.query(`CREATE INDEX IF NOT EXISTS idx_perf_trades_entry_time ON perf_trades(entry_time)`);
+        await p.query(`CREATE INDEX IF NOT EXISTS idx_perf_trades_exit_time ON perf_trades(exit_time)`);
+        await p.query(`CREATE INDEX IF NOT EXISTS idx_perf_trades_status ON perf_trades(status)`);
         ready = true;
         console.log("[db] PostgreSQL schema ready");
         return { engine: "postgres" };
@@ -355,6 +399,309 @@ async function clearShoonyaSession() {
     return true;
 }
 
+// =========================================================
+// PERFORMANCE LEDGER — durable record of REAL strategy trades
+//
+// One row per trade (unique by trade_uid). Idempotent upserts so the same
+// trade processed repeatedly (SSE reconnect / polling / restart / redeploy)
+// never creates duplicate records. Only trade outcomes — never credentials.
+//
+// Postgres (production) when DATABASE_URL is set; JSON-file fallback for
+// local/dev (data/perf-trades.json).
+// =========================================================
+
+const PERF_FILE = path.resolve(
+    process.cwd(),
+    "data",
+    "perf-trades.json"
+);
+
+function loadPerfJson() {
+    try {
+        const parsed = JSON.parse(fs.readFileSync(PERF_FILE, "utf8"));
+        if (Array.isArray(parsed)) return parsed;
+    } catch {}
+    return [];
+}
+
+function savePerfJson(rows) {
+    fs.mkdirSync(path.dirname(PERF_FILE), { recursive: true });
+    fs.writeFileSync(PERF_FILE, JSON.stringify(rows, null, 2), "utf8");
+}
+
+// Normalize a trade object (from Postgres or JSON) into a clean row.
+function perfRow(r) {
+    if (!r) return null;
+    return {
+        tradeUid: String(r.trade_uid || r.tradeUid || ""),
+        exchange: String(r.exchange || ""),
+        symbol: String(r.symbol || ""),
+        token: r.token || null,
+        timeframe: String(r.timeframe || ""),
+        signal: String(r.signal || ""),
+        entryPrice: numOrNull(r.entry_price ?? r.entryPrice),
+        entryTime: numOrNull(r.entry_time ?? r.entryTime),
+        initialSL: numOrNull(r.initial_sl ?? r.initialSL),
+        activeSL: numOrNull(r.active_sl ?? r.activeSL),
+        target1: numOrNull(r.target1),
+        target2: numOrNull(r.target2),
+        target1Status: r.target1_status ?? r.target1Status ?? null,
+        target1HitTime: numOrNull(r.target1_hit_time ?? r.target1HitTime),
+        target1Profit: numOrNull(r.target1_profit ?? r.target1Profit),
+        target2Status: r.target2_status ?? r.target2Status ?? null,
+        target2HitTime: numOrNull(r.target2_hit_time ?? r.target2HitTime),
+        target2Profit: numOrNull(r.target2_profit ?? r.target2Profit),
+        exitPrice: numOrNull(r.exit_price ?? r.exitPrice),
+        exitTime: numOrNull(r.exit_time ?? r.exitTime),
+        exitReason: r.exit_reason ?? r.exitReason ?? null,
+        status: String(r.status || "OPEN"),
+        result: r.result || null,
+        resultPoints: numOrNull(r.result_points ?? r.resultPoints),
+        currentPL: numOrNull(r.current_pl ?? r.currentPL),
+        maxPoints: numOrNull(r.max_points ?? r.maxPoints),
+        createdAt: r.created_at ?? r.createdAt ?? null,
+        updatedAt: r.updated_at ?? r.updatedAt ?? null,
+    };
+}
+
+function numOrNull(v) {
+    const n = Number(v);
+    return Number.isFinite(n) ? n : null;
+}
+
+// Idempotent upsert keyed by trade_uid.
+async function upsertPerfTrade(t) {
+    if (!t || !t.tradeUid) return false;
+
+    if (!pgEnabled()) {
+        const rows = loadPerfJson();
+        const i = rows.findIndex((x) => String(x.tradeUid) === String(t.tradeUid));
+        const row = {
+            trade_uid: t.tradeUid,
+            exchange: t.exchange,
+            symbol: t.symbol,
+            token: t.token || null,
+            timeframe: t.timeframe,
+            signal: t.signal,
+            entry_price: numOrNull(t.entryPrice),
+            entry_time: numOrNull(t.entryTime),
+            initial_sl: numOrNull(t.initialSL),
+            active_sl: numOrNull(t.activeSL),
+            target1: numOrNull(t.target1),
+            target2: numOrNull(t.target2),
+            target1_status: t.target1Status ?? null,
+            target1_hit_time: numOrNull(t.target1HitTime),
+            target1_profit: numOrNull(t.target1Profit),
+            target2_status: t.target2Status ?? null,
+            target2_hit_time: numOrNull(t.target2HitTime),
+            target2_profit: numOrNull(t.target2Profit),
+            exit_price: numOrNull(t.exitPrice),
+            exit_time: numOrNull(t.exitTime),
+            exit_reason: t.exitReason ?? null,
+            status: t.status || "OPEN",
+            result: t.result ?? null,
+            result_points: numOrNull(t.resultPoints),
+            current_pl: numOrNull(t.currentPL),
+            max_points: numOrNull(t.maxPoints),
+            updated_at: new Date().toISOString(),
+        };
+        if (i >= 0) rows[i] = { ...rows[i], ...row };
+        else rows.push(row);
+        savePerfJson(rows);
+        return true;
+    }
+
+    try {
+        await init();
+        await getPool().query(
+            `INSERT INTO perf_trades (
+                trade_uid, exchange, symbol, token, timeframe, signal,
+                entry_price, entry_time, initial_sl, active_sl, target1, target2,
+                target1_status, target1_hit_time, target1_profit,
+                target2_status, target2_hit_time, target2_profit,
+                exit_price, exit_time, exit_reason, status, result, result_points,
+                current_pl, max_points, updated_at
+             ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26, now())
+             ON CONFLICT (trade_uid) DO UPDATE SET
+                exchange=EXCLUDED.exchange, symbol=EXCLUDED.symbol, token=EXCLUDED.token,
+                timeframe=EXCLUDED.timeframe, signal=EXCLUDED.signal,
+                entry_price=EXCLUDED.entry_price, entry_time=EXCLUDED.entry_time,
+                initial_sl=EXCLUDED.initial_sl, active_sl=EXCLUDED.active_sl,
+                target1=EXCLUDED.target1, target2=EXCLUDED.target2,
+                target1_status=EXCLUDED.target1_status,
+                target1_hit_time=EXCLUDED.target1_hit_time,
+                target1_profit=EXCLUDED.target1_profit,
+                target2_status=EXCLUDED.target2_status,
+                target2_hit_time=EXCLUDED.target2_hit_time,
+                target2_profit=EXCLUDED.target2_profit,
+                exit_price=EXCLUDED.exit_price, exit_time=EXCLUDED.exit_time,
+                exit_reason=EXCLUDED.exit_reason, status=EXCLUDED.status,
+                result=EXCLUDED.result, result_points=EXCLUDED.result_points,
+                current_pl=EXCLUDED.current_pl, max_points=EXCLUDED.max_points,
+                updated_at=now()`,
+            [
+                String(t.tradeUid), t.exchange, t.symbol, t.token || null, t.timeframe, t.signal,
+                numOrNull(t.entryPrice), numOrNull(t.entryTime), numOrNull(t.initialSL),
+                numOrNull(t.activeSL), numOrNull(t.target1), numOrNull(t.target2),
+                t.target1Status ?? null, numOrNull(t.target1HitTime), numOrNull(t.target1Profit),
+                t.target2Status ?? null, numOrNull(t.target2HitTime), numOrNull(t.target2Profit),
+                numOrNull(t.exitPrice), numOrNull(t.exitTime), t.exitReason ?? null,
+                t.status || "OPEN", t.result ?? null, numOrNull(t.resultPoints),
+                numOrNull(t.currentPL), numOrNull(t.maxPoints),
+            ]
+        );
+        return true;
+    } catch (error) {
+        console.error("[db] upsertPerfTrade failed:", error?.message || error);
+        return false;
+    }
+}
+
+async function getPerfTrades({ exchange, symbol, timeframe, limit = 20, offset = 0 } = {}) {
+    if (!pgEnabled()) {
+        let rows = loadPerfJson();
+        if (exchange) rows = rows.filter((r) => String(r.exchange).toUpperCase() === String(exchange).toUpperCase());
+        if (symbol) rows = rows.filter((r) => String(r.symbol).toUpperCase() === String(symbol).toUpperCase());
+        if (timeframe) rows = rows.filter((r) => String(r.timeframe) === String(timeframe));
+        rows.sort((a, b) => (a.entry_time || 0) - (b.entry_time || 0));
+        const total = rows.length;
+        rows = rows.slice(offset, offset + limit).reverse().map(perfRow);
+        return { rows, total };
+    }
+
+    try {
+        await init();
+        const where = [];
+        const params = [];
+        if (exchange) { params.push(exchange); where.push(`exchange = $${params.length}`); }
+        if (symbol) { params.push(symbol); where.push(`symbol = $${params.length}`); }
+        if (timeframe) { params.push(timeframe); where.push(`timeframe = $${params.length}`); }
+        const whereSql = where.length ? `WHERE ${where.join(" AND ")}` : "";
+        const p2 = [...params];
+        const totalR = await getPool().query(`SELECT count(*)::int AS c FROM perf_trades ${whereSql}`, params);
+        const total = totalR.rows[0]?.c ?? 0;
+        params.push(limit, offset);
+        const r = await getPool().query(
+            `SELECT * FROM perf_trades ${whereSql} ORDER BY entry_time DESC NULLS LAST LIMIT $${params.length - 1} OFFSET $${params.length}`,
+            params
+        );
+        return { rows: r.rows.map(perfRow), total };
+    } catch (error) {
+        console.error("[db] getPerfTrades failed:", error?.message || error);
+        return { rows: [], total: 0 };
+    }
+}
+
+async function getPerfTrade(tradeUid) {
+    if (!tradeUid) return null;
+    if (!pgEnabled()) {
+        const r = loadPerfJson().find((x) => String(x.trade_uid ?? x.tradeUid) === String(tradeUid));
+        return r ? perfRow(r) : null;
+    }
+    try {
+        await init();
+        const r = await getPool().query(`SELECT * FROM perf_trades WHERE trade_uid = $1`, [tradeUid]);
+        return r.rows[0] ? perfRow(r.rows[0]) : null;
+    } catch (error) {
+        console.error("[db] getPerfTrade failed:", error?.message || error);
+        return null;
+    }
+}
+
+async function getPerfSummary({ exchange, timeframe } = {}) {
+    const { rows } = await getPerfTrades({ exchange, timeframe, limit: 100000, offset: 0 });
+    const closed = rows.filter((r) => r.status === "CLOSED");
+    const open = rows.filter((r) => r.status === "OPEN");
+    const wins = closed.filter((r) => (r.resultPoints ?? 0) > 0).length;
+    const losses = closed.filter((r) => (r.resultPoints ?? 0) <= 0).length;
+    const netPL = closed.reduce((s, r) => s + (r.resultPoints ?? 0), 0);
+    const tgt1Profit = rows.reduce((s, r) => s + (r.target1Profit ?? 0), 0);
+    const winRate = closed.length ? (wins / closed.length) * 100 : 0;
+
+    let openPL = 0;
+    let openMaxPoints = 0;
+    for (const r of open) {
+        openPL += r.currentPL ?? 0;
+        openMaxPoints += r.maxPoints ?? 0;
+    }
+
+    return {
+        market: exchange || "MCX",
+        timeframe: timeframe || "15m",
+        totalTrades: rows.length,
+        openTrades: open.length,
+        closedTrades: closed.length,
+        winningTrades: wins,
+        losingTrades: losses,
+        winRate,
+        tgt1Profit,
+        netPL,
+        openPL,
+        openMaxPoints,
+    };
+}
+
+async function getPerfDaily({ exchange, timeframe } = {}) {
+    const { rows } = await getPerfTrades({ exchange, timeframe, limit: 100000, offset: 0 });
+    const byDay = {};
+    for (const r of rows) {
+        const key = r.entryTime ? dayKey(r.entryTime) : null;
+        if (!key) continue;
+        const d = byDay[key] || (byDay[key] = { date: key, trades: 0, closed: 0, wins: 0, losses: 0, tgt1Profit: 0, netPL: 0 });
+        d.trades++;
+        if (r.status === "CLOSED") {
+            d.closed++;
+            d.tgt1Profit += r.target1Profit ?? 0;
+            d.netPL += r.resultPoints ?? 0;
+            if ((r.resultPoints ?? 0) > 0) d.wins++;
+            else d.losses++;
+        }
+    }
+    return Object.values(byDay)
+        .sort((a, b) => (a.date < b.date ? 1 : -1))
+        .map((d) => ({
+            date: d.date,
+            trades: d.trades,
+            closed: d.closed,
+            wins: d.wins,
+            losses: d.losses,
+            tgt1Profit: d.tgt1Profit,
+            netPL: d.netPL,
+        }));
+}
+
+async function getPerfScripts({ exchange, timeframe } = {}) {
+    const { rows } = await getPerfTrades({ exchange, timeframe, limit: 100000, offset: 0 });
+    const bySymbol = {};
+    for (const r of rows) {
+        const s = r.symbol || "—";
+        const d = bySymbol[s] || (bySymbol[s] = { symbol: s, trades: 0, open: 0, closed: 0, wins: 0, losses: 0, tgt1Profit: 0, netPL: 0 });
+        d.trades++;
+        if (r.status === "OPEN") d.open++;
+        else if (r.status === "CLOSED") {
+            d.closed++;
+            d.tgt1Profit += r.target1Profit ?? 0;
+            d.netPL += r.resultPoints ?? 0;
+            if ((r.resultPoints ?? 0) > 0) d.wins++;
+            else d.losses++;
+        }
+    }
+    return Object.values(bySymbol).map((d) => ({
+        ...d,
+        winRate: d.closed ? (d.wins / d.closed) * 100 : 0,
+    })).sort((a, b) => b.netPL - a.netPL);
+}
+
+// IST day key "YYYY-MM-DD".
+function dayKey(ms) {
+    try {
+        const d = new Date(Number(ms) + 5.5 * 3600 * 1000);
+        return d.toISOString().slice(0, 10);
+    } catch {
+        return null;
+    }
+}
+
 module.exports = {
     pgEnabled,
     init,
@@ -369,6 +716,12 @@ module.exports = {
     saveShoonyaSession,
     getShoonyaSession,
     clearShoonyaSession,
+    upsertPerfTrade,
+    getPerfSummary,
+    getPerfDaily,
+    getPerfScripts,
+    getPerfTrades,
+    getPerfTrade,
     rowToUser,
     jsonRowToUser,
 };

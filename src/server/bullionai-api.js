@@ -967,6 +967,15 @@ async reconcileAll(label) {
         // Never restarts the HTTP server; never asks for a login unless the
         // session is genuinely invalid.
         this.startFeedWatchdog();
+
+        // Periodically capture MCX 15m performance (watchlist-independent) so
+        // the perf_trades ledger accumulates real strategy trades.
+        if (!this.perfCaptureTimer) {
+            this.perfCaptureTimer = setInterval(() => {
+                this.captureMCXPerformance().catch(() => {});
+            }, Number(process.env.PERF_CAPTURE_INTERVAL_MS || 5 * 60 * 1000));
+            this.perfCaptureTimer.unref?.();
+        }
     }
 
     // =========================================================
@@ -1490,6 +1499,51 @@ const allowedTimeframes =
         } catch (error) {
             console.error(
                 "[boot] MCX contract bootstrap failed:",
+                error?.message || error
+            );
+            return 0;
+        }
+    }
+
+    // =========================================================
+    // MCX 15m PERFORMANCE CAPTURE (watchlist-independent)
+    //
+    // Runs the TradeEngine lifecycle for EVERY MCX 15m strategy-enabled
+    // registry contract and persists any resulting trade to perf_trades.
+    // This makes Performance independent of the user's watchlist /
+    // activeInstruments — if the engine generates a trade, it belongs in the
+    // ledger. Reuses the single TradeEngine (no second engine). Lightweight:
+    // runs on a timer and reuses the existing snapshot path.
+    // =========================================================
+
+    async captureMCXPerformance() {
+        try {
+            const registry =
+                await getRegistry("MCX").catch(() => []);
+            if (!registry.length) return 0;
+            let captured = 0;
+            for (const row of registry) {
+                if (!row?.token) continue;
+                if (!["FUTCOM", "FUT", "FUTMET" ].some(
+                    (t) => String(row.instrumentType || "").toUpperCase().includes(t)
+                )) continue;
+                const inst = {
+                    key: row.symbol || row.tradingSymbol || row.token,
+                    symbol: row.symbol || row.tradingSymbol,
+                    name: row.name || row.tradingSymbol,
+                    token: row.token,
+                    exchange: "MCX",
+                };
+                // Feed the TradeEngine for this contract (15m); any new/updated
+                // trade is persisted by the ledger hook inside analyzeSegmentForInstrument.
+                await this.analyzeSegmentForInstrument(inst, "15m")
+                    .catch(() => null);
+                captured++;
+            }
+            return captured;
+        } catch (error) {
+            console.error(
+                "[perf] MCX performance capture failed:",
                 error?.message || error
             );
             return 0;
@@ -3408,6 +3462,57 @@ const allowedTimeframes =
     // exchange-agnostic source (no frontend signal logic).
     // =========================================================
 
+    // Persist a TradeEngine trade into the perf_trades ledger (idempotent by
+    // tradeUid). Reads existing engine values only — never re-derives them.
+    // target1Profit/target2Profit are derived from entry->target distances;
+    // hit times come from the transition events.
+    async persistPerfTrade({ exchange, symbol, token, timeframe, trade, hitTimes = {} }) {
+        if (!trade || !trade.entryTime) return;
+        const isBuy = trade.signal === "BUY";
+        const t1Profit = trade.target1 != null && trade.entryPrice != null
+            ? (isBuy ? trade.target1 - trade.entryPrice : trade.entryPrice - trade.target1)
+            : null;
+        const t2Profit = trade.target2 != null && trade.entryPrice != null
+            ? (isBuy ? trade.target2 - trade.entryPrice : trade.entryPrice - trade.target2)
+            : null;
+        const t1HitTime = hitTimes.target1 ?? null;
+        const t2HitTime = hitTimes.target2 ?? null;
+
+        const { upsertPerfTrade } = require("../auth/db");
+        await upsertPerfTrade({
+            tradeUid: `${String(exchange).toUpperCase()}:${symbol}:${timeframe}:${trade.entryTime}:${trade.signal}:${trade.entryPrice}`,
+            exchange: String(exchange).toUpperCase(),
+            symbol,
+            token: token || null,
+            timeframe,
+            signal: trade.signal,
+            entryPrice: trade.entryPrice,
+            entryTime: trade.entryTime,
+            initialSL: trade.initialSL,
+            activeSL: trade.activeSL,
+            target1: trade.target1,
+            target2: trade.target2,
+            target1Status: trade.target1Status === "ACHIEVED" ? "ACHIEVED" : (trade.target1Status || "WAITING"),
+            target1HitTime: t1HitTime,
+            target1Profit: t1Profit,
+            target2Status: trade.target2Status === "ACHIEVED" ? "ACHIEVED" : (trade.target2Status || "WAITING"),
+            target2HitTime: t2HitTime,
+            target2Profit: t2Profit,
+            exitPrice: trade.exitPrice ?? null,
+            exitTime: trade.exitTime ?? null,
+            exitReason: trade.result
+                ? (String(trade.result).includes("TGT2") ? "TGT2" :
+                   String(trade.result).includes("TGT1") ? "MODIFIED_SL" :
+                   String(trade.result).includes("SL") ? "SL" : null)
+                : null,
+            status: trade.status,
+            result: trade.result ?? null,
+            resultPoints: trade.resultPoints ?? null,
+            currentPL: trade.currentPL ?? null,
+            maxPoints: trade.maxPoints ?? null,
+        });
+    }
+
     async analyzeSegmentForInstrument(inst, timeframeKey) {
         const exch = String(inst.exchange || "MCX").toUpperCase();
         const token = String(inst.token);
@@ -3454,6 +3559,11 @@ const allowedTimeframes =
                             exchange: exch, symbol, timeframe: tf.key, signal: sig.signal,
                             entry: res.trade.entryPrice, sl: res.trade.initialSL, target1: res.trade.target1, target2: res.trade.target2,
                         }));
+                        // Persist the freshly-opened trade (idempotent by tradeUid).
+                        await this.persistPerfTrade({
+                            exchange: exch, symbol, token: String(token), timeframe: tf.key,
+                            trade: res.trade,
+                        }).catch(() => {});
                     }
                 }
             }
@@ -3473,6 +3583,19 @@ const allowedTimeframes =
                     resultPoints: ev.resultPoints,
                 }));
             }
+
+            // Persist the lifecycle update (same record; TGT1/hit times tracked
+            // from the transition events). Idempotent by tradeUid.
+            const hitTimes = {};
+            for (const ev of upd.events) {
+                if (ev.type === "target1") hitTimes.target1 = ev.trade?.entryTime || candles[candles.length - 1]?.time || Date.now();
+                if (ev.type === "trade_close") hitTimes.target2 = ev.trade?.target2Status === "ACHIEVED" ? (candles[candles.length - 1]?.time || Date.now()) : null;
+            }
+            await this.persistPerfTrade({
+                exchange: exch, symbol, token: String(token), timeframe: tf.key,
+                trade: upd.trade,
+                hitTimes,
+            }).catch(() => {});
         }
 
         const state = this.tradeEngine.getState({ exchange: exch, symbol, timeframe: tf.key });
@@ -5577,6 +5700,105 @@ const allowedTimeframes =
                 );
             }
 
+            return;
+        }
+
+
+        // -----------------------------------------------------
+        // PERFORMANCE PORTAL (PUBLIC READ-ONLY)
+        //
+        // Reads from the perf_trades ledger. Publicly accessible (no Bearer
+        // token) for the public /performance page and the dashboard. READ-ONLY
+        // — the only writer is the backend TradeEngine persistence layer.
+        // Queries are server-side aggregated; never expose DB internals.
+        // -----------------------------------------------------
+
+        if (
+            url.pathname.startsWith(
+                "/api/performance/"
+            )
+        ) {
+
+            // PERFORMANCE IS STRICTLY PUBLIC READ-ONLY. Reject any non-GET.
+            if (request.method !== "GET") {
+                this.sendJson(response, 405, { ok: false, error: "Method not allowed (read-only)" });
+                return;
+            }
+        }
+
+        if (
+            url.pathname ===
+            "/api/performance/summary"
+        ) {
+
+            const exchange = ("MCX");
+            const timeframe = url.searchParams.get("timeframe") || "15m";
+            const { getPerfSummary } = require("../auth/db");
+            const summary = await getPerfSummary({ exchange, timeframe });
+            this.sendJson(response, 200, { ok: true, summary });
+            return;
+        }
+
+        if (
+            url.pathname ===
+            "/api/performance/daily"
+        ) {
+
+            const exchange = ("MCX");
+            const timeframe = url.searchParams.get("timeframe") || "15m";
+            const { getPerfDaily } = require("../auth/db");
+            const rows = await getPerfDaily({ exchange, timeframe });
+            this.sendJson(response, 200, { ok: true, daily: rows });
+            return;
+        }
+
+        if (
+            url.pathname ===
+            "/api/performance/scripts"
+        ) {
+
+            const exchange = ("MCX");
+            const timeframe = url.searchParams.get("timeframe") || "15m";
+            const { getPerfScripts } = require("../auth/db");
+            const rows = await getPerfScripts({ exchange, timeframe });
+            this.sendJson(response, 200, { ok: true, scripts: rows });
+            return;
+        }
+
+        if (
+            url.pathname ===
+            "/api/performance/trades"
+        ) {
+
+            const exchange = url.searchParams.get("exchange") || "MCX";
+            const timeframe = url.searchParams.get("timeframe") || "15m";
+            const symbol = url.searchParams.get("symbol") || null;
+            const limit = Math.min(100, Number(url.searchParams.get("limit")) || 20);
+            const offset = Math.max(0, Number(url.searchParams.get("offset")) || 0);
+            const { getPerfTrades } = require("../auth/db");
+            const result = await getPerfTrades({ exchange, timeframe, symbol, limit, offset });
+            this.sendJson(response, 200, { ok: true, trades: result.rows, total: result.total });
+            return;
+        }
+
+        // Trade detail: /api/performance/trade?uid=<tradeUid>
+        if (
+            url.pathname ===
+            "/api/performance/trade"
+        ) {
+
+            const uid = url.searchParams.get("uid");
+            if (!uid) {
+                this.sendJson(response, 400, { ok: false, error: "tradeUid required" });
+                return;
+            }
+            const { getPerfTrade } = require("../auth/db");
+            const trade = await getPerfTrade(uid);
+            if (!trade) {
+                this.sendJson(response, 404, { ok: false, error: "Trade not found" });
+                return;
+            }
+            this.sendJson(response, 200, { ok: true, trade });
             return;
         }
 

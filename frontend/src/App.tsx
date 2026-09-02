@@ -43,6 +43,7 @@ import { BlogPage, BlogArticleRoute } from "./pages/BlogPage";
 import { FAQPage } from "./pages/FAQPage";
 import { PaymentPage } from "./pages/PaymentPage";
 import { LegalPage, TERMS_DOC, PRIVACY_DOC, RISK_DOC, REFUND_DOC } from "./pages/LegalPage";
+import { PerformancePage } from "./pages/PerformancePage";
 
 import "./App.css";
 
@@ -3849,6 +3850,7 @@ function App() {
           )
         }
       />
+      <Route path="/performance" element={<PerformancePage />} />
       <Route path="*" element={<Navigate to="/" replace />} />
 
       {/* RECENT SIGNAL DETAIL DRAWER */}
