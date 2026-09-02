@@ -137,6 +137,7 @@ export type BullionState = {
   strategy: StrategyState;
   market: MarketState;
   marketStatus?: MarketStatus | null;
+  segments?: SegmentSnapshot | null;
   livePrices?: {
     connected?: boolean;
     gold?: LivePriceInfo | null;
@@ -149,6 +150,40 @@ export type BullionState = {
     crude_oil?: LivePriceInfo | null;
   } | null;
 };
+
+// Per-instrument strategy/trade snapshot served by /api/state (segments).
+// `recent` holds the newest signals (active + completed history, deduped by
+// tradeUid, capped at 5) for this instrument.
+export type RecentSignalTrade = {
+  tradeUid: string;
+  signal: string;
+  status: string;
+  entryPrice?: number | null;
+  activeSL?: number | null;
+  entrySL?: number | null;
+  target1?: number | null;
+  target2?: number | null;
+  target1Status?: string | null;
+  target2Status?: string | null;
+  currentPL?: number | null;
+  maxPoints?: number | null;
+  entryTime?: number | null;
+  exitTime?: number | null;
+  result?: string | null;
+  resultPoints?: number | null;
+};
+
+export type SegmentSnapshotEntry = {
+  exchange?: string;
+  symbol?: string;
+  token?: string;
+  timeframe?: string;
+  status?: string;
+  signal?: string;
+  recent?: RecentSignalTrade[];
+};
+
+export type SegmentSnapshot = SegmentSnapshotEntry[] | null;
 
 import { API_BASE } from "./api-base";
 

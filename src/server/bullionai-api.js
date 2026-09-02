@@ -3478,6 +3478,55 @@ const allowedTimeframes =
         const state = this.tradeEngine.getState({ exchange: exch, symbol, timeframe: tf.key });
         const t = state.active || state.lastClosed;
 
+        // ---------------------------------------------------------
+        // RECENT SIGNALS (per script): combine the ACTIVE trade with the
+        // completed-trade history, dedupe by a stable tradeUid, and return
+        // the newest (max) 5. This is read-only exposure of the TradeEngine
+        // state — no change to signal/trade lifecycle logic.
+        //
+        // tradeUid = `${exch}:${symbol}:${timeframe}:${entryTime}:${signal}:${entryPrice}`
+        // Identifies ONE signal/trade across SSE reconnects, re-renders,
+        // polls and restarts (in-memory) without duplicates.
+        // ---------------------------------------------------------
+        const recentList = [];
+        const seenUid = new Set();
+
+        const pushRecent = (tr) => {
+            if (!tr || !tr.entryTime) return;
+            const ts = Number(tr.entryTime);
+            if (!Number.isFinite(ts) || ts <= 0) return;
+            const uid = `${exch}:${symbol}:${tf.key}:${ts}:${tr.signal}:${tr.entryPrice}`;
+            if (seenUid.has(uid)) return;
+            seenUid.add(uid);
+            recentList.push({
+                tradeUid: uid,
+                signal: tr.signal,
+                status: tr.status,
+                entryPrice: tr.entryPrice,
+                activeSL: tr.activeSL,
+                entrySL: tr.initialSL,
+                target1: tr.target1,
+                target2: tr.target2,
+                target1Status: tr.target1Status,
+                target2Status: tr.target2Status,
+                currentPL: tr.currentPL,
+                maxPoints: tr.maxPoints,
+                entryTime: tr.entryTime,
+                exitTime: tr.exitTime,
+                result: tr.result,
+                resultPoints: tr.resultPoints,
+            });
+        };
+
+        // Active trade first (newest, may still be OPEN), then history.
+        pushRecent(state.active);
+        (state.history || []).forEach(pushRecent);
+
+        // Newest first, cap at 5.
+        const recent = recentList
+            .sort((a, b) => Number(b.entryTime) - Number(a.entryTime))
+            .slice(0, 5);
+
         this.jsSignals.set(key, {
             exchange: exch, symbol, token: String(token), timeframe: tf.key,
             signal: sig.signal,
@@ -3510,6 +3559,8 @@ const allowedTimeframes =
                       result: t.result,
                   }
                 : null,
+
+            recent,
         };
     }
 

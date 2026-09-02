@@ -59,6 +59,8 @@ import {
   type Candle,
   type DayStats,
   type StrategyState,
+  type SegmentSnapshot,
+  type RecentSignalTrade,
   fetchState,
   type SseStatus,
 } from "./lib/bullionai-api";
@@ -267,9 +269,85 @@ function CardTitle({
 
 
 /* =============================================================
-   SHOONYA STATUS PILL — LIVE / RECONNECTING / FEED STALE / LOGIN REQUIRED
+   RECENT SIGNALS — status label helper
    ============================================================= */
 
+function sigStatusLabel(sig: RecentSignalTrade): string {
+  if (!sig) return "—";
+  // CLOSED trades: prefer the result text (e.g. "TGT2 ACHIEVED +20 pts").
+  if (sig.status === "CLOSED") {
+    if (sig.result) return sig.result;
+    if (sig.target2Status === "ACHIEVED") return "TGT2 HIT";
+    return "CLOSED";
+  }
+  // OPEN trade lifecycle.
+  if (sig.target1Status === "ACHIEVED") {
+    if (sig.target2Status === "ACHIEVED") return "TGT2 HIT";
+    return "WAITING FOR TGT2";
+  }
+  if (sig.target2Status === "ACHIEVED") return "TGT2 HIT";
+  return "ACTIVE";
+}
+
+
+/* =============================================================
+   RECENT SIGNAL DETAIL — lifecycle rows
+   ============================================================= */
+
+function SignalDetailRows({
+  signal,
+  fmt,
+  fmtSigned,
+  formatISTShortDateTime,
+}: {
+  signal: RecentSignalTrade;
+  fmt: (v: number | null | undefined) => string;
+  fmtSigned: (v: number | null) => string;
+  formatISTShortDateTime: (ts: number) => string;
+}) {
+  const rows: Array<{ label: string; value?: string | null }> = [
+    { label: "Entry", value: signal.entryPrice != null ? fmt(signal.entryPrice) : null },
+    { label: "Initial SL", value: signal.entrySL != null ? fmt(signal.entrySL) : null },
+    { label: "Modified SL", value: signal.activeSL != null && signal.target1Status === "ACHIEVED" ? fmt(signal.activeSL) : null },
+    { label: "Target 1", value: signal.target1 != null ? fmt(signal.target1) : null },
+    { label: "Target 2", value: signal.target2 != null ? fmt(signal.target2) : null },
+    { label: "TGT1 status", value: signal.target1Status ?? null },
+    { label: "TGT1 hit time", value: signal.entryTime && signal.target1Status === "ACHIEVED" ? formatISTShortDateTime(signal.entryTime) : null },
+    { label: "TGT2 status", value: signal.target2Status ?? null },
+    { label: "Entered", value: signal.entryTime ? formatISTShortDateTime(signal.entryTime) : null },
+    { label: "Exit time", value: signal.exitTime ? formatISTShortDateTime(signal.exitTime) : null },
+    { label: "Current / Final P&L", value: signal.currentPL != null ? fmtSigned(signal.currentPL) : null },
+    { label: "Max points", value: signal.maxPoints != null ? fmt(signal.maxPoints) : null },
+    { label: "State", value: sigStatusLabel(signal) },
+  ];
+  // Only render fields that actually have a value (no fabricated zeros).
+  const present = rows.filter((r) => r.value != null && r.value !== "");
+
+  return (
+    <div className="mt-4 divide-y divide-slate-100">
+      {present.map((r) => (
+        <div key={r.label} className="flex items-center justify-between py-1.5">
+          <span className="text-[11px] font-medium uppercase tracking-wider text-slate-400">
+            {r.label}
+          </span>
+          <span className="font-mono text-[12px] font-bold tabular-nums text-slate-800">
+            {r.value}
+          </span>
+        </div>
+      ))}
+      {present.length === 0 && (
+        <div className="py-4 text-center text-[11px] text-slate-400">
+          No additional details available.
+        </div>
+      )}
+    </div>
+  );
+}
+
+
+/* =============================================================
+   SHOONYA STATUS PILL — LIVE / RECONNECTING / FEED STALE / LOGIN REQUIRED
+   ============================================================= */
 function ShoonyaStatusPill({
   status,
   sseStatus,
@@ -417,6 +495,10 @@ function App() {
   // This is purely a connection-health signal; it never clears UI state.
   const [sseStatus, setSseStatus] =
     useState<SseStatus>("connecting");
+
+  // Selected recent signal for the detail drawer (null = closed).
+  const [selectedRecentSignal, setSelectedRecentSignal] =
+    useState<{ group: { exchange: string; symbol: string; token: string; timeframe: string }; signal: RecentSignalTrade } | null>(null);
 
   // Refs to the live SSE sources so tab-visibility recovery can call
   // reconnect() without creating a duplicate connection.
@@ -1523,18 +1605,39 @@ function App() {
      straight from the Pine engine's
      own plotshape() emissions. */
 
-  const recentSignals =
+  // Recent Signals — grouped per script, newest first, last 5 each.
+  // Source: the shared /api/state `segments` snapshot (TradeEngine active +
+  // completed history), deduped by tradeUid. Consumes the existing shared
+  // state — no new SSE, polling, or fetch.
+  const recentByScript =
     useMemo(() => {
+      const segs = (state as any)?.segments as SegmentSnapshot | null;
+      if (!Array.isArray(segs)) return [];
+      const groups: Array<{
+        exchange: string;
+        symbol: string;
+        token: string;
+        timeframe: string;
+        signals: RecentSignalTrade[];
+      }> = [];
 
-      const history =
-        strategy?.signalHistory ?? [];
+      for (const entry of segs) {
+        const recent = entry?.recent;
+        if (!Array.isArray(recent) || recent.length === 0) continue;
+        groups.push({
+          exchange: entry?.exchange || "MCX",
+          symbol: entry?.symbol || entry?.token || "—",
+          token: entry?.token || "",
+          timeframe: entry?.timeframe || "15m",
+          signals: recent.slice(0, 5),
+        });
+      }
 
-      return history
-        .slice(-5)
-        .reverse();
-
-    }, [strategy]);
-
+      // Deterministic order: scripts that just produced a signal first, then
+      // stable sort by symbol.
+      groups.sort((a, b) => a.symbol.localeCompare(b.symbol));
+      return groups;
+    }, [state]);
 
   const liveTokenPrice =
     state && selectedSymbol
@@ -2910,7 +3013,7 @@ function App() {
               right={
 
                 <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[9px] font-semibold text-slate-500">
-                  last 5
+                  per script · last 5
                 </span>
 
               }
@@ -2923,95 +3026,78 @@ function App() {
 
             <div className="p-1">
 
-              {recentSignals.length ===
-                0 && (
+              {recentByScript.length === 0 && (
                 <div className="px-3 py-4 text-center text-[11px] text-slate-400">
-
-                  No signals yet.
-
+                  No recent signals
                 </div>
               )}
 
-
-              {recentSignals.map(ev => {
-
-                const buy =
-                  ev.signal === "BUY";
-
-                const pl = (ev as any).realizedPL ?? null;
-
-                return (
-
-                  <div
-                    key={`${ev.index}-${ev.signal}`}
-
-                    className="flex items-center gap-2 rounded-xl px-2 py-1.5 transition hover:bg-slate-50"
-                  >
-
-                    <span
-                      className={[
-                        "flex h-5 w-[44px] shrink-0 items-center justify-center rounded-md text-[9px] font-black tracking-wider",
-
-                        buy
-                          ? "bg-emerald-50 text-emerald-600 ring-1 ring-emerald-200"
-
-                          : "bg-rose-50 text-rose-600 ring-1 ring-rose-200",
-                      ].join(" ")}
-                    >
-
-                      {ev.signal}
-
+              {recentByScript.map((grp) => (
+                <div key={`${grp.exchange}:${grp.token}:${grp.timeframe}`} className="mb-2">
+                  <div className="flex items-center justify-between px-2 pt-2 pb-1">
+                    <span className="truncate font-mono text-[10px] font-bold text-slate-700">
+                      {grp.symbol}
                     </span>
-
-
-                    <span className="min-w-0 flex-1 leading-tight">
-
-                      <span
-                        className={[
-                          "block font-mono text-[11px] font-bold tabular-nums",
-
-                          buy ? "text-emerald-600" : "text-rose-600",
-                        ].join(" ")}
-                      >
-
-                        {fmt(ev.price)}
-
-                      </span>
-
-                      <span className="block truncate text-[9px] font-medium text-slate-400">
-
-                        {ev.time
-                          ? formatISTShortDateTime(
-                              ev.time
-                            )
-                          : "—"}
-
-                      </span>
-
+                    <span className="shrink-0 text-[9px] font-medium uppercase tracking-wider text-slate-400">
+                      {grp.timeframe}
                     </span>
-
-                    <span className="text-right leading-tight">
-                      <span
-                        className={[
-                          "block font-mono text-[10px] font-bold tabular-nums",
-                          pl == null
-                            ? "text-slate-400"
-                            : pl >= 0
-                              ? "text-emerald-600"
-                              : "text-rose-600",
-                        ].join(" ")}
-                      >
-                        {pl != null ? fmtSigned(pl) : "—"}
-                      </span>
-                      <span className="block text-[8px] font-medium uppercase tracking-wider text-slate-400">
-                        P/L
-                      </span>
-                    </span>
-
                   </div>
-                );
 
-              })}
+                  <div className="divide-y divide-slate-100 rounded-xl border border-slate-100">
+                    {grp.signals.map((sig) => {
+                      const buy = sig.signal === "BUY";
+                      const pl = sig?.currentPL ?? null;
+                      return (
+                        <button
+                          key={sig.tradeUid}
+                          type="button"
+                          onClick={() =>
+                            setSelectedRecentSignal({ group: grp, signal: sig })
+                          }
+                          className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left transition hover:bg-slate-50"
+                        >
+                          <span
+                            className={[
+                              "flex h-5 w-[44px] shrink-0 items-center justify-center rounded-md text-[9px] font-black tracking-wider",
+                              buy
+                                ? "bg-emerald-50 text-emerald-600 ring-1 ring-emerald-200"
+                                : "bg-rose-50 text-rose-600 ring-1 ring-rose-200",
+                            ].join(" ")}
+                          >
+                            {sig.signal}
+                          </span>
+
+                          <span className="min-w-0 flex-1 leading-tight">
+                            <span className="block truncate text-[10px] font-medium text-slate-500">
+                              {sig.entryTime
+                                ? formatISTShortDateTime(sig.entryTime)
+                                : "—"}
+                            </span>
+                            <span className="block truncate text-[9px] font-medium text-slate-400">
+                              {sigStatusLabel(sig)}
+                            </span>
+                          </span>
+
+                          <span className="shrink-0 text-right leading-tight">
+                            <span
+                              className={[
+                                "block font-mono text-[10px] font-bold tabular-nums",
+                                pl == null
+                                  ? "text-slate-400"
+                                  : pl >= 0
+                                    ? "text-emerald-600"
+                                    : "text-rose-600",
+                              ].join(" ")}
+                            >
+                              {pl != null ? fmtSigned(pl) : "—"}
+                            </span>
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
 
             </div>
 
@@ -3764,6 +3850,54 @@ function App() {
         }
       />
       <Route path="*" element={<Navigate to="/" replace />} />
+
+      {/* RECENT SIGNAL DETAIL DRAWER */}
+      {selectedRecentSignal && (
+        <div className="fixed inset-0 z-[130] flex items-end justify-center sm:items-center">
+          <div
+            className="absolute inset-0 bg-slate-900/50 backdrop-blur-sm"
+            onClick={() => setSelectedRecentSignal(null)}
+          />
+          <div className="relative z-10 m-3 w-full max-w-md rounded-3xl bg-white p-5 shadow-2xl">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span
+                  className={[
+                    "flex h-6 w-[48px] items-center justify-center rounded-md text-[10px] font-black tracking-wider",
+                    selectedRecentSignal.signal.signal === "BUY"
+                      ? "bg-emerald-50 text-emerald-600 ring-1 ring-emerald-200"
+                      : "bg-rose-50 text-rose-600 ring-1 ring-rose-200",
+                  ].join(" ")}
+                >
+                  {selectedRecentSignal.signal.signal}
+                </span>
+                <div>
+                  <div className="text-sm font-black text-slate-900">
+                    {selectedRecentSignal.group.symbol}
+                  </div>
+                  <div className="text-[10px] font-medium text-slate-400">
+                    {selectedRecentSignal.group.exchange} · {selectedRecentSignal.group.timeframe}
+                  </div>
+                </div>
+              </div>
+              <button
+                onClick={() => setSelectedRecentSignal(null)}
+                className="rounded-full p-1.5 text-slate-400 hover:bg-slate-100"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <SignalDetailRows
+              signal={selectedRecentSignal.signal}
+              fmt={fmt}
+              fmtSigned={fmtSigned}
+              formatISTShortDateTime={formatISTShortDateTime}
+            />
+          </div>
+        </div>
+      )}
+
     </Routes>
   );
 }
