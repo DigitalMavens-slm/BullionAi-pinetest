@@ -60,10 +60,13 @@ import {
   type Candle,
   type DayStats,
   type StrategyState,
-  type SegmentSnapshot,
   type RecentSignalTrade,
   fetchState,
   type SseStatus,
+  fetchPerfRecentSignals,
+  fetchPerfTrade,
+  type PerfTrade,
+  type PerfRecentGroup,
 } from "./lib/bullionai-api";
 
 import {
@@ -270,29 +273,30 @@ function CardTitle({
 
 
 /* =============================================================
-   RECENT SIGNALS — status label helper
+   RECENT SIGNALS — status label helper (DB trade)
    ============================================================= */
 
-function sigStatusLabel(sig: RecentSignalTrade): string {
+function sigStatusLabel(sig: RecentSignalTrade | PerfTrade): string {
   if (!sig) return "—";
+  const s: any = sig;
   // CLOSED trades: prefer the result text (e.g. "TGT2 ACHIEVED +20 pts").
-  if (sig.status === "CLOSED") {
-    if (sig.result) return sig.result;
-    if (sig.target2Status === "ACHIEVED") return "TGT2 HIT";
+  if (s.status === "CLOSED") {
+    if (s.result) return s.result;
+    if (s.target2Status === "ACHIEVED") return "TGT2 HIT";
     return "CLOSED";
   }
   // OPEN trade lifecycle.
-  if (sig.target1Status === "ACHIEVED") {
-    if (sig.target2Status === "ACHIEVED") return "TGT2 HIT";
+  if (s.target1Status === "ACHIEVED") {
+    if (s.target2Status === "ACHIEVED") return "TGT2 HIT";
     return "WAITING FOR TGT2";
   }
-  if (sig.target2Status === "ACHIEVED") return "TGT2 HIT";
-  return "ACTIVE";
+  if (s.target2Status === "ACHIEVED") return "TGT2 HIT";
+  return "OPEN";
 }
 
-
 /* =============================================================
-   RECENT SIGNAL DETAIL — lifecycle rows
+   RECENT SIGNAL DETAIL — lifecycle rows (DB authoritative)
+   Spec 9: show all fields that exist; do NOT fabricate missing.
    ============================================================= */
 
 function SignalDetailRows({
@@ -301,25 +305,39 @@ function SignalDetailRows({
   fmtSigned,
   formatISTShortDateTime,
 }: {
-  signal: RecentSignalTrade;
+  signal: RecentSignalTrade | PerfTrade;
   fmt: (v: number | null | undefined) => string;
   fmtSigned: (v: number | null) => string;
   formatISTShortDateTime: (ts: number) => string;
 }) {
+  const s: any = signal;
+  const entrySL = s.entrySL ?? s.initialSL ?? null;
   const rows: Array<{ label: string; value?: string | null }> = [
-    { label: "Entry", value: signal.entryPrice != null ? fmt(signal.entryPrice) : null },
-    { label: "Initial SL", value: signal.entrySL != null ? fmt(signal.entrySL) : null },
-    { label: "Modified SL", value: signal.activeSL != null && signal.target1Status === "ACHIEVED" ? fmt(signal.activeSL) : null },
-    { label: "Target 1", value: signal.target1 != null ? fmt(signal.target1) : null },
-    { label: "Target 2", value: signal.target2 != null ? fmt(signal.target2) : null },
-    { label: "TGT1 status", value: signal.target1Status ?? null },
-    { label: "TGT1 hit time", value: signal.entryTime && signal.target1Status === "ACHIEVED" ? formatISTShortDateTime(signal.entryTime) : null },
-    { label: "TGT2 status", value: signal.target2Status ?? null },
-    { label: "Entered", value: signal.entryTime ? formatISTShortDateTime(signal.entryTime) : null },
-    { label: "Exit time", value: signal.exitTime ? formatISTShortDateTime(signal.exitTime) : null },
-    { label: "Current / Final P&L", value: signal.currentPL != null ? fmtSigned(signal.currentPL) : null },
-    { label: "Max points", value: signal.maxPoints != null ? fmt(signal.maxPoints) : null },
-    { label: "State", value: sigStatusLabel(signal) },
+    { label: "Script", value: s.symbol ?? null },
+    { label: "Exchange", value: s.exchange ?? null },
+    { label: "Timeframe", value: s.timeframe ?? null },
+    { label: "Signal", value: s.signal ?? null },
+    { label: "Signal Generated Time", value: s.entryTime ? formatISTShortDateTime(s.entryTime) : null },
+    { label: "Entry Price", value: s.entryPrice != null ? fmt(s.entryPrice) : null },
+    { label: "Entry Time", value: s.entryTime ? formatISTShortDateTime(s.entryTime) : null },
+    { label: "Initial SL", value: entrySL != null ? fmt(entrySL) : null },
+    { label: "Target 1", value: s.target1 != null ? fmt(s.target1) : null },
+    { label: "TGT1 Status", value: s.target1Status ?? null },
+    { label: "TGT1 Hit Time", value: s.target1HitTime ? formatISTShortDateTime(s.target1HitTime) : null },
+    { label: "TGT1 Profit", value: s.target1Profit != null ? fmtSigned(s.target1Profit) : null },
+    { label: "Modified SL", value: s.activeSL != null && s.target1Status === "ACHIEVED" ? fmt(s.activeSL) : null },
+    { label: "Target 2", value: s.target2 != null ? fmt(s.target2) : null },
+    { label: "TGT2 Status", value: s.target2Status ?? null },
+    { label: "TGT2 Hit Time", value: s.target2HitTime ? formatISTShortDateTime(s.target2HitTime) : null },
+    { label: "TGT2 Profit", value: s.target2Profit != null ? fmtSigned(s.target2Profit) : null },
+    { label: "Exit Price", value: s.exitPrice != null ? fmt(s.exitPrice) : null },
+    { label: "Exit Time", value: s.exitTime ? formatISTShortDateTime(s.exitTime) : null },
+    { label: "Exit Reason", value: s.exitReason ?? null },
+    { label: "Final Status", value: sigStatusLabel(signal as any) },
+    { label: "Final Result", value: s.result ?? null },
+    { label: "Current P&L", value: s.currentPL != null ? fmtSigned(s.currentPL) : null },
+    { label: "Final P&L", value: s.resultPoints != null ? fmtSigned(s.resultPoints) : (s.currentPL != null && s.status === "CLOSED" ? fmtSigned(s.currentPL) : null) },
+    { label: "Max Points", value: s.maxPoints != null ? fmt(s.maxPoints) : null },
   ];
   // Only render fields that actually have a value (no fabricated zeros).
   const present = rows.filter((r) => r.value != null && r.value !== "");
@@ -497,9 +515,15 @@ function App() {
   const [sseStatus, setSseStatus] =
     useState<SseStatus>("connecting");
 
-  // Selected recent signal for the detail drawer (null = closed).
+  // Selected recent signal for the detail drawer (DB authoritative, null = closed).
+  // Spec 8: clicking fetches tradeUid from DB and auto-opens drawer.
   const [selectedRecentSignal, setSelectedRecentSignal] =
-    useState<{ group: { exchange: string; symbol: string; token: string; timeframe: string }; signal: RecentSignalTrade } | null>(null);
+    useState<{ group: { exchange: string; symbol: string; token: string; timeframe: string }; signal: PerfTrade | RecentSignalTrade } | null>(null);
+
+  // DATABASE-FIRST Recent Signals (last 5 per script). Fetches from
+  // /api/performance/recent-signals; survives refresh/login/SSE reconnect.
+  const [dbRecentGroups, setDbRecentGroups] = useState<PerfRecentGroup[]>([]);
+  const [dbRecentLoading, setDbRecentLoading] = useState(true);
 
   // Refs to the live SSE sources so tab-visibility recovery can call
   // reconnect() without creating a duplicate connection.
@@ -1602,43 +1626,44 @@ function App() {
       selectedTimeframe === "15m");
 
 
-  /* Last 5 signals, newest first —
-     straight from the Pine engine's
-     own plotshape() emissions. */
-
-  // Recent Signals — grouped per script, newest first, last 5 each.
-  // Source: the shared /api/state `segments` snapshot (TradeEngine active +
-  // completed history), deduped by tradeUid. Consumes the existing shared
-  // state — no new SSE, polling, or fetch.
-  const recentByScript =
-    useMemo(() => {
-      const segs = (state as any)?.segments as SegmentSnapshot | null;
-      if (!Array.isArray(segs)) return [];
-      const groups: Array<{
-        exchange: string;
-        symbol: string;
-        token: string;
-        timeframe: string;
-        signals: RecentSignalTrade[];
-      }> = [];
-
-      for (const entry of segs) {
-        const recent = entry?.recent;
-        if (!Array.isArray(recent) || recent.length === 0) continue;
-        groups.push({
-          exchange: entry?.exchange || "MCX",
-          symbol: entry?.symbol || entry?.token || "—",
-          token: entry?.token || "",
-          timeframe: entry?.timeframe || "15m",
-          signals: recent.slice(0, 5),
-        });
+  // =========================================================
+  // RECENT SIGNALS — DATABASE-FIRST (Spec 4-6)
+  //
+  // Every real trade is persisted to perf_trades server-side (TradeEngine
+  // -> persistPerfTrade -> upsert). Frontend FETCHES last 5 per script from
+  // /api/performance/recent-signals (window function, one query). Not from
+  // state.segments / strategy.signalHistory. Click fetches tradeUid from DB.
+  // =========================================================
+  useEffect(() => {
+    let cancelled = false;
+    async function loadDbRecent() {
+      try {
+        setDbRecentLoading(true);
+        const groups = await fetchPerfRecentSignals("15m");
+        if (!cancelled) setDbRecentGroups(groups);
+      } catch {
+        if (!cancelled) setDbRecentGroups([]);
+      } finally {
+        if (!cancelled) setDbRecentLoading(false);
       }
+    }
+    loadDbRecent();
+    const id = setInterval(loadDbRecent, 30000);
+    // Refresh on tab focus / SSE reconnect is handled by visibility; poll covers it.
+    return () => { cancelled = true; clearInterval(id); };
+  }, []);
 
-      // Deterministic order: scripts that just produced a signal first, then
-      // stable sort by symbol.
-      groups.sort((a, b) => a.symbol.localeCompare(b.symbol));
-      return groups;
-    }, [state]);
+  const recentByScript = useMemo(() => {
+    // DB-first groups: already last 5 per script, newest first, from perf_trades.
+    // Map to the shape the Recent Signals UI expects.
+    return dbRecentGroups.map(g => ({
+      exchange: g.exchange,
+      symbol: g.symbol,
+      token: g.token || "",
+      timeframe: g.timeframe,
+      signals: g.signals as any,
+    }));
+  }, [dbRecentGroups]);
 
   const liveTokenPrice =
     state && selectedSymbol
@@ -3027,9 +3052,12 @@ function App() {
 
             <div className="p-1">
 
-              {recentByScript.length === 0 && (
+              {dbRecentLoading && recentByScript.length === 0 && (
+                <div className="px-3 py-4 text-center text-[11px] text-slate-400">Loading recent signals…</div>
+              )}
+              {!dbRecentLoading && recentByScript.length === 0 && (
                 <div className="px-3 py-4 text-center text-[11px] text-slate-400">
-                  No recent signals
+                  No recent signals — real trades will appear here once the strategy generates them.
                 </div>
               )}
 
@@ -3045,16 +3073,30 @@ function App() {
                   </div>
 
                   <div className="divide-y divide-slate-100 rounded-xl border border-slate-100">
-                    {grp.signals.map((sig) => {
-                      const buy = sig.signal === "BUY";
-                      const pl = sig?.currentPL ?? null;
+                    {grp.signals.map((sig: PerfTrade | RecentSignalTrade) => {
+                      const buy = (sig as any).signal === "BUY";
+                      // Spec 7: compact row — show Final P&L if closed else Current P&L
+                      const s: any = sig;
+                      const pl = s.resultPoints ?? s.currentPL ?? null;
+                      const compactStatus = sigStatusLabel(sig as any);
                       return (
                         <button
-                          key={sig.tradeUid}
+                          key={s.tradeUid}
                           type="button"
-                          onClick={() =>
-                            setSelectedRecentSignal({ group: grp, signal: sig })
-                          }
+                          onClick={async () => {
+                            // Spec 8: fetch authoritative DB record by tradeUid, then auto-open drawer.
+                            const uid = String(s.tradeUid || "");
+                            if (!uid) return;
+                            try {
+                              const full = await fetchPerfTrade(uid);
+                              if (full) {
+                                setSelectedRecentSignal({ group: grp, signal: full as any });
+                                return;
+                              }
+                            } catch {}
+                            // Fallback: open what we have (row is same tradeUid, just less complete).
+                            setSelectedRecentSignal({ group: grp, signal: sig as any });
+                          }}
                           className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left transition hover:bg-slate-50"
                         >
                           <span
@@ -3069,13 +3111,15 @@ function App() {
                           </span>
 
                           <span className="min-w-0 flex-1 leading-tight">
-                            <span className="block truncate text-[10px] font-medium text-slate-500">
-                              {sig.entryTime
-                                ? formatISTShortDateTime(sig.entryTime)
+                            <span className="block truncate font-mono text-[10px] font-medium text-slate-600">
+                              {s.entryTime
+                                ? new Date(s.entryTime).toLocaleDateString("en-IN", { day: "2-digit", month: "short" }) + " · " + new Date(s.entryTime).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: true })
                                 : "—"}
+                              {s.entryPrice != null ? ` · ${fmt(s.entryPrice)}` : ""}
                             </span>
                             <span className="block truncate text-[9px] font-medium text-slate-400">
-                              {sigStatusLabel(sig)}
+                              {s.target1Status === "ACHIEVED" ? "TGT1 ✓ · " : ""}
+                              {compactStatus}
                             </span>
                           </span>
 
@@ -3091,6 +3135,9 @@ function App() {
                               ].join(" ")}
                             >
                               {pl != null ? fmtSigned(pl) : "—"}
+                            </span>
+                            <span className="block text-[8px] font-medium text-slate-400">
+                              {s.status === "CLOSED" ? "CLOSED" : "OPEN"}
                             </span>
                           </span>
                         </button>

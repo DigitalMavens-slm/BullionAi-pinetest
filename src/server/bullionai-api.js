@@ -3584,12 +3584,13 @@ const allowedTimeframes =
                 }));
             }
 
-            // Persist the lifecycle update (same record; TGT1/hit times tracked
-            // from the transition events). Idempotent by tradeUid.
+            // Persist the lifecycle update (same record; TGT1/TGT2 hit times are
+            // the current candle's close time). Idempotent by tradeUid.
             const hitTimes = {};
+            const lastCloseMs = candles[candles.length - 1]?.time || Date.now();
             for (const ev of upd.events) {
-                if (ev.type === "target1") hitTimes.target1 = ev.trade?.entryTime || candles[candles.length - 1]?.time || Date.now();
-                if (ev.type === "trade_close") hitTimes.target2 = ev.trade?.target2Status === "ACHIEVED" ? (candles[candles.length - 1]?.time || Date.now()) : null;
+                if (ev.type === "target1") hitTimes.target1 = lastCloseMs;
+                if (ev.type === "trade_close" && ev.trade?.target2Status === "ACHIEVED") hitTimes.target2 = lastCloseMs;
             }
             await this.persistPerfTrade({
                 exchange: exch, symbol, token: String(token), timeframe: tf.key,
@@ -5778,6 +5779,19 @@ const allowedTimeframes =
             const { getPerfTrades } = require("../auth/db");
             const result = await getPerfTrades({ exchange, timeframe, symbol, limit, offset });
             this.sendJson(response, 200, { ok: true, trades: result.rows, total: result.total });
+            return;
+        }
+
+        if (
+            url.pathname ===
+            "/api/performance/recent-signals"
+        ) {
+
+            const exchange = url.searchParams.get("exchange") || "MCX";
+            const timeframe = url.searchParams.get("timeframe") || "15m";
+            const { getPerfRecentSignals } = require("../auth/db");
+            const groups = await getPerfRecentSignals({ exchange, timeframe });
+            this.sendJson(response, 200, { ok: true, groups });
             return;
         }
 

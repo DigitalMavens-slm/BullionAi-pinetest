@@ -692,6 +692,68 @@ async function getPerfScripts({ exchange, timeframe } = {}) {
     })).sort((a, b) => b.netPL - a.netPL);
 }
 
+// Recent Signals: last 5 per script (DB-first).
+// Returns groups [{ symbol, exchange, timeframe, signals: PerfTrade[] }]
+// newest first per group, ordered by entry_time DESC.
+// Uses a single window-function query in Postgres; JSON fallback groups in JS.
+async function getPerfRecentSignals({ exchange, timeframe } = {}) {
+    if (!pgEnabled()) {
+        let rows = loadPerfJson();
+        if (exchange) rows = rows.filter((r) => String(r.exchange).toUpperCase() === String(exchange).toUpperCase());
+        if (timeframe) rows = rows.filter((r) => String(r.timeframe) === String(timeframe));
+        rows.sort((a, b) => (b.entry_time || 0) - (a.entry_time || 0));
+        const byScript = new Map();
+        for (const r of rows) {
+            const sym = String(r.symbol || "").toUpperCase();
+            if (!sym) continue;
+            const key = `${String(r.exchange).toUpperCase()}:${sym}:${String(r.timeframe)}`;
+            if (!byScript.has(key)) byScript.set(key, []);
+            const arr = byScript.get(key);
+            if (arr.length < 5) arr.push(perfRow(r));
+        }
+        return [...byScript.entries()]
+            .map(([key, signals]) => {
+                const [ex, sym, tf] = key.split(":");
+                return { exchange: ex, symbol: sym, timeframe: tf, token: signals[0]?.token || null, signals };
+            })
+            .sort((a, b) => a.symbol.localeCompare(b.symbol));
+    }
+    try {
+        await init();
+        const where = [];
+        const params = [];
+        if (exchange) { params.push(exchange); where.push(`exchange = $${params.length}`); }
+        if (timeframe) { params.push(timeframe); where.push(`timeframe = $${params.length}`); }
+        const whereSql = where.length ? `WHERE ${where.join(" AND ")}` : "";
+        // Window: last 5 per (exchange, symbol, timeframe) by entry_time
+        const q = `
+            SELECT * FROM (
+                SELECT *,
+                    ROW_NUMBER() OVER (
+                        PARTITION BY exchange, symbol, timeframe
+                        ORDER BY entry_time DESC NULLS LAST
+                    ) AS rn
+                FROM perf_trades
+                ${whereSql}
+            ) ranked
+            WHERE rn <= 5
+            ORDER BY symbol ASC, entry_time DESC
+        `;
+        const r = await getPool().query(q, params);
+        const byScript = new Map();
+        for (const row of r.rows) {
+            const sym = String(row.symbol || "").toUpperCase();
+            const key = `${String(row.exchange).toUpperCase()}:${sym}:${String(row.timeframe)}`;
+            if (!byScript.has(key)) byScript.set(key, { exchange: String(row.exchange).toUpperCase(), symbol: sym, timeframe: String(row.timeframe), token: row.token || null, signals: [] });
+            byScript.get(key).signals.push(perfRow(row));
+        }
+        return [...byScript.values()];
+    } catch (error) {
+        console.error("[db] getPerfRecentSignals failed:", error?.message || error);
+        return [];
+    }
+}
+
 // IST day key "YYYY-MM-DD".
 function dayKey(ms) {
     try {
@@ -722,6 +784,7 @@ module.exports = {
     getPerfScripts,
     getPerfTrades,
     getPerfTrade,
+    getPerfRecentSignals,
     rowToUser,
     jsonRowToUser,
 };

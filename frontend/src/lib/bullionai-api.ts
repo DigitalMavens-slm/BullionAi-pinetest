@@ -855,3 +855,21 @@ export async function fetchPerfTrade(tradeUid: string): Promise<PerfTrade | null
   const d = await perfGet<{ trade: PerfTrade }>("/trade", { uid: tradeUid });
   return d.trade ?? null;
 }
+
+export type PerfRecentGroup = {
+  exchange: string;
+  symbol: string;
+  timeframe: string;
+  token: string | null;
+  signals: PerfTrade[];
+};
+
+export async function fetchPerfRecentSignals(timeframe = "15m"): Promise<PerfRecentGroup[]> {
+  // Bypass the short cache — recent signals must reflect DB immediately.
+  const u = new URL(API_BASE + "/api/performance/recent-signals");
+  u.searchParams.set("timeframe", timeframe);
+  const res = await fetch(u.toString());
+  if (!res.ok) throw new Error(`Recent signals failed: ${res.status}`);
+  const d = (await res.json()) as { groups: PerfRecentGroup[] };
+  return d.groups || [];
+}
