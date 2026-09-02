@@ -3149,10 +3149,11 @@ const allowedTimeframes =
     // =========================================================
     // DAY STATS (O/H/L/C + PREV CLOSE)
     //
-    // TradingView-style daily figures
-    // derived from the instrument's
-    // real intraday candles, grouped
-    // by exchange-local (IST) date.
+    // Exchange-authoritative daily figures.
+    // Primary: Shoonya live tick o/h/l/c (MCX official open,
+    // day high/low, prev close) — perfectly syncs with MCX and
+    // TradingView MCX. Fallback: real intraday candles grouped
+    // by IST date when no live tick yet (unauthenticated / offline).
     // =========================================================
 
     async computeDayStats(
@@ -3393,7 +3394,6 @@ const allowedTimeframes =
 
                 : null;
 
-
         const week52 =
 
             await this.getWeek52(
@@ -3402,21 +3402,59 @@ const allowedTimeframes =
                 bars
             );
 
+        // ----- EXCHANGE-AUTHORITATIVE OHLC (Shoonya live tick) -----
+        // Shoonya touchline o/h/l/c are MCX official. Prefer them over
+        // candle-derived values so open/prevClose/change perfectly sync with
+        // MCX (TradingView MCX). Falls back to candle values when no live tick
+        // yet (unauthenticated / pre-market) so offline still works.
+        // Second-tier: REST GetQuotes when the WS has not yet delivered a tick.
+        let liveDay = null;
+        try {
+            const ps = this.coordinator?.liveMarket?.priceStates?.get(String(inst.token));
+            const s = ps?.getState?.();
+            if (s && (s.open != null || s.prevClose != null || s.high != null || s.low != null)) liveDay = s;
+        } catch {}
+        if (!liveDay) {
+            try {
+                const market = this.coordinator?.market;
+                if (market?.isAuthenticated?.()) {
+                    const q = await market.client.getQuotes({ exch: exchange, token: String(inst.token) }).catch(() => null);
+                    if (q && typeof q === "object") {
+                        const pick = (obj, keys) => {
+                            for (const k of keys) { const v = Number(obj[k]); if (Number.isFinite(v) && v > 0) return v; }
+                            return null;
+                        };
+                        const qo = pick(q, ["o", "open", "day_open", "open_price"]);
+                        const qh = pick(q, ["h", "high", "day_high", "wh", "weekHigh"]);
+                        const ql = pick(q, ["l", "low", "day_low", "wl", "weekLow"]);
+                        const qc = pick(q, ["c", "close", "prev_close", "prevClose", "previous_close", "lp_close", "settlement"]);
+                        if (qo != null || qh != null || ql != null || qc != null) {
+                            liveDay = { open: qo, high: qh, low: ql, prevClose: qc };
+                        }
+                    }
+                }
+            } catch {}
+        }
 
         return {
             date: today,
 
             open:
-                Number(
-                    todays[0].open
-                ),
+                liveDay?.open != null
+                    ? Number(liveDay.open)
+                    : Number(todays[0].open),
 
             high:
 
-                Number(high),
+                liveDay?.high != null
+                    ? Number(liveDay.high)
+                    : Number(high),
 
             low:
-                Number(low),
+
+                liveDay?.low != null
+                    ? Number(liveDay.low)
+                    : Number(low),
 
             close:
 
@@ -3426,10 +3464,10 @@ const allowedTimeframes =
 
             prevClose:
 
-                lastPrev != null
-
+                liveDay?.prevClose != null
+                    ? Number(liveDay.prevClose)
+                    : lastPrev != null
                     ? Number(lastPrev)
-
                     : null,
 
             week52High:

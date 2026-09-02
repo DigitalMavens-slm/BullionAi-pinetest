@@ -29,6 +29,14 @@ class LivePriceState extends EventEmitter {
             previousPrice:
                 null,
 
+            // Exchange-authoritative day OHLC (from Shoonya tick o/h/l/c).
+            // These are the official MCX open / day high / day low / previous
+            // close — must stay in sync with the exchange, not derived candles.
+            open: null,
+            high: null,
+            low: null,
+            prevClose: null,
+
             change:
                 null,
 
@@ -128,51 +136,43 @@ class LivePriceState extends EventEmitter {
         this.state.tickCount +=
             1;
 
+        // -----------------------------------------------------
+        // EXCHANGE-AUTHORITATIVE DAY OHLC (from Shoonya tick).
+        // tick.o = today's open, tick.h/l = day high/low, tick.c = prev close.
+        // Keep the latest non-null values — these sync with MCX, not candles.
+        // -----------------------------------------------------
+        const toNum = v => {
+            const n = Number(v);
+            return Number.isFinite(n) && n > 0 ? n : null;
+        };
+        const tOpen = toNum(tick.open);
+        const tHigh = toNum(tick.high);
+        const tLow = toNum(tick.low);
+        const tPrev = toNum(tick.close);
+        if (tOpen != null) this.state.open = tOpen;
+        if (tHigh != null) this.state.high = tHigh;
+        if (tLow != null) this.state.low = tLow;
+        if (tPrev != null) this.state.prevClose = tPrev;
 
         // -----------------------------------------------------
-        // PRICE CHANGE
+        // DAY CHANGE (exchange)
+        // LTP - prevClose (MCX), not tick-to-tick.
+        // Falls back to tick-to-tick only when prevClose unknown.
         // -----------------------------------------------------
-
-        if (
-            previousPrice !== null
-        ) {
-
-            this.state.change =
-                price -
-                previousPrice;
-
+        const pc = this.state.prevClose;
+        if (pc != null && pc !== 0) {
+            this.state.change = price - pc;
+            this.state.changePercent = ((price - pc) / pc) * 100;
+        } else if (previousPrice !== null) {
+            this.state.change = price - previousPrice;
+            if (previousPrice !== 0) {
+                this.state.changePercent = ((price - previousPrice) / previousPrice) * 100;
+            } else {
+                this.state.changePercent = null;
+            }
         } else {
-
-            this.state.change =
-                null;
-
-        }
-
-
-        // -----------------------------------------------------
-        // PERCENT CHANGE
-        // -----------------------------------------------------
-
-        if (
-            previousPrice !== null &&
-            previousPrice !== 0
-        ) {
-
-            this.state.changePercent =
-                (
-                    (
-                        price -
-                        previousPrice
-                    ) /
-                    previousPrice
-                ) *
-                100;
-
-        } else {
-
-            this.state.changePercent =
-                null;
-
+            this.state.change = null;
+            this.state.changePercent = null;
         }
 
 
@@ -268,6 +268,15 @@ class LivePriceState extends EventEmitter {
             null;
 
         this.state.previousPrice =
+            null;
+
+        this.state.open =
+            null;
+        this.state.high =
+            null;
+        this.state.low =
+            null;
+        this.state.prevClose =
             null;
 
         this.state.change =
