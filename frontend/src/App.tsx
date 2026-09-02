@@ -3850,7 +3850,14 @@ function App() {
           )
         }
       />
-      <Route path="/performance" element={<PerformancePage />} />
+      <Route
+        path="/performance"
+        element={
+          <Layout>
+            <PerformancePage />
+          </Layout>
+        }
+      />
       <Route path="*" element={<Navigate to="/" replace />} />
 
       {/* RECENT SIGNAL DETAIL DRAWER */}
