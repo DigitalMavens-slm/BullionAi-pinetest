@@ -1,1 +1,1 @@
-web: node src/server/bullionai-api.js
+web: node backend/src/server/bullionai-api.js

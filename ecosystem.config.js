@@ -1,10 +1,10 @@
-// PM2 ecosystem — run the always-on backend on a VPS.
+// PM2 ecosystem — monorepo backend (always-on)
 // Usage: pm2 start ecosystem.config.js && pm2 save && pm2 startup
 module.exports = {
   apps: [
     {
       name: "bullionai",
-      script: "src/server/bullionai-api.js",
+      script: "backend/src/server/bullionai-api.js",
       cwd: __dirname,
       instances: 1,
       exec_mode: "fork",

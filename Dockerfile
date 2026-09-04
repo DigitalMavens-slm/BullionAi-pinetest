@@ -7,15 +7,17 @@ FROM node:20-slim
 WORKDIR /app
 
 # Install dependencies first for better layer caching
-COPY package.json package-lock.json ./
+COPY backend/package.json backend/package-lock.json ./
 RUN npm ci --omit=dev || npm install --omit=dev
 
-# Copy app source + data skeleton
-COPY src ./src
-COPY scripts ./scripts
-COPY tests ./tests
+# Copy app source + data skeleton (monorepo: backend/ is the service root)
+COPY backend/src ./src
+COPY backend/scripts ./scripts
+COPY backend/tests ./tests
 COPY BullionAI-fixedtgt.pine BullionAI.pine ./ 2>/dev/null || true
-COPY start-server.js ./
+# start-server.js stays at repo root for backwards compat; also try backend/
+COPY start-server.js ./ 2>/dev/null || true
+COPY backend/start-server.js ./ 2>/dev/null || true
 
 # Data dir for candle datasets; symbols downloaded at runtime.
 RUN mkdir -p /app/data /app/data/symbols

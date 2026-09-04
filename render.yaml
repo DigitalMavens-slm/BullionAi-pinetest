@@ -10,8 +10,9 @@ services:
     name: bullionai-api
     runtime: node
     plan: free
-    buildCommand: npm ci --omit=dev
-    startCommand: node src/server/bullionai-api.js
+    # Monorepo: backend lives in backend/
+    buildCommand: cd backend && npm ci --omit=dev
+    startCommand: node backend/src/server/bullionai-api.js
 
     envVars:
       - key: PORT
@@ -96,8 +97,8 @@ services:
     plan: free
     schedule: "20 3 * * 1-5"
 
-    buildCommand: npm ci --omit=dev
-    startCommand: node scripts/check-session.js
+    buildCommand: cd backend && npm ci --omit=dev
+    startCommand: node backend/scripts/check-session.js
 
     envVars:
       - key: BACKEND_URL
