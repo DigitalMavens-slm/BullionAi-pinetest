@@ -6219,15 +6219,10 @@ async function main() {
 }
 
 
-if (
-    require.main ===
-    module
-) {
-
-    main();
-}
-
-
 module.exports = {
     BullionAIApi,
 };
+
+// Hostinger Node.js hosting loads the entry file without require.main === module.
+// Invoke unconditionally so listen() is called within 3s.
+main();
