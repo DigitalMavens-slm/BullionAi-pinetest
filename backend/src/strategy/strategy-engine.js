@@ -345,28 +345,79 @@ class StrategyEngine {
             ].join(" ");
 
 
-        execSync(
-            command,
-            {
-                cwd:
-                    this.projectRoot,
+        try {
+            execSync(
+                command,
+                {
+                    cwd:
+                        this.projectRoot,
 
-                stdio:
-                    "inherit",
+                    stdio:
+                        "pipe",
 
-                windowsHide:
-                    true,
+                    windowsHide:
+                        true,
 
-                // Bound the PineTS run so a hung process can never block the
-                // Node event loop indefinitely (which would stall the live
-                // WebSocket tick handler). Results are unchanged.
-                timeout:
-                    Number(
-                        process.env.BULLIONAI_PINETS_TIMEOUT_MS ||
-                        30000
-                    ),
+                    timeout:
+                        Number(
+                            process.env.BULLIONAI_PINETS_TIMEOUT_MS ||
+                            30000
+                        ),
+                }
+            );
+        } catch (e) {
+            console.error(
+                "[pinets] command:",
+                command
+            );
+            console.error(
+                "[pinets] cwd:",
+                this.projectRoot,
+                "strategy:",
+                this.strategyFile,
+                "data:",
+                this.candlesFile,
+                "exists:",
+                fs.existsSync(
+                    this.candlesFile
+                )
+            );
+            console.error(
+                "[pinets] exit:",
+                e.status,
+                "signal:",
+                e.signal
+            );
+            if (e.stderr) {
+                console.error(
+                    "[pinets] stderr:",
+                    e.stderr
+                        .toString()
+                        .slice(0, 4000)
+                );
             }
-        );
+            if (e.stdout) {
+                console.error(
+                    "[pinets] stdout:",
+                    e.stdout
+                        .toString()
+                        .slice(0, 2000)
+                );
+            }
+            try {
+                console.error(
+                    "[pinets] bin check:",
+                    fs.existsSync(bin),
+                    fs.existsSync(
+                        path.join(
+                            this.projectRoot,
+                            "BullionAI-fixedtgt.pine"
+                        )
+                    )
+                );
+            } catch {}
+            throw e;
+        }
 
 
         // -----------------------------------------------------
