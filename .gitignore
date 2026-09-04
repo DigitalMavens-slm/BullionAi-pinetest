@@ -33,13 +33,36 @@ backend/scripts/tmp-*.cjs
 # Monorepo: backend/data is a junction to ../data for dual-cwd support
 backend/data
 
+# === Runtime / generated — MUST be ignored (approved audit) ===
 
+# Candle caches (regenerable via backfill + live feed)
+data/MCX_*.json
+data/BSE_*.json
+data/NSE_*.json
+data/SPOT_*.json
+data/*.json
+!data/.gitkeep
+
+# Symbol seeds (auto-download from Shoonya CDN)
+data/symbols/*
+!data/symbols/.gitkeep
+
+# Fallback / secrets (DB is primary when DATABASE_URL set)
 data/shoonya-session.json
-shoonya-auth.txt
-
-
-# BullionAI authentication secrets
-data/bullionai-auth-secret.txt
 data/bullionai-users.json
+data/perf-trades.json
+data/bullionai-auth-secret.txt
 data/bullionai-admin-key.txt
 data/bullionai-pine-secret.txt
+data/bullionai-pine-integrity.json
+data/bullionai-fixedtgt-integrity.json
+shoonya-auth.txt
+
+# Pine strategy outputs (ephemeral, at repo root)
+results-*.json
+results-15m.json
+strategy-15m.json
+candles.json
+gold-candles.json
+MCX_symbols.txt
+MCX_symbols.txt.zip
