@@ -320,6 +320,8 @@ class StrategyEngine {
         const command =
             [
                 "npx",
+                "--prefix",
+                "backend",
                 "pinets-cli",
                 "run",
                 `"${strategyPath}"`,
