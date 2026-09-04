@@ -317,12 +317,24 @@ class StrategyEngine {
         // NO Pine logic is duplicated here.
         // -----------------------------------------------------
 
+        const pinetsBin =
+            path.resolve(
+                this.projectRoot,
+                "backend/node_modules/pinets-cli/dist/pinets-cli.min.cjs"
+            );
+
+        const bin =
+            fs.existsSync(pinetsBin)
+                ? pinetsBin
+                : path.resolve(
+                      this.projectRoot,
+                      "node_modules/pinets-cli/dist/pinets-cli.min.cjs"
+                  );
+
         const command =
             [
-                "npx",
-                "--prefix",
-                "backend",
-                "pinets-cli",
+                "node",
+                `"${bin}"`,
                 "run",
                 `"${strategyPath}"`,
                 "--data",
