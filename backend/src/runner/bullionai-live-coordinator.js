@@ -1,10 +1,16 @@
 require("dotenv").config();
 
+const fs = require("fs");
+const path = require("path");
 const EventEmitter = require("events");
 
 const {
     MarketDataService,
 } = require("../market/market-data-service");
+
+const {
+    CandleDataManager,
+} = require("../market/candle-data-manager");
 
 const {
     ShoonyaSessionManager,
@@ -299,6 +305,126 @@ class BullionAILiveCoordinator extends EventEmitter {
     resolveResultsFile() {
 
         return `results-${this.timeframe}.json`;
+    }
+
+
+    // =========================================================
+    // ENSURE STRATEGY CANDLES (fresh-host bootstrap)
+    //
+    // On a fresh Hostinger deploy data/MCX_*.json does not exist.
+    // Reuse the existing MarketDataService + CandleDataManager
+    // infrastructure (no fake data, no hardcoded dataset) to
+    // backfill legitimate history before the first Pine run.
+    // If backfill yields no candles, keep API alive with no-data.
+    // =========================================================
+
+    async ensureStrategyCandles() {
+
+        const file =
+            this.strategy.candlesFile;
+
+        // Already has data -> done
+        try {
+            if (fs.existsSync(file)) {
+                const arr =
+                    JSON.parse(
+                        fs.readFileSync(
+                            file,
+                            "utf8"
+                        )
+                    );
+                if (
+                    Array.isArray(arr) &&
+                    arr.length > 0
+                ) {
+                    return true;
+                }
+            }
+        } catch {}
+
+        // No file or empty — try legitimate historical backfill
+        if (
+            !this.market ||
+            !this.market.isAuthenticated()
+        ) {
+            console.log(
+                "[coordinator] no candles file and market not authenticated — deferring backfill, live ticks will build history"
+            );
+            return false;
+        }
+
+        try {
+            console.log(
+                "[coordinator] candles file missing — attempting historical backfill for",
+                path.basename(file)
+            );
+
+            // Ensure data directory exists on Linux
+            try {
+                fs.mkdirSync(
+                    path.dirname(file),
+                    { recursive: true }
+                );
+            } catch {}
+
+            const mgr =
+                new CandleDataManager({
+                    dataDirectory:
+                        "./data",
+                    exchange:
+                        this.exchange,
+                    token:
+                        this.token,
+                });
+
+            // MarketDataService handles Shoonya TPSeries + dedup + sort
+            const result =
+                await this.market.updateCandles(
+                    [],
+                    {
+                        exchange:
+                            this.exchange,
+                        token:
+                            this.token,
+                        interval:
+                            this.interval,
+                    }
+                );
+
+            if (
+                result &&
+                Array.isArray(
+                    result.candles
+                ) &&
+                result.candles.length > 0
+            ) {
+                // Persist via existing manager (timeframe key, e.g. "15m")
+                const tfKey =
+                    String(
+                        this.timeframe
+                    ).toLowerCase();
+                mgr.save(
+                    tfKey,
+                    result.candles
+                );
+                console.log(
+                    `[coordinator] backfilled ${result.candles.length} candles to ${path.basename(file)}`
+                );
+                return true;
+            }
+
+            console.log(
+                "[coordinator] backfill returned no candles — live aggregator will build history"
+            );
+            return false;
+        } catch (error) {
+            console.error(
+                "[coordinator] backfill failed:",
+                error?.message ||
+                error
+            );
+            return false;
+        }
     }
 
 
@@ -1344,8 +1470,47 @@ class BullionAILiveCoordinator extends EventEmitter {
                 "Executing initial Pine strategy state..."
             );
 
+            // Fresh-host bootstrap: ensure runtime candle file exists via
+            // legitimate historical backfill before Pine execution.
+            await this.ensureStrategyCandles().catch(
+                () => false
+            );
 
-            this.runStrategy();
+            try {
+                this.runStrategy();
+            } catch (error) {
+                const msg =
+                    String(
+                        error?.message ||
+                        error ||
+                        ""
+                    );
+                if (
+                    msg.includes(
+                        "Candles file not found"
+                    ) ||
+                    msg.includes(
+                        "zero candles"
+                    )
+                ) {
+                    console.log(
+                        "[coordinator] strategy skipped — no candles yet, live aggregator will build history"
+                    );
+                    // Safe no-data state — keep API alive, future ticks will populate
+                    this.strategyState = null;
+                    try {
+                        this.display.setStrategyState({
+                            signal: "NONE",
+                            status: "no-data",
+                            entryPrice: null,
+                            trailSL: null,
+                            candleCount: 0,
+                        });
+                    } catch {}
+                } else {
+                    throw error;
+                }
+            }
 
 
             this.initialized =
