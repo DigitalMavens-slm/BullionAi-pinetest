@@ -30,6 +30,9 @@ backend/scripts/tmp-*.cjs
 # Local runtime files
 *.pid
 
+# Monorepo: backend/data is a junction to ../data for dual-cwd support
+backend/data
+
 
 data/shoonya-session.json
 shoonya-auth.txt
