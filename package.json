@@ -8,12 +8,14 @@
     "backend"
   ],
   "scripts": {
-    "build": "npm --prefix backend ci --workspaces=false",
     "dev:frontend": "npm --workspace frontend run dev",
     "build:frontend": "npm --workspace frontend run build",
     "dev:backend": "npm --workspace backend run dev",
     "start:backend": "node backend/src/server/bullionai-api.js",
     "test": "node backend/tests/engines.test.js",
     "test:backend": "npm --workspace backend test"
+  },
+  "dependencies": {
+    "pinets-cli": "^0.1.15"
   }
 }
