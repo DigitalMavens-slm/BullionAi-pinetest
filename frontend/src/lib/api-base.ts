@@ -8,8 +8,8 @@
 // host (reverse-proxying /api to the backend) "just works".
 const envUrl = import.meta.env.VITE_BULLIONAI_API_URL as string | undefined;
 
-// If it's an explicit full URL, use it as-is. Otherwise same-origin.
+// If it's an explicit full URL, use it as-is. Otherwise Hostinger production default.
 export const API_BASE =
   envUrl && /^https?:\/\//i.test(envUrl)
     ? envUrl.replace(/\/+$/, "")
-    : "";
+    : "https://backend.bullionai.in";

@@ -467,12 +467,12 @@ export function AdminDashboard({ onExit }: { onExit: () => void }) {
                   // would burn the ~30s code).
                   try {
                     await fetch(
-                      "https://bullionai-pinetest.onrender.com/health",
+                      "https://backend.bullionai.in/health",
                       { method: "GET" }
                     );
                   } catch {}
                   window.open(
-                    "https://bullionai-pinetest.onrender.com/api/shoonya/login",
+                    "https://backend.bullionai.in/api/shoonya/login",
                     "_blank"
                   );
                 }}
@@ -885,7 +885,7 @@ export function AdminDashboard({ onExit }: { onExit: () => void }) {
                     onClick={async () => {
                       try { await warmupBackend(); } catch {}
                       window.open(
-                        "https://bullionai-pinetest.onrender.com/api/shoonya/login",
+                        "https://backend.bullionai.in/api/shoonya/login",
                         "_blank"
                       );
                     }}

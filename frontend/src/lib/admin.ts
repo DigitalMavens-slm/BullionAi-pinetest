@@ -150,7 +150,7 @@ export async function restartServer() {
 // Warm the backend (ping /health) so Render's free tier doesn't sleep
 // between admin actions / Shoonya login.
 export function warmupBackend(host?: string) {
-  const base = host || API_BASE || "https://bullionai-pinetest.onrender.com";
+  const base = host || API_BASE || "https://backend.bullionai.in";
   const u = base + "/health";
   return fetch(u, { method: "GET", cache: "no-store" }).catch(() => null);
 }
