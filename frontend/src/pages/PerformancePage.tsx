@@ -13,7 +13,26 @@ import {
   type StrategySignalRow,
 } from "../lib/bullionai-api";
 
-// Premium helpers
+// Premium helpers — display actual trading names, never code numbers
+const displaySymbol = (row: { symbol: string; token?: string | null; tradingSymbol?: string | null }) => {
+  const raw = String(row.symbol || row.tradingSymbol || row.token || "—").trim();
+  if (!raw || raw === "—") return "—";
+  // If stored symbol is numeric token (e.g. "483079"), map to actual name
+  if (/^\d+$/.test(raw)) {
+    const byToken: Record<string, string> = {
+      "483079": "GOLD", "483080": "GOLD", "539551": "GOLDM", "563946": "GOLD",
+      "495214": "SILVER", "471725": "SILVER", "500325": "SILVERM", "568831": "SILVERM",
+      "565899": "CRUDEOIL", "565900": "CRUDEOILM",
+      "568245": "COPPER", "571296": "COPPERM",
+      "571304": "ZINC", "571298": "ZINCM",
+      "571300": "LEADMINI", "574848": "ALUMINI", "574824": "ALUMINIUM",
+    };
+    const tok = String(row.token || raw);
+    return byToken[tok] || byToken[raw] || raw;
+  }
+  return raw;
+};
+
 const INR = (v: number | null | undefined) => {
   if (v == null || !Number.isFinite(v)) return "—";
   const n = Math.abs(v);
@@ -169,7 +188,7 @@ export function PerformancePage({ compact = false }: { compact?: boolean }) {
                       className={`w-full px-4 py-2.5 text-left text-sm font-medium hover:bg-slate-50 ${selectedScript === s.symbol ? "bg-slate-900 text-white" : "text-slate-700"}`}
                     >
                       <span className="flex items-center justify-between">
-                        <span>{s.symbol}</span>
+                        <span>{displaySymbol(s)}</span>
                         <span className="text-xs text-slate-400">{s.trades} trades</span>
                       </span>
                     </button>
@@ -271,7 +290,7 @@ export function PerformancePage({ compact = false }: { compact?: boolean }) {
                 {scripts.map((s) => (
                   <div key={s.symbol} className="rounded-2xl border border-slate-100 bg-gradient-to-br from-white to-slate-50 p-4">
                     <div className="flex items-center justify-between">
-                      <span className="rounded-lg bg-slate-900 px-2.5 py-1 font-mono text-xs font-black text-white">{s.symbol}</span>
+                      <span className="rounded-lg bg-slate-900 px-2.5 py-1 font-mono text-xs font-black text-white">{displaySymbol(s)}</span>
                       <span className={`text-xs font-black ${s.netPL >= 0 ? "text-emerald-600" : "text-rose-600"}`}>{INR(s.netPL)}</span>
                     </div>
                     <div className="mt-3 grid grid-cols-3 gap-2 text-center">
@@ -342,7 +361,7 @@ export function PerformancePage({ compact = false }: { compact?: boolean }) {
                       .map((t) => (
                         <tr key={t.tradeUid} onClick={() => openDetail(t.tradeUid)} className="cursor-pointer hover:bg-slate-50">
                           <td className="whitespace-nowrap px-4 py-3 text-xs text-slate-500">{shortDate(t.entryTime)}</td>
-                          <td className="px-4 py-3 font-mono text-xs font-black text-slate-900">{t.symbol}</td>
+                          <td className="px-4 py-3 font-mono text-xs font-black text-slate-900">{displaySymbol(t)}</td>
                           <td className="px-4 py-3">
                             <span className={`rounded-full px-2 py-1 text-[10px] font-black ${t.signal === "BUY" ? "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200" : "bg-rose-50 text-rose-700 ring-1 ring-rose-200"}`}>{t.signal}</span>
                           </td>
@@ -382,7 +401,7 @@ export function PerformancePage({ compact = false }: { compact?: boolean }) {
                       <tr key={s.signalUid} className="hover:bg-slate-50">
                         <td className="whitespace-nowrap px-4 py-3 text-xs text-slate-500">{shortDate(s.time)}</td>
                         <td className="whitespace-nowrap px-4 py-3 text-xs text-slate-500">{fmtTime(s.time)}</td>
-                        <td className="px-4 py-3 font-mono text-xs font-black text-slate-900">{s.symbol}</td>
+                        <td className="px-4 py-3 font-mono text-xs font-black text-slate-900">{displaySymbol(s)}</td>
                         <td className="px-4 py-3">
                           <span className={`rounded-full px-2 py-1 text-[10px] font-black ${s.signal === "BUY" ? "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200" : "bg-rose-50 text-rose-700 ring-1 ring-rose-200"}`}>{s.signal}</span>
                         </td>
@@ -407,7 +426,7 @@ export function PerformancePage({ compact = false }: { compact?: boolean }) {
               <div className="flex items-center gap-3">
                 <span className={`rounded-xl px-3 py-1.5 text-xs font-black ${detail.signal === "BUY" ? "bg-emerald-500 text-white" : "bg-rose-500 text-white"}`}>{detail.signal}</span>
                 <div>
-                  <div className="text-base font-black text-slate-900">{detail.symbol} · {detail.exchange}</div>
+                  <div className="text-base font-black text-slate-900">{displaySymbol(detail)} · {detail.exchange}</div>
                   <div className="text-xs text-slate-400">{fmtTime(detail.entryTime)}</div>
                 </div>
               </div>
