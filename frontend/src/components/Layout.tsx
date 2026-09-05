@@ -69,7 +69,6 @@ const NAV_LINKS = [
   { label: "Insights", to: "/blog" },
   { label: "FAQ", to: "/faq" },
   { label: "About", to: "/about" },
-  { label: "Performance", to: "/performance" },
 ];
 
 const LEGAL_LINKS = [

@@ -39,7 +39,6 @@ import { BlogPage, BlogArticleRoute } from "./pages/BlogPage";
 import { FAQPage } from "./pages/FAQPage";
 import { PaymentPage } from "./pages/PaymentPage";
 import { LegalPage, TERMS_DOC, PRIVACY_DOC, RISK_DOC, REFUND_DOC } from "./pages/LegalPage";
-import { PerformancePage } from "./pages/PerformancePage";
 
 import "./App.css";
 
@@ -59,10 +58,6 @@ import {
   type RecentSignalTrade,
   fetchState,
   type SseStatus,
-  fetchPerfRecentSignals,
-  fetchPerfTrade,
-  type PerfTrade,
-  type PerfRecentGroup,
 } from "./lib/bullionai-api";
 
 import {
@@ -272,7 +267,7 @@ function CardTitle({
    RECENT SIGNALS — status label helper (DB trade)
    ============================================================= */
 
-function sigStatusLabel(sig: RecentSignalTrade | PerfTrade): string {
+function sigStatusLabel(sig: RecentSignalTrade): string {
   if (!sig) return "—";
   const s: any = sig;
   // CLOSED trades: prefer the result text (e.g. "TGT2 ACHIEVED +20 pts").
@@ -301,7 +296,7 @@ function SignalDetailRows({
   fmtSigned,
   formatISTShortDateTime,
 }: {
-  signal: RecentSignalTrade | PerfTrade;
+  signal: RecentSignalTrade;
   fmt: (v: number | null | undefined) => string;
   fmtSigned: (v: number | null) => string;
   formatISTShortDateTime: (ts: number) => string;
@@ -514,12 +509,7 @@ function App() {
   // Selected recent signal for the detail drawer (DB authoritative, null = closed).
   // Spec 8: clicking fetches tradeUid from DB and auto-opens drawer.
   const [selectedRecentSignal, setSelectedRecentSignal] =
-    useState<{ group: { exchange: string; symbol: string; token: string; timeframe: string }; signal: PerfTrade | RecentSignalTrade } | null>(null);
-
-  // DATABASE-FIRST Recent Signals (last 5 per script). Fetches from
-  // /api/performance/recent-signals; survives refresh/login/SSE reconnect.
-  const [dbRecentGroups, setDbRecentGroups] = useState<PerfRecentGroup[]>([]);
-  const [dbRecentLoading, setDbRecentLoading] = useState(true);
+    useState<{ group: { exchange: string; symbol: string; token: string; timeframe: string }; signal: RecentSignalTrade } | null>(null);
 
   // Refs to the live SSE sources so tab-visibility recovery can call
   // reconnect() without creating a duplicate connection.
@@ -1347,45 +1337,6 @@ function App() {
       isContractBasedSelected &&
       selectedTimeframe === "15m");
 
-
-  // =========================================================
-  // RECENT SIGNALS — DATABASE-FIRST (Spec 4-6)
-  //
-  // Every real trade is persisted to perf_trades server-side (TradeEngine
-  // -> persistPerfTrade -> upsert). Frontend FETCHES last 5 per script from
-  // /api/performance/recent-signals (window function, one query). Not from
-  // state.segments / strategy.signalHistory. Click fetches tradeUid from DB.
-  // =========================================================
-  useEffect(() => {
-    let cancelled = false;
-    async function loadDbRecent() {
-      try {
-        setDbRecentLoading(true);
-        const groups = await fetchPerfRecentSignals("15m");
-        if (!cancelled) setDbRecentGroups(groups);
-      } catch {
-        if (!cancelled) setDbRecentGroups([]);
-      } finally {
-        if (!cancelled) setDbRecentLoading(false);
-      }
-    }
-    loadDbRecent();
-    const id = setInterval(loadDbRecent, 30000);
-    // Refresh on tab focus / SSE reconnect is handled by visibility; poll covers it.
-    return () => { cancelled = true; clearInterval(id); };
-  }, []);
-
-  const recentByScript = useMemo(() => {
-    // DB-first groups: already last 5 per script, newest first, from perf_trades.
-    // Map to the shape the Recent Signals UI expects.
-    return dbRecentGroups.map(g => ({
-      exchange: g.exchange,
-      symbol: g.symbol,
-      token: g.token || "",
-      timeframe: g.timeframe,
-      signals: g.signals as any,
-    }));
-  }, [dbRecentGroups]);
 
   const liveTokenPrice =
     state && selectedSymbol
@@ -2548,126 +2499,7 @@ function App() {
           </Card>
 
 
-          {/* RECENT SIGNALS */}
 
-          <Card className="shrink-0">
-
-            <CardTitle
-
-              right={
-
-                <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[9px] font-semibold text-slate-500">
-                  per script · last 5
-                </span>
-
-              }
-            >
-
-              Recent Signals
-
-            </CardTitle>
-
-
-            <div className="p-1">
-
-              {dbRecentLoading && recentByScript.length === 0 && (
-                <div className="px-3 py-4 text-center text-[11px] text-slate-400">Loading recent signals…</div>
-              )}
-              {!dbRecentLoading && recentByScript.length === 0 && (
-                <div className="px-3 py-4 text-center text-[11px] text-slate-400">
-                  No recent signals — real trades will appear here once the strategy generates them.
-                </div>
-              )}
-
-              {recentByScript.map((grp) => (
-                <div key={`${grp.exchange}:${grp.token}:${grp.timeframe}`} className="mb-2">
-                  <div className="flex items-center justify-between px-2 pt-2 pb-1">
-                    <span className="truncate font-mono text-[10px] font-bold text-slate-700">
-                      {grp.symbol}
-                    </span>
-                    <span className="shrink-0 text-[9px] font-medium uppercase tracking-wider text-slate-400">
-                      {grp.timeframe}
-                    </span>
-                  </div>
-
-                  <div className="divide-y divide-slate-100 rounded-xl border border-slate-100">
-                    {grp.signals.map((sig: PerfTrade | RecentSignalTrade) => {
-                      const buy = (sig as any).signal === "BUY";
-                      // Spec 7: compact row — show Final P&L if closed else Current P&L
-                      const s: any = sig;
-                      const pl = s.resultPoints ?? s.currentPL ?? null;
-                      const compactStatus = sigStatusLabel(sig as any);
-                      return (
-                        <button
-                          key={s.tradeUid}
-                          type="button"
-                          onClick={async () => {
-                            // Spec 8: fetch authoritative DB record by tradeUid, then auto-open drawer.
-                            const uid = String(s.tradeUid || "");
-                            if (!uid) return;
-                            try {
-                              const full = await fetchPerfTrade(uid);
-                              if (full) {
-                                setSelectedRecentSignal({ group: grp, signal: full as any });
-                                return;
-                              }
-                            } catch {}
-                            // Fallback: open what we have (row is same tradeUid, just less complete).
-                            setSelectedRecentSignal({ group: grp, signal: sig as any });
-                          }}
-                          className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left transition hover:bg-slate-50"
-                        >
-                          <span
-                            className={[
-                              "flex h-5 w-[44px] shrink-0 items-center justify-center rounded-md text-[9px] font-black tracking-wider",
-                              buy
-                                ? "bg-emerald-50 text-emerald-600 ring-1 ring-emerald-200"
-                                : "bg-rose-50 text-rose-600 ring-1 ring-rose-200",
-                            ].join(" ")}
-                          >
-                            {sig.signal}
-                          </span>
-
-                          <span className="min-w-0 flex-1 leading-tight">
-                            <span className="block truncate font-mono text-[10px] font-medium text-slate-600">
-                              {s.entryTime
-                                ? new Date(s.entryTime).toLocaleDateString("en-IN", { day: "2-digit", month: "short" }) + " · " + new Date(s.entryTime).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: true })
-                                : "—"}
-                              {s.entryPrice != null ? ` · ${fmt(s.entryPrice)}` : ""}
-                            </span>
-                            <span className="block truncate text-[9px] font-medium text-slate-400">
-                              {s.target1Status === "ACHIEVED" ? "TGT1 ✓ · " : ""}
-                              {compactStatus}
-                            </span>
-                          </span>
-
-                          <span className="shrink-0 text-right leading-tight">
-                            <span
-                              className={[
-                                "block font-mono text-[10px] font-bold tabular-nums",
-                                pl == null
-                                  ? "text-slate-400"
-                                  : pl >= 0
-                                    ? "text-emerald-600"
-                                    : "text-rose-600",
-                              ].join(" ")}
-                            >
-                              {pl != null ? fmtSigned(pl) : "—"}
-                            </span>
-                            <span className="block text-[8px] font-medium text-slate-400">
-                              {s.status === "CLOSED" ? "CLOSED" : "OPEN"}
-                            </span>
-                          </span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              ))}
-
-            </div>
-
-          </Card>
 
         </aside>
 
@@ -3413,14 +3245,6 @@ function App() {
 
     </div>
           )
-        }
-      />
-      <Route
-        path="/performance"
-        element={
-          <Layout>
-            <PerformancePage />
-          </Layout>
         }
       />
       <Route path="*" element={<Navigate to="/" replace />} />
