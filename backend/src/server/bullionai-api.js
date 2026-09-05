@@ -5841,6 +5841,20 @@ const allowedTimeframes =
             return;
         }
 
+        if (
+            url.pathname ===
+            "/api/performance/signals"
+        ) {
+
+            const exchange = url.searchParams.get("exchange") || "MCX";
+            const timeframe = url.searchParams.get("timeframe") || "15m";
+            const limit = Math.min(200, Number(url.searchParams.get("limit")) || 100);
+            const { getStrategySignals } = require("../auth/db");
+            const signals = await getStrategySignals({ exchange, timeframe, limit });
+            this.sendJson(response, 200, { ok: true, signals });
+            return;
+        }
+
         // Trade detail: /api/performance/trade?uid=<tradeUid>
         if (
             url.pathname ===

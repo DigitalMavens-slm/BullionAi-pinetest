@@ -719,4 +719,73 @@ export async function getCurrentContract(
   }
 }
 
+// =========================================================
+// PERFORMANCE PORTAL — premium, DB-first, professional
+// Reads perf_trades + strategy_signals ledgers (server aggregated).
+// =========================================================
+
+export type PerfSummary = {
+  market: string; timeframe: string; totalTrades: number; openTrades: number;
+  closedTrades: number; winningTrades: number; losingTrades: number;
+  winRate: number; tgt1Profit: number; netPL: number; openPL: number; openMaxPoints: number;
+};
+export type PerfDailyRow = { date: string; trades: number; closed: number; wins: number; losses: number; tgt1Profit: number; netPL: number; };
+export type PerfScriptRow = { symbol: string; trades: number; open: number; closed: number; wins: number; losses: number; tgt1Profit: number; netPL: number; winRate: number; };
+export type PerfTrade = {
+  tradeUid: string; exchange: string; symbol: string; token: string | null; timeframe: string;
+  signal: string; entryPrice: number | null; entryTime: number | null; initialSL: number | null;
+  activeSL: number | null; target1: number | null; target2: number | null;
+  target1Status: string | null; target1HitTime: number | null; target1Profit: number | null;
+  target2Status: string | null; target2HitTime: number | null; target2Profit: number | null;
+  exitPrice: number | null; exitTime: number | null; exitReason: string | null;
+  status: string; result: string | null; resultPoints: number | null; currentPL: number | null; maxPoints: number | null;
+};
+export type PerfRecentGroup = { exchange: string; symbol: string; timeframe: string; token: string | null; signals: PerfTrade[]; };
+export type StrategySignalRow = { signalUid: string; exchange: string; symbol: string; token: string | null; timeframe: string; signal: string; price: number | null; time: number | null; };
+
+type PerfCache = { at: number; promise: Promise<any> };
+const perfCache = new Map<string, PerfCache>();
+const PERF_TTL = 5000;
+function perfCached<T>(key: string, fn: () => Promise<T>): Promise<T> {
+  const now = Date.now(); const e = perfCache.get(key);
+  if (e && now - e.at < PERF_TTL) return e.promise;
+  const p = fn().then((v) => { perfCache.set(key, { at: Date.now(), promise: p }); return v; });
+  perfCache.set(key, { at: 0, promise: p }); return p;
+}
+async function perfGet<T>(path: string, params: Record<string, string | number | null | undefined> = {}): Promise<T> {
+  const u = new URL(API_BASE + "/api/performance" + path);
+  for (const [k, v] of Object.entries(params)) if (v != null && v !== "") u.searchParams.set(k, String(v));
+  const key = "perf:" + u.pathname + "?" + u.searchParams.toString();
+  return perfCached(key, async () => {
+    const r = await fetch(u.toString());
+    if (!r.ok) throw Object.assign(new Error(`Performance ${r.status}`) as any, { status: r.status });
+    return (await r.json()) as T;
+  });
+}
+export async function fetchPerfSummary(timeframe = "15m"): Promise<PerfSummary> {
+  const d = await perfGet<{ summary: PerfSummary }>("/summary", { timeframe }); return d.summary;
+}
+export async function fetchPerfDaily(timeframe = "15m"): Promise<PerfDailyRow[]> {
+  const d = await perfGet<{ daily: PerfDailyRow[] }>("/daily", { timeframe }); return d.daily || [];
+}
+export async function fetchPerfScripts(timeframe = "15m"): Promise<PerfScriptRow[]> {
+  const d = await perfGet<{ scripts: PerfScriptRow[] }>("/scripts", { timeframe }); return d.scripts || [];
+}
+export async function fetchPerfTrades(opts: { symbol?: string; limit?: number; offset?: number; timeframe?: string } = {}): Promise<{ trades: PerfTrade[]; total: number }> {
+  const d = await perfGet<{ trades: PerfTrade[]; total: number }>("/trades", { timeframe: opts.timeframe || "15m", symbol: opts.symbol, limit: opts.limit || 20, offset: opts.offset || 0 });
+  return { trades: d.trades || [], total: d.total || 0 };
+}
+export async function fetchPerfTrade(tradeUid: string): Promise<PerfTrade | null> {
+  const d = await perfGet<{ trade: PerfTrade }>("/trade", { uid: tradeUid }); return d.trade ?? null;
+}
+export async function fetchPerfRecentSignals(timeframe = "15m"): Promise<PerfRecentGroup[]> {
+  const u = new URL(API_BASE + "/api/performance/recent-signals"); u.searchParams.set("timeframe", timeframe);
+  const r = await fetch(u.toString()); if (!r.ok) throw new Error(String(r.status));
+  const d = (await r.json()) as { groups: PerfRecentGroup[] }; return d.groups || [];
+}
+export async function fetchStrategySignals(opts: { limit?: number; timeframe?: string } = {}): Promise<StrategySignalRow[]> {
+  const d = await perfGet<{ signals: StrategySignalRow[] }>("/signals", { limit: opts.limit || 100, timeframe: opts.timeframe || "15m" });
+  return d.signals || [];
+}
+
 
