@@ -114,7 +114,7 @@ export function PerformancePage({ compact = false }: { compact?: boolean }) {
         <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <div className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-white/80 backdrop-blur">
-              <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" /> Live • MCX • 15m
+              <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" /> Live • MCX
             </div>
             <h1 className="mt-3 font-display text-3xl font-black tracking-tight text-white sm:text-4xl">Performance</h1>
             <p className="mt-2 max-w-xl text-sm leading-relaxed text-slate-300">
@@ -122,10 +122,6 @@ export function PerformancePage({ compact = false }: { compact?: boolean }) {
             </p>
           </div>
           <div className="flex shrink-0 items-center gap-2">
-            <div className="rounded-2xl bg-white/10 px-4 py-3 text-center backdrop-blur">
-              <div className="text-[10px] font-bold uppercase tracking-wider text-white/60">Timeframe</div>
-              <div className="font-mono text-sm font-black text-white">15m</div>
-            </div>
             <button onClick={load} className="rounded-2xl bg-amber-400 px-5 py-3 text-sm font-black text-slate-900 transition hover:bg-amber-300">
               Refresh
             </button>
@@ -331,7 +327,7 @@ export function PerformancePage({ compact = false }: { compact?: boolean }) {
               <div className="flex items-center gap-3">
                 <span className={`rounded-xl px-3 py-1.5 text-xs font-black ${detail.signal === "BUY" ? "bg-emerald-500 text-white" : "bg-rose-500 text-white"}`}>{detail.signal}</span>
                 <div>
-                  <div className="text-base font-black text-slate-900">{detail.symbol} · {detail.exchange} · {detail.timeframe}</div>
+                  <div className="text-base font-black text-slate-900">{detail.symbol} · {detail.exchange}</div>
                   <div className="text-xs text-slate-400">{fmtTime(detail.entryTime)}</div>
                 </div>
               </div>

@@ -3573,8 +3573,8 @@ const allowedTimeframes =
 
         // Evaluate signal on the LAST CLOSED candle (authoritative).
         const sig = latestSignal(candles);
-        // Persist every real BUY/SELL signal (even when trade not opened) — complete audit trail
-        if (sig.signal === "BUY" || sig.signal === "SELL") {
+        // Persist every real BUY/SELL signal — ONLY 15m, complete audit trail
+        if ((sig.signal === "BUY" || sig.signal === "SELL") && tf.key === "15m") {
             const signalUid = `${exch}:${symbol}:${tf.key}:${sig.time || Date.now()}:${sig.signal}:${sig.close}`;
             try {
                 const { upsertStrategySignal } = require("../auth/db");
@@ -3605,11 +3605,13 @@ const allowedTimeframes =
                             exchange: exch, symbol, timeframe: tf.key, signal: sig.signal,
                             entry: res.trade.entryPrice, sl: res.trade.initialSL, target1: res.trade.target1, target2: res.trade.target2,
                         }));
-                        // Persist the freshly-opened trade (idempotent by tradeUid).
-                        await this.persistPerfTrade({
-                            exchange: exch, symbol, token: String(token), timeframe: tf.key,
-                            trade: res.trade,
-                        }).catch(() => {});
+                        // Persist the freshly-opened trade — ONLY 15m
+                        if (tf.key === "15m") {
+                            await this.persistPerfTrade({
+                                exchange: exch, symbol, token: String(token), timeframe: tf.key,
+                                trade: res.trade,
+                            }).catch(() => {});
+                        }
                     }
                 }
             }
@@ -3630,19 +3632,20 @@ const allowedTimeframes =
                 }));
             }
 
-            // Persist the lifecycle update (same record; TGT1/TGT2 hit times are
-            // the current candle's close time). Idempotent by tradeUid.
-            const hitTimes = {};
-            const lastCloseMs = candles[candles.length - 1]?.time || Date.now();
-            for (const ev of upd.events) {
-                if (ev.type === "target1") hitTimes.target1 = lastCloseMs;
-                if (ev.type === "trade_close" && ev.trade?.target2Status === "ACHIEVED") hitTimes.target2 = lastCloseMs;
+            // Persist the lifecycle update — ONLY 15m
+            if (tf.key === "15m") {
+                const hitTimes = {};
+                const lastCloseMs = candles[candles.length - 1]?.time || Date.now();
+                for (const ev of upd.events) {
+                    if (ev.type === "target1") hitTimes.target1 = lastCloseMs;
+                    if (ev.type === "trade_close" && ev.trade?.target2Status === "ACHIEVED") hitTimes.target2 = lastCloseMs;
+                }
+                await this.persistPerfTrade({
+                    exchange: exch, symbol, token: String(token), timeframe: tf.key,
+                    trade: upd.trade,
+                    hitTimes,
+                }).catch(() => {});
             }
-            await this.persistPerfTrade({
-                exchange: exch, symbol, token: String(token), timeframe: tf.key,
-                trade: upd.trade,
-                hitTimes,
-            }).catch(() => {});
         }
 
         const state = this.tradeEngine.getState({ exchange: exch, symbol, timeframe: tf.key });
