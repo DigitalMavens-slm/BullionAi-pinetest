@@ -5,7 +5,8 @@
   "description": "BullionAI — monorepo (frontend + backend)",
   "workspaces": [
     "frontend",
-    "backend"
+    "backend",
+    "mobile"
   ],
   "scripts": {
     "dev:frontend": "npm --workspace frontend run dev",
