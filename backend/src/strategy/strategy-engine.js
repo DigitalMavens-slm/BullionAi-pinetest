@@ -333,7 +333,7 @@ class StrategyEngine {
 
         const command =
             [
-                "node",
+                `"${process.execPath}"`,
                 `"${bin}"`,
                 "run",
                 `"${strategyPath}"`,
