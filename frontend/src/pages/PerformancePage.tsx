@@ -102,8 +102,18 @@ export function PerformancePage({ compact = false }: { compact?: boolean }) {
     ];
   }, [summary]);
 
+  const [selectedScript, setSelectedScript] = useState<string>("ALL");
+  const [dropdownOpen, setDropdownOpen] = useState(false);
   const hasData = summary && summary.totalTrades > 0;
   const maxDailyPL = Math.max(...daily.map((d) => Math.abs(d.netPL)), 1);
+  const filteredTrades = useMemo(() => {
+    if (selectedScript === "ALL") return trades.trades;
+    return trades.trades.filter((t) => t.symbol === selectedScript);
+  }, [trades.trades, selectedScript]);
+  const filteredSignals = useMemo(() => {
+    if (selectedScript === "ALL") return signals;
+    return signals.filter((s) => s.symbol === selectedScript);
+  }, [signals, selectedScript]);
 
   return (
     <div className={compact ? "mx-auto w-full max-w-[1600px] px-4 py-4" : "mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:py-14"}>
@@ -128,6 +138,56 @@ export function PerformancePage({ compact = false }: { compact?: boolean }) {
           </div>
         </div>
       </div>
+
+      {!loading && !error && hasData && (
+        <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-3">
+            <span className="text-sm font-bold text-slate-700">Select Script:</span>
+            <div className="relative">
+              <button
+                onClick={() => setDropdownOpen(!dropdownOpen)}
+                className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-bold text-slate-900 shadow-sm transition hover:border-slate-300 hover:bg-slate-50"
+              >
+                <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-slate-900 text-[10px] font-black text-white">
+                  {selectedScript === "ALL" ? "◈" : selectedScript[0]}
+                </span>
+                {selectedScript === "ALL" ? "All Scripts" : selectedScript}
+                <span className="text-slate-400">▼</span>
+              </button>
+              {dropdownOpen && (
+                <div className="absolute left-0 top-full z-20 mt-2 max-h-64 w-48 overflow-auto rounded-xl border border-slate-200 bg-white shadow-xl">
+                  <button
+                    onClick={() => { setSelectedScript("ALL"); setDropdownOpen(false); }}
+                    className={`w-full px-4 py-2.5 text-left text-sm font-medium hover:bg-slate-50 ${selectedScript === "ALL" ? "bg-slate-900 text-white" : "text-slate-700"}`}
+                  >
+                    All Scripts
+                  </button>
+                  {scripts.map((s) => (
+                    <button
+                      key={s.symbol}
+                      onClick={() => { setSelectedScript(s.symbol); setDropdownOpen(false); }}
+                      className={`w-full px-4 py-2.5 text-left text-sm font-medium hover:bg-slate-50 ${selectedScript === s.symbol ? "bg-slate-900 text-white" : "text-slate-700"}`}
+                    >
+                      <span className="flex items-center justify-between">
+                        <span>{s.symbol}</span>
+                        <span className="text-xs text-slate-400">{s.trades} trades</span>
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+            {selectedScript !== "ALL" && (
+              <button onClick={() => setSelectedScript("ALL")} className="text-xs font-bold text-slate-500 hover:text-slate-700">
+                Clear
+              </button>
+            )}
+          </div>
+          <div className="text-xs font-medium text-slate-500">
+            {selectedScript === "ALL" ? `${trades.total} trades` : `${filteredTrades.length} trades for ${selectedScript}`}
+          </div>
+        </div>
+      )}
 
       {loading && (
         <div className="mt-6 grid gap-3 sm:grid-cols-3">
@@ -252,12 +312,15 @@ export function PerformancePage({ compact = false }: { compact?: boolean }) {
             </div>
           </div>
 
-          {/* Trade book OR Signals */}
+          {/* Trade book OR Signals — premium tables */}
           {tab === "trades" ? (
             <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
-              <div className="flex items-center justify-between border-b border-slate-100 p-4">
+              <div className="flex flex-col gap-3 border-b border-slate-100 p-4 sm:flex-row sm:items-center sm:justify-between">
                 <h2 className="text-sm font-black tracking-tight text-slate-900">Trade Book — ONE row = ONE lifecycle</h2>
-                <input value={filterSym} onChange={(e) => setFilterSym(e.target.value.toUpperCase())} placeholder="Filter GOLD" className="rounded-full border border-slate-200 px-3 py-1.5 text-xs outline-none focus:border-slate-900" />
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-bold text-slate-500">{filteredTrades.length} trades</span>
+                  <input value={filterSym} onChange={(e) => setFilterSym(e.target.value.toUpperCase())} placeholder="Filter" className="rounded-full border border-slate-200 px-3 py-1.5 text-xs outline-none focus:border-slate-900" />
+                </div>
               </div>
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-sm">
@@ -274,7 +337,7 @@ export function PerformancePage({ compact = false }: { compact?: boolean }) {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
-                    {trades.trades
+                    {filteredTrades
                       .filter((t) => !filterSym || t.symbol.includes(filterSym))
                       .map((t) => (
                         <tr key={t.tradeUid} onClick={() => openDetail(t.tradeUid)} className="cursor-pointer hover:bg-slate-50">
@@ -296,22 +359,39 @@ export function PerformancePage({ compact = false }: { compact?: boolean }) {
             </div>
           ) : (
             <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
-              <div className="border-b border-slate-100 p-4">
-                <h2 className="text-sm font-black tracking-tight text-slate-900">Every BUY/SELL Call — complete audit trail</h2>
-                <p className="text-xs text-slate-500">Each signal is a DB row, even when no trade opened. No frontend trigger required.</p>
+              <div className="flex flex-col gap-2 border-b border-slate-100 p-4 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <h2 className="text-sm font-black tracking-tight text-slate-900">Every BUY/SELL Call — complete audit trail</h2>
+                  <p className="text-xs text-slate-500">Each signal is a DB row, even when no trade opened — {filteredSignals.length} signals</p>
+                </div>
+                <span className="rounded-full bg-slate-900 px-3 py-1 text-xs font-bold text-white">{filteredSignals.length} calls</span>
               </div>
-              <div className="divide-y divide-slate-100">
-                {signals.map((s) => (
-                  <div key={s.signalUid} className="flex items-center justify-between p-4 hover:bg-slate-50">
-                    <div className="flex items-center gap-3">
-                      <span className={`rounded-full px-2.5 py-1 text-xs font-black ${s.signal === "BUY" ? "bg-emerald-500 text-white" : "bg-rose-500 text-white"}`}>{s.signal}</span>
-                      <span className="font-mono text-sm font-black text-slate-900">{s.symbol}</span>
-                      <span className="text-xs text-slate-400">{shortDate(s.time)} · {fmtTime(s.time)}</span>
-                    </div>
-                    <span className="font-mono text-sm font-bold text-slate-700">₹{NUM(s.price)}</span>
-                  </div>
-                ))}
-                {signals.length === 0 && <div className="p-8 text-center text-sm text-slate-400">No signals yet — will appear as strategy generates them.</div>}
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-sm">
+                  <thead className="bg-slate-50 text-[10px] uppercase tracking-wider text-slate-400">
+                    <tr>
+                      <th className="px-4 py-3">Date</th>
+                      <th className="px-4 py-3">Time</th>
+                      <th className="px-4 py-3">Script</th>
+                      <th className="px-4 py-3">Side</th>
+                      <th className="px-4 py-3 text-right">Price</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {filteredSignals.map((s) => (
+                      <tr key={s.signalUid} className="hover:bg-slate-50">
+                        <td className="whitespace-nowrap px-4 py-3 text-xs text-slate-500">{shortDate(s.time)}</td>
+                        <td className="whitespace-nowrap px-4 py-3 text-xs text-slate-500">{fmtTime(s.time)}</td>
+                        <td className="px-4 py-3 font-mono text-xs font-black text-slate-900">{s.symbol}</td>
+                        <td className="px-4 py-3">
+                          <span className={`rounded-full px-2 py-1 text-[10px] font-black ${s.signal === "BUY" ? "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200" : "bg-rose-50 text-rose-700 ring-1 ring-rose-200"}`}>{s.signal}</span>
+                        </td>
+                        <td className="px-4 py-3 text-right font-mono text-xs font-bold text-slate-900">₹{NUM(s.price)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                {filteredSignals.length === 0 && <div className="p-8 text-center text-sm text-slate-400">No signals yet — will appear as strategy generates them.</div>}
               </div>
             </div>
           )}
