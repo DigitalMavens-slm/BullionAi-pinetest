@@ -157,6 +157,24 @@ async function init() {
         await p.query(`CREATE INDEX IF NOT EXISTS idx_perf_trades_entry_time ON perf_trades(entry_time)`);
         await p.query(`CREATE INDEX IF NOT EXISTS idx_perf_trades_exit_time ON perf_trades(exit_time)`);
         await p.query(`CREATE INDEX IF NOT EXISTS idx_perf_trades_status ON perf_trades(status)`);
+        // Every BUY/SELL signal (even when no trade opens) — for complete audit
+        await p.query(`
+            CREATE TABLE IF NOT EXISTS strategy_signals (
+                id BIGSERIAL PRIMARY KEY,
+                signal_uid TEXT UNIQUE NOT NULL,
+                exchange TEXT NOT NULL,
+                symbol TEXT NOT NULL,
+                token TEXT,
+                timeframe TEXT NOT NULL,
+                signal TEXT NOT NULL,
+                price NUMERIC,
+                time BIGINT,
+                created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+            )
+        `);
+        await p.query(`CREATE INDEX IF NOT EXISTS idx_strategy_signals_uid ON strategy_signals(signal_uid)`);
+        await p.query(`CREATE INDEX IF NOT EXISTS idx_strategy_signals_symbol ON strategy_signals(symbol)`);
+        await p.query(`CREATE INDEX IF NOT EXISTS idx_strategy_signals_time ON strategy_signals(time)`);
         ready = true;
         console.log("[db] PostgreSQL schema ready");
         return { engine: "postgres" };
@@ -754,6 +772,78 @@ async function getPerfRecentSignals({ exchange, timeframe } = {}) {
     }
 }
 
+// Strategy signals — every BUY/SELL, even when no trade opens
+const SIGNALS_FILE = path.resolve(process.cwd(), "data", "strategy-signals.json");
+function loadSignalsJson() {
+    try {
+        const p = JSON.parse(fs.readFileSync(SIGNALS_FILE, "utf8"));
+        if (Array.isArray(p)) return p;
+    } catch {}
+    return [];
+}
+function saveSignalsJson(rows) {
+    fs.mkdirSync(path.dirname(SIGNALS_FILE), { recursive: true });
+    fs.writeFileSync(SIGNALS_FILE, JSON.stringify(rows, null, 2), "utf8");
+}
+function signalRow(r) {
+    if (!r) return null;
+    return {
+        signalUid: String(r.signal_uid || r.signalUid || ""),
+        exchange: String(r.exchange || ""),
+        symbol: String(r.symbol || ""),
+        token: r.token || null,
+        timeframe: String(r.timeframe || ""),
+        signal: String(r.signal || ""),
+        price: numOrNull(r.price),
+        time: numOrNull(r.time),
+        createdAt: r.created_at ?? r.createdAt ?? null,
+    };
+}
+async function upsertStrategySignal(s) {
+    if (!s || !s.signalUid || !s.signal) return false;
+    if (!pgEnabled()) {
+        const rows = loadSignalsJson();
+        if (rows.find((x) => String(x.signal_uid || x.signalUid) === String(s.signalUid))) return true;
+        rows.push({ signal_uid: s.signalUid, exchange: s.exchange, symbol: s.symbol, token: s.token || null, timeframe: s.timeframe, signal: s.signal, price: numOrNull(s.price), time: numOrNull(s.time), created_at: new Date().toISOString() });
+        saveSignalsJson(rows);
+        return true;
+    }
+    try {
+        await init();
+        await getPool().query(
+            `INSERT INTO strategy_signals (signal_uid, exchange, symbol, token, timeframe, signal, price, time) VALUES ($1,$2,$3,$4,$5,$6,$7,$8) ON CONFLICT (signal_uid) DO NOTHING`,
+            [String(s.signalUid), s.exchange, s.symbol, s.token || null, s.timeframe, s.signal, numOrNull(s.price), numOrNull(s.time)]
+        );
+        return true;
+    } catch (e) {
+        console.error("[db] upsertStrategySignal failed:", e?.message || e);
+        return false;
+    }
+}
+async function getStrategySignals({ exchange, timeframe, limit = 100 } = {}) {
+    if (!pgEnabled()) {
+        let rows = loadSignalsJson().map(signalRow).filter(Boolean);
+        if (exchange) rows = rows.filter((r) => r.exchange === String(exchange).toUpperCase());
+        if (timeframe) rows = rows.filter((r) => r.timeframe === String(timeframe));
+        rows.sort((a, b) => (b.time || 0) - (a.time || 0));
+        return rows.slice(0, limit);
+    }
+    try {
+        await init();
+        const where = [];
+        const params = [];
+        if (exchange) { params.push(exchange); where.push(`exchange = $${params.length}`); }
+        if (timeframe) { params.push(timeframe); where.push(`timeframe = $${params.length}`); }
+        const whereSql = where.length ? `WHERE ${where.join(" AND ")}` : "";
+        params.push(limit);
+        const r = await getPool().query(`SELECT * FROM strategy_signals ${whereSql} ORDER BY time DESC NULLS LAST LIMIT $${params.length}`, params);
+        return r.rows.map(signalRow);
+    } catch (e) {
+        console.error("[db] getStrategySignals failed:", e?.message || e);
+        return [];
+    }
+}
+
 // IST day key "YYYY-MM-DD".
 function dayKey(ms) {
     try {
@@ -785,6 +875,8 @@ module.exports = {
     getPerfTrades,
     getPerfTrade,
     getPerfRecentSignals,
+    upsertStrategySignal,
+    getStrategySignals,
     rowToUser,
     jsonRowToUser,
 };

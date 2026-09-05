@@ -3573,6 +3573,14 @@ const allowedTimeframes =
 
         // Evaluate signal on the LAST CLOSED candle (authoritative).
         const sig = latestSignal(candles);
+        // Persist every real BUY/SELL signal (even when trade not opened) — complete audit trail
+        if (sig.signal === "BUY" || sig.signal === "SELL") {
+            const signalUid = `${exch}:${symbol}:${tf.key}:${sig.time || Date.now()}:${sig.signal}:${sig.close}`;
+            try {
+                const { upsertStrategySignal } = require("../auth/db");
+                upsertStrategySignal({ signalUid, exchange: exch, symbol, token: String(token), timeframe: tf.key, signal: sig.signal, price: sig.close, time: sig.time || Date.now() }).catch(() => {});
+            } catch {}
+        }
         const tradeKey = `${exch}:${symbol}:${tf.key}`;
         const active = this.tradeEngine.getState({ exchange: exch, symbol, timeframe: tf.key });
 
