@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 
-const ROOT_URL = "https://bullionai.digitalmavens.in";
+const ROOT_URL = "https://bullionai.in";
 
 type SeoProps = {
   title?: string;

@@ -268,7 +268,7 @@ export function BlogArticlePage({ article }: { article: typeof ARTICLES[0] }) {
   const cat = CATEGORIES.find(c => c.slug === article.category)!;
 
   useEffect(() => {
-    const url = `https://bullionai.digitalmavens.in/blog/${article.slug}`;
+    const url = `https://bullionai.in/blog/${article.slug}`;
     const articleJsonLd = {
       "@context": "https://schema.org",
       "@type": "BlogPosting",
@@ -276,7 +276,7 @@ export function BlogArticlePage({ article }: { article: typeof ARTICLES[0] }) {
       "description": article.excerpt,
       "image": article.image,
       "author": { "@type": "Organization", "name": "BullionAI" },
-      "publisher": { "@type": "Organization", "name": "BullionAI", "logo": { "@type": "ImageObject", "url": "https://bullionai.digitalmavens.in/favicon.svg" } },
+      "publisher": { "@type": "Organization", "name": "BullionAI", "logo": { "@type": "ImageObject", "url": "https://bullionai.in/favicon.svg" } },
       "datePublished": article.date,
       "dateModified": article.date,
       "mainEntityOfPage": url,
@@ -286,8 +286,8 @@ export function BlogArticlePage({ article }: { article: typeof ARTICLES[0] }) {
       "@context": "https://schema.org",
       "@type": "BreadcrumbList",
       "itemListElement": [
-        { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://bullionai.digitalmavens.in/" },
-        { "@type": "ListItem", "position": 2, "name": "Insights", "item": "https://bullionai.digitalmavens.in/blog" },
+        { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://bullionai.in/" },
+        { "@type": "ListItem", "position": 2, "name": "Insights", "item": "https://bullionai.in/blog" },
         { "@type": "ListItem", "position": 3, "name": article.title, "item": url },
       ],
     };
