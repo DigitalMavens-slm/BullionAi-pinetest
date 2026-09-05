@@ -21,7 +21,7 @@ echo.
 echo ==========================================
 echo.
 
-node src/server/bullionai-api.js %*
+node backend/src/server/bullionai-api.js %*
 
 echo.
 echo Server exited. Press any key to close.
