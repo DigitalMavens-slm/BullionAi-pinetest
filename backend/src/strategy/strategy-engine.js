@@ -1595,91 +1595,29 @@ class StrategyEngine {
          * marker is forced to mirror
          * the table exactly.
          */
-
-        const signalHistory =
-            entries.filter(
-                ev =>
-                    entryIndex ===
-                        null ||
-                    ev.index <
-                        entryIndex
-            );
+        // Show ALL historical BUY/SELL arrows on chart (not just latest)
+        const signalHistory = [...entries];
 
         if (
             tradeSide &&
             entryPrice !== null &&
-            entryTimestamp !== null
+            entryTimestamp !== null &&
+            entryIndex !== null
         ) {
-
-            signalHistory.push({
-
-                index:
-                    entryIndex ?? -1,
-
-                signal:
-                    tradeSide,
-
-                price:
-                    entryPrice,
-
-                time:
-                    entryTimestamp,
-
-            });
-
-        }
-
-
-        /*
-         * Entries strictly alternate
-         * (newBuy/newSell only fire
-         * while CLOSED), so collapse
-         * any same-direction run —
-         * keeping the NEWEST, which
-         * is anchored to the table.
-         */
-
-        const collapsed = [];
-
-        for (
-            const ev of
-                signalHistory
-        ) {
-
-            const prev =
-
-                collapsed[
-                    collapsed
-                        .length - 1
-                ];
-
-            if (
-                prev &&
-                prev.signal ===
-                    ev.signal
-            ) {
-
-                collapsed[
-                    collapsed
-                        .length - 1
-                ] = ev;
-
-            } else {
-
-                collapsed.push(
-                    ev
-                );
-
+            const exists = signalHistory.some(
+                ev =>
+                    ev.index === entryIndex &&
+                    ev.signal === tradeSide
+            );
+            if (!exists) {
+                signalHistory.push({
+                    index: entryIndex,
+                    signal: tradeSide,
+                    price: entryPrice,
+                    time: entryTimestamp,
+                });
             }
-
         }
-
-        signalHistory.length = 0;
-
-        signalHistory.push(
-            ...collapsed
-        );
-
 
         // -----------------------------------------------------
         // PER-TRADE REALIZED P/L
