@@ -3571,11 +3571,12 @@ const allowedTimeframes =
             return { exchange: exch, symbol, token: String(token), timeframe: tf.key, status: "no-data" };
         }
 
-        // Evaluate signal — use exact Pine via PineTS for all: 15m MCX → BullionAI-fixedtgt.pine, others → BullionAI.pine
-        const isFixedTgt = exch === "MCX" && tf.key === "15m";
-        const pineFile = isFixedTgt ? "BullionAI-fixedtgt.pine" : "BullionAI.pine";
+        // Use exact Pine via PineTS for every scrip/timeframe — no JS drift
+        // 15m MCX → BullionAI-fixedtgt.pine (TGT1/TGT2), all else → BullionAI.pine (trailing)
+        const pineFile = exch === "MCX" && tf.key === "15m" ? "BullionAI-fixedtgt.pine" : "BullionAI.pine";
+        let pineState = null;
+        let pineResults = null;
         let sig = null;
-        let sigTrailing = null;
         try {
             const { StrategyEngine } = require("../strategy/strategy-engine");
             const fileName = `${exch}_${token}_${tf.key}.json`;
@@ -3584,67 +3585,57 @@ const allowedTimeframes =
                 const strat = new StrategyEngine({ strategyFile: pineFile, candlesFile: fileName, resultsFile });
                 const results = strat.execute();
                 const state = strat.buildState(results, candles);
-                const isFixed = pineFile.includes("fixedtgt");
-                if (isFixed) {
-                    sig = {
-                        signal: state.signal,
-                        close: state.entryPrice ?? candles[candles.length - 1].close,
-                        time: state.entryTime ?? candles[candles.length - 1].time,
-                        indicators: { atr: null },
-                        state,
-                        results,
-                    };
-                } else {
-                    sigTrailing = {
-                        signal: state.signal,
-                        close: state.entryPrice ?? candles[candles.length - 1].close,
-                        time: state.entryTime ?? candles[candles.length - 1].time,
-                        indicators: { atr: null },
-                        state,
-                        results,
-                    };
-                }
+                pineResults = results;
+                pineState = state;
+                sig = {
+                    signal: state.signal,
+                    close: state.entryPrice ?? candles[candles.length - 1].close,
+                    time: state.entryTime ?? candles[candles.length - 1].time,
+                    indicators: { atr: null },
+                    state,
+                    results,
+                };
             }
         } catch (e) {
-            // Fallback to JS signal engine if PineTS fails (e.g., missing file)
-            sig = latestSignal(candles);
+            // PineTS failed — will fallback to JS, but log
+            console.error(`[pine] ${exch} ${symbol} ${tf.key} failed:`, e?.message || e);
         }
-        // Fallback: if Pine did not produce signal, use JS engine
-        if (!sig && !sigTrailing) {
-            sig = latestSignal(candles);
+        if (!sig) {
+            // Fallback only if Pine truly failed — still JS trailing, but log
+            const jsSig = latestSignal(candles);
+            sig = { signal: jsSig.signal, close: jsSig.close, time: jsSig.time, indicators: jsSig.indicators, state: null, results: null };
         }
-
-        const effectiveSig = isFixedTgt ? sig : sigTrailing;
-        // Persist every real BUY/SELL signal — ONLY 15m, complete audit trail (fixedtgt path only)
-        if (isFixedTgt && effectiveSig && (effectiveSig.signal === "BUY" || effectiveSig.signal === "SELL")) {
-            const signalUid = `${exch}:${symbol}:${tf.key}:${effectiveSig.time || Date.now()}:${effectiveSig.signal}:${effectiveSig.close}`;
+        // Persist every real BUY/SELL signal — ONLY 15m MCX, complete audit trail
+        if (exch === "MCX" && tf.key === "15m" && sig && (sig.signal === "BUY" || sig.signal === "SELL")) {
+            const signalUid = `${exch}:${symbol}:${tf.key}:${sig.time || Date.now()}:${sig.signal}:${sig.close}`;
             try {
                 const { upsertStrategySignal } = require("../auth/db");
-                upsertStrategySignal({ signalUid, exchange: exch, symbol, token: String(token), timeframe: tf.key, signal: effectiveSig.signal, price: effectiveSig.close, time: effectiveSig.time || Date.now() }).catch(() => {});
+                upsertStrategySignal({ signalUid, exchange: exch, symbol, token: String(token), timeframe: tf.key, signal: sig.signal, price: sig.close, time: sig.time || Date.now() }).catch(() => {});
             } catch {}
         }
         const tradeKey = `${exch}:${symbol}:${tf.key}`;
         const active = this.tradeEngine.getState({ exchange: exch, symbol, timeframe: tf.key });
 
         let openResult = null;
-        if (isFixedTgt && effectiveSig && (effectiveSig.signal === "BUY" || effectiveSig.signal === "SELL")) {
+        const isFixedTgt = exch === "MCX" && tf.key === "15m";
+        if (isFixedTgt && sig && (sig.signal === "BUY" || sig.signal === "SELL")) {
             // Only open if no active trade exists for this key.
             if (!active.active) {
-                const atr = effectiveSig.indicators?.atr;
+                const atr = sig.indicators?.atr;
                 if (atr && Number.isFinite(atr) && atr > 0) {
                     const res = this.tradeEngine.openTrade({
                         exchange: exch,
                         symbol,
                         timeframe: tf.key,
-                        signal: effectiveSig.signal,
-                        entryPrice: effectiveSig.close,
+                        signal: sig.signal,
+                        entryPrice: sig.close,
                         atr,
-                        time: effectiveSig.time || Date.now(),
+                        time: sig.time || Date.now(),
                     });
                     if (res.ok) {
-                        openResult = { signal: effectiveSig.signal, entry: res.trade.entryPrice, sl: res.trade.initialSL, t1: res.trade.target1, t2: res.trade.target2 };
+                        openResult = { signal: sig.signal, entry: res.trade.entryPrice, sl: res.trade.initialSL, t1: res.trade.target1, t2: res.trade.target2 };
                         this.broadcastEvent("trade_open", this.segmentEvent("trade_open", {
-                            exchange: exch, symbol, timeframe: tf.key, signal: effectiveSig.signal,
+                            exchange: exch, symbol, timeframe: tf.key, signal: sig.signal,
                             entry: res.trade.entryPrice, sl: res.trade.initialSL, target1: res.trade.target1, target2: res.trade.target2,
                         }));
                         // Persist the freshly-opened trade — ONLY 15m
@@ -3655,14 +3646,11 @@ const allowedTimeframes =
                     }
                 }
             }
-        } else if (!isFixedTgt && sigTrailing && (sigTrailing.signal === "BUY" || sigTrailing.signal === "SELL" || sigTrailing.state?.signal === "BUY" || sigTrailing.state?.signal === "SELL")) {
+        } else if (!isFixedTgt && sig && (sig.signal === "BUY" || sig.signal === "SELL")) {
             // Trailing: no TradeEngine, just broadcast the Pine signal for chart/live
-            const sigVal = sigTrailing.signal || sigTrailing.state?.signal;
-            if (sigVal === "BUY" || sigVal === "SELL") {
-                this.broadcastEvent("strategy", this.segmentEvent("strategy", {
-                    exchange: exch, symbol, timeframe: tf.key, signal: sigVal, state: sigTrailing.state,
-                }));
-            }
+            this.broadcastEvent("strategy", this.segmentEvent("strategy", {
+                exchange: exch, symbol, timeframe: tf.key, signal: sig.signal, state: sig.state,
+            }));
         }
 
         // Advance the active trade with the latest close (for live P/L / max points) — ONLY 15m fixedtgt
@@ -3748,11 +3736,11 @@ const allowedTimeframes =
             .sort((a, b) => Number(b.entryTime) - Number(a.entryTime))
             .slice(0, 5);
 
-        const effectiveSignal = isFixedTgt ? sig?.signal : sigTrailing?.signal || sigTrailing?.state?.signal || "NONE";
+        const effectiveSignal = sig?.signal || "NONE";
         const effectiveIndicators = isFixedTgt ? sig?.indicators : null;
-        const effectiveTrade = isFixedTgt ? t : sigTrailing?.state || null;
+        const effectiveTrade = isFixedTgt ? t : sig?.state || null;
         const effectiveRecent = isFixedTgt ? recent : (() => {
-            const sh = sigTrailing?.state?.signalHistory || [];
+            const sh = sig?.state?.signalHistory || [];
             return sh.slice(-5).reverse().map((ev) => ({
                 tradeUid: `${exch}:${symbol}:${tf.key}:${ev.time}:${ev.signal}:${ev.price}`,
                 signal: ev.signal,
