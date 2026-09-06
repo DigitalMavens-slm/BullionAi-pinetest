@@ -734,8 +734,49 @@ class StrategyEngine {
         candles
     ) {
 
-        const data =
+        // Handle both: fixedtgt uses "BUY SIGNAL"/"SELL SIGNAL", trailing uses "plot"
+        const buyData =
+            results?.plots?.["BUY SIGNAL"]?.data;
+        const sellData =
+            results?.plots?.["SELL SIGNAL"]?.data;
+        const plotData =
             results?.plots?.plot?.data;
+
+        if (
+            Array.isArray(buyData) ||
+            Array.isArray(sellData)
+        ) {
+            const history = [];
+            const maxLen = Math.max(
+                buyData?.length || 0,
+                sellData?.length || 0
+            );
+            for (let i = 0; i < maxLen; i++) {
+                const b =
+                    buyData?.[i];
+                const s =
+                    sellData?.[i];
+                const isBuy =
+                    b?.value === true;
+                const isSell =
+                    s?.value === true;
+                if (!isBuy && !isSell) continue;
+                const signal = isBuy ? "BUY" : "SELL";
+                const candle = candles[i];
+                if (!candle) continue;
+                history.push({
+                    index: i,
+                    signal,
+                    price: Number(candle.close),
+                    time: candle.time,
+                });
+            }
+            return history.sort(
+                (a, b) => a.index - b.index
+            );
+        }
+
+        const data = plotData;
 
 
         if (
@@ -743,7 +784,6 @@ class StrategyEngine {
         ) {
 
             return [];
-
         }
 
 
