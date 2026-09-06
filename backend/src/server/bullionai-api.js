@@ -3571,54 +3571,89 @@ const allowedTimeframes =
             return { exchange: exch, symbol, token: String(token), timeframe: tf.key, status: "no-data" };
         }
 
-        // Evaluate signal on the LAST CLOSED candle (authoritative).
-        const sig = latestSignal(candles);
-        // Persist every real BUY/SELL signal — ONLY 15m, complete audit trail
-        if ((sig.signal === "BUY" || sig.signal === "SELL") && tf.key === "15m") {
-            const signalUid = `${exch}:${symbol}:${tf.key}:${sig.time || Date.now()}:${sig.signal}:${sig.close}`;
+        // Evaluate signal — 15m MCX uses fixed-target TradeEngine, all other timeframes use trailing Pine (BullionAI.pine) via PineTS
+        const isFixedTgt = exch === "MCX" && tf.key === "15m";
+        const sig = isFixedTgt ? latestSignal(candles) : null;
+        let sigTrailing = null;
+
+        // For trailing (non-15m): run BullionAI.pine via PineTS to get exact TradingView signal
+        if (!isFixedTgt) {
+            try {
+                const { StrategyEngine } = require("../strategy/strategy-engine");
+                const fileName = `${exch}_${token}_${tf.key}.json`;
+                const stratFile = "BullionAI.pine";
+                const candlesFile = path.resolve(process.cwd(), "data", fileName);
+                const resultsFile = `results-${token}-${tf.key}.json`;
+                // Ensure candles file exists (ensureCandles already did via ensured)
+                if (candles.length > 0) {
+                    const strat = new StrategyEngine({ strategyFile: stratFile, candlesFile: fileName, resultsFile });
+                    const results = strat.execute();
+                    const state = strat.buildState(results, candles);
+                    sigTrailing = {
+                        signal: state.signal,
+                        close: state.entryPrice ?? candles[candles.length - 1].close,
+                        time: state.entryTime ?? candles[candles.length - 1].time,
+                        indicators: { atr: null },
+                        state,
+                        results,
+                    };
+                }
+            } catch {}
+        }
+
+        const effectiveSig = isFixedTgt ? sig : sigTrailing;
+        // Persist every real BUY/SELL signal — ONLY 15m, complete audit trail (fixedtgt path only)
+        if (isFixedTgt && effectiveSig && (effectiveSig.signal === "BUY" || effectiveSig.signal === "SELL")) {
+            const signalUid = `${exch}:${symbol}:${tf.key}:${effectiveSig.time || Date.now()}:${effectiveSig.signal}:${effectiveSig.close}`;
             try {
                 const { upsertStrategySignal } = require("../auth/db");
-                upsertStrategySignal({ signalUid, exchange: exch, symbol, token: String(token), timeframe: tf.key, signal: sig.signal, price: sig.close, time: sig.time || Date.now() }).catch(() => {});
+                upsertStrategySignal({ signalUid, exchange: exch, symbol, token: String(token), timeframe: tf.key, signal: effectiveSig.signal, price: effectiveSig.close, time: effectiveSig.time || Date.now() }).catch(() => {});
             } catch {}
         }
         const tradeKey = `${exch}:${symbol}:${tf.key}`;
         const active = this.tradeEngine.getState({ exchange: exch, symbol, timeframe: tf.key });
 
         let openResult = null;
-        if (sig.signal === "BUY" || sig.signal === "SELL") {
+        if (isFixedTgt && effectiveSig && (effectiveSig.signal === "BUY" || effectiveSig.signal === "SELL")) {
             // Only open if no active trade exists for this key.
             if (!active.active) {
-                const atr = sig.indicators?.atr;
+                const atr = effectiveSig.indicators?.atr;
                 if (atr && Number.isFinite(atr) && atr > 0) {
                     const res = this.tradeEngine.openTrade({
                         exchange: exch,
                         symbol,
                         timeframe: tf.key,
-                        signal: sig.signal,
-                        entryPrice: sig.close,
+                        signal: effectiveSig.signal,
+                        entryPrice: effectiveSig.close,
                         atr,
-                        time: sig.time || Date.now(),
+                        time: effectiveSig.time || Date.now(),
                     });
                     if (res.ok) {
-                        openResult = { signal: sig.signal, entry: res.trade.entryPrice, sl: res.trade.initialSL, t1: res.trade.target1, t2: res.trade.target2 };
+                        openResult = { signal: effectiveSig.signal, entry: res.trade.entryPrice, sl: res.trade.initialSL, t1: res.trade.target1, t2: res.trade.target2 };
                         this.broadcastEvent("trade_open", this.segmentEvent("trade_open", {
-                            exchange: exch, symbol, timeframe: tf.key, signal: sig.signal,
+                            exchange: exch, symbol, timeframe: tf.key, signal: effectiveSig.signal,
                             entry: res.trade.entryPrice, sl: res.trade.initialSL, target1: res.trade.target1, target2: res.trade.target2,
                         }));
                         // Persist the freshly-opened trade — ONLY 15m
-                        if (tf.key === "15m") {
-                            await this.persistPerfTrade({
-                                exchange: exch, symbol, token: String(token), timeframe: tf.key,
-                                trade: res.trade,
-                            }).catch(() => {});
-                        }
+                        await this.persistPerfTrade({
+                            exchange: exch, symbol, token: String(token), timeframe: tf.key,
+                            trade: res.trade,
+                        }).catch(() => {});
                     }
                 }
             }
+        } else if (!isFixedTgt && sigTrailing && (sigTrailing.signal === "BUY" || sigTrailing.signal === "SELL" || sigTrailing.state?.signal === "BUY" || sigTrailing.state?.signal === "SELL")) {
+            // Trailing: no TradeEngine, just broadcast the Pine signal for chart/live
+            const sigVal = sigTrailing.signal || sigTrailing.state?.signal;
+            if (sigVal === "BUY" || sigVal === "SELL") {
+                this.broadcastEvent("strategy", this.segmentEvent("strategy", {
+                    exchange: exch, symbol, timeframe: tf.key, signal: sigVal, state: sigTrailing.state,
+                }));
+            }
         }
 
-        // Advance the active trade with the latest close (for live P/L / max points).
-        if (active.active) {
+        // Advance the active trade with the latest close (for live P/L / max points) — ONLY 15m fixedtgt
+        if (isFixedTgt && active.active) {
             const upd = this.tradeEngine.updatePrice({
                 exchange: exch, symbol, timeframe: tf.key,
                 price: candles[candles.length - 1].close,
@@ -3700,9 +3735,34 @@ const allowedTimeframes =
             .sort((a, b) => Number(b.entryTime) - Number(a.entryTime))
             .slice(0, 5);
 
+        const effectiveSignal = isFixedTgt ? sig?.signal : sigTrailing?.signal || sigTrailing?.state?.signal || "NONE";
+        const effectiveIndicators = isFixedTgt ? sig?.indicators : null;
+        const effectiveTrade = isFixedTgt ? t : sigTrailing?.state || null;
+        const effectiveRecent = isFixedTgt ? recent : (() => {
+            const sh = sigTrailing?.state?.signalHistory || [];
+            return sh.slice(-5).reverse().map((ev) => ({
+                tradeUid: `${exch}:${symbol}:${tf.key}:${ev.time}:${ev.signal}:${ev.price}`,
+                signal: ev.signal,
+                status: ev.exitTime ? "CLOSED" : "OPEN",
+                entryPrice: ev.price,
+                activeSL: null,
+                entrySL: null,
+                target1: null,
+                target2: null,
+                target1Status: null,
+                target2Status: null,
+                currentPL: ev.realizedPL ?? null,
+                maxPoints: null,
+                entryTime: ev.time,
+                exitTime: ev.exitTime ?? null,
+                result: ev.realizedPL != null ? String(ev.realizedPL) : null,
+                resultPoints: ev.realizedPL ?? null,
+            }));
+        })();
+
         this.jsSignals.set(key, {
             exchange: exch, symbol, token: String(token), timeframe: tf.key,
-            signal: sig.signal,
+            signal: effectiveSignal,
             lastCandleTime: candles[candles.length - 1]?.time ?? null,
         });
 
@@ -3712,28 +3772,28 @@ const allowedTimeframes =
             token: String(token),
             timeframe: tf.key,
             status: "ok",
-            signal: sig.signal,
-            indicators: sig.indicators,
-            trade: t
+            signal: effectiveSignal,
+            indicators: effectiveIndicators,
+            trade: effectiveTrade
                 ? {
-                      signal: t.signal,
-                      status: t.status,
-                      entryPrice: t.entryPrice,
-                      activeSL: t.activeSL,
-                      entrySL: t.initialSL,
-                      target1: t.target1,
-                      target2: t.target2,
-                      target1Status: t.target1Status,
-                      target2Status: t.target2Status,
-                      currentPL: t.currentPL,
-                      maxPoints: t.maxPoints,
-                      entryTime: t.entryTime,
-                      exitTime: t.exitTime,
-                      result: t.result,
+                      signal: effectiveTrade.signal,
+                      status: effectiveTrade.status,
+                      entryPrice: effectiveTrade.entryPrice,
+                      activeSL: effectiveTrade.activeSL ?? effectiveTrade.trailSL ?? null,
+                      entrySL: effectiveTrade.initialSL ?? effectiveTrade.trailSL ?? null,
+                      target1: effectiveTrade.target1 ?? null,
+                      target2: effectiveTrade.target2 ?? null,
+                      target1Status: effectiveTrade.target1Status ?? null,
+                      target2Status: effectiveTrade.target2Status ?? null,
+                      currentPL: effectiveTrade.currentPL ?? null,
+                      maxPoints: effectiveTrade.maxPoints ?? effectiveTrade.bestPL ?? null,
+                      entryTime: effectiveTrade.entryTime,
+                      exitTime: effectiveTrade.exitTime,
+                      result: effectiveTrade.result ?? null,
                   }
                 : null,
 
-            recent,
+            recent: effectiveRecent,
         };
     }
 
