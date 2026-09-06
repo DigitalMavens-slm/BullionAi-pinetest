@@ -3571,24 +3571,30 @@ const allowedTimeframes =
             return { exchange: exch, symbol, token: String(token), timeframe: tf.key, status: "no-data" };
         }
 
-        // Evaluate signal — 15m MCX uses fixed-target TradeEngine, all other timeframes use trailing Pine (BullionAI.pine) via PineTS
+        // Evaluate signal — use exact Pine via PineTS for all: 15m MCX → BullionAI-fixedtgt.pine, others → BullionAI.pine
         const isFixedTgt = exch === "MCX" && tf.key === "15m";
-        const sig = isFixedTgt ? latestSignal(candles) : null;
+        const pineFile = isFixedTgt ? "BullionAI-fixedtgt.pine" : "BullionAI.pine";
+        let sig = null;
         let sigTrailing = null;
-
-        // For trailing (non-15m): run BullionAI.pine via PineTS to get exact TradingView signal
-        if (!isFixedTgt) {
-            try {
-                const { StrategyEngine } = require("../strategy/strategy-engine");
-                const fileName = `${exch}_${token}_${tf.key}.json`;
-                const stratFile = "BullionAI.pine";
-                const candlesFile = path.resolve(process.cwd(), "data", fileName);
-                const resultsFile = `results-${token}-${tf.key}.json`;
-                // Ensure candles file exists (ensureCandles already did via ensured)
-                if (candles.length > 0) {
-                    const strat = new StrategyEngine({ strategyFile: stratFile, candlesFile: fileName, resultsFile });
-                    const results = strat.execute();
-                    const state = strat.buildState(results, candles);
+        try {
+            const { StrategyEngine } = require("../strategy/strategy-engine");
+            const fileName = `${exch}_${token}_${tf.key}.json`;
+            const resultsFile = `results-${token}-${tf.key}.json`;
+            if (candles.length > 0) {
+                const strat = new StrategyEngine({ strategyFile: pineFile, candlesFile: fileName, resultsFile });
+                const results = strat.execute();
+                const state = strat.buildState(results, candles);
+                const isFixed = pineFile.includes("fixedtgt");
+                if (isFixed) {
+                    sig = {
+                        signal: state.signal,
+                        close: state.entryPrice ?? candles[candles.length - 1].close,
+                        time: state.entryTime ?? candles[candles.length - 1].time,
+                        indicators: { atr: null },
+                        state,
+                        results,
+                    };
+                } else {
                     sigTrailing = {
                         signal: state.signal,
                         close: state.entryPrice ?? candles[candles.length - 1].close,
@@ -3598,7 +3604,14 @@ const allowedTimeframes =
                         results,
                     };
                 }
-            } catch {}
+            }
+        } catch (e) {
+            // Fallback to JS signal engine if PineTS fails (e.g., missing file)
+            sig = latestSignal(candles);
+        }
+        // Fallback: if Pine did not produce signal, use JS engine
+        if (!sig && !sigTrailing) {
+            sig = latestSignal(candles);
         }
 
         const effectiveSig = isFixedTgt ? sig : sigTrailing;
