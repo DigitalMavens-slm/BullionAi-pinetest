@@ -2237,12 +2237,12 @@ function App() {
                           </span>
                         </span>
                         {hasBidAsk ? (
-                          <span className="grid shrink-0 grid-cols-[72px_1px_72px] grid-rows-[auto_auto_auto] gap-x-3 text-right leading-tight">
-                            <span className="text-[9px] font-bold uppercase tracking-[0.14em] text-slate-400">Bid</span>
-                            <span className="row-span-3 w-px bg-slate-200" aria-hidden />
-                            <span className="text-[9px] font-bold uppercase tracking-[0.14em] text-slate-400">Ask</span>
-                            <span title="Bid (Buy)" className={`font-mono text-[16px] font-extrabold tabular-nums tracking-tight text-blue-600 ${flashCls}`}>{fmtRow(bid, (sym as any)?.tickSize)}</span>
-                            <span title="Ask (Sell)" className={`font-mono text-[16px] font-extrabold tabular-nums tracking-tight text-rose-600 ${flashCls}`}>{fmtRow(ask, (sym as any)?.tickSize)}</span>
+                          <span className="grid shrink-0 grid-cols-[80px_1px_80px] grid-rows-[auto_auto_auto] gap-x-3 text-right leading-tight">
+                            <span className="text-[9px] font-bold uppercase tracking-[0.18em] text-slate-400">Bid</span>
+                            <span className="row-span-3 w-px rounded-full bg-slate-200" aria-hidden />
+                            <span className="text-[9px] font-bold uppercase tracking-[0.18em] text-slate-400">Ask</span>
+                            <span title="Bid (Buy)" className={`rounded-md bg-blue-50/80 px-1.5 py-0.5 font-mono text-[15px] font-extrabold tabular-nums tracking-tight text-blue-700 ${flashCls}`}>{fmtRow(bid, (sym as any)?.tickSize)}</span>
+                            <span title="Ask (Sell)" className={`rounded-md bg-rose-50/80 px-1.5 py-0.5 font-mono text-[15px] font-extrabold tabular-nums tracking-tight text-rose-700 ${flashCls}`}>{fmtRow(ask, (sym as any)?.tickSize)}</span>
                             <span title="Day low" className="font-mono text-[10px] tabular-nums text-slate-500">L: {fmtRow(lo, (sym as any)?.tickSize)}</span>
                             <span title="Day high" className="font-mono text-[10px] tabular-nums text-slate-500">H: {fmtRow(hi, (sym as any)?.tickSize)}</span>
                           </span>
@@ -2879,12 +2879,12 @@ function App() {
                       </span>
                     </span>
                     {hasBARow ? (
-                      <span className="grid shrink-0 grid-cols-[72px_1px_72px] grid-rows-[auto_auto_auto] gap-x-3 text-right leading-tight">
-                        <span className="text-[9px] font-bold uppercase tracking-[0.14em] text-slate-400">Bid</span>
-                        <span className="row-span-3 w-px bg-slate-200" aria-hidden />
-                        <span className="text-[9px] font-bold uppercase tracking-[0.14em] text-slate-400">Ask</span>
-                        <span title="Bid (Buy)" className="font-mono text-[16px] font-extrabold tabular-nums tracking-tight text-blue-600">{fmtRow(bidrow, (sym as any)?.tickSize)}</span>
-                        <span title="Ask (Sell)" className="font-mono text-[16px] font-extrabold tabular-nums tracking-tight text-rose-600">{fmtRow(askrow, (sym as any)?.tickSize)}</span>
+                      <span className="grid shrink-0 grid-cols-[80px_1px_80px] grid-rows-[auto_auto_auto] gap-x-3 text-right leading-tight">
+                        <span className="text-[9px] font-bold uppercase tracking-[0.18em] text-slate-400">Bid</span>
+                        <span className="row-span-3 w-px rounded-full bg-slate-200" aria-hidden />
+                        <span className="text-[9px] font-bold uppercase tracking-[0.18em] text-slate-400">Ask</span>
+                        <span title="Bid (Buy)" className="rounded-md bg-blue-50/80 px-1.5 py-0.5 font-mono text-[15px] font-extrabold tabular-nums tracking-tight text-blue-700">{fmtRow(bidrow, (sym as any)?.tickSize)}</span>
+                        <span title="Ask (Sell)" className="rounded-md bg-rose-50/80 px-1.5 py-0.5 font-mono text-[15px] font-extrabold tabular-nums tracking-tight text-rose-700">{fmtRow(askrow, (sym as any)?.tickSize)}</span>
                         <span title="Day low" className="font-mono text-[10px] tabular-nums text-slate-500">L: {fmtRow(lorow, (sym as any)?.tickSize)}</span>
                         <span title="Day high" className="font-mono text-[10px] tabular-nums text-slate-500">H: {fmtRow(hirow, (sym as any)?.tickSize)}</span>
                       </span>
