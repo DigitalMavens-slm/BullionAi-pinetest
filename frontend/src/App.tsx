@@ -1982,7 +1982,7 @@ function App() {
           ) : authUser.hasAccess === false ? (
             <TrialExpired user={authUser} />
           ) : (
-            <div className="page-glow flex min-h-screen flex-col text-slate-900 lg:h-screen lg:overflow-hidden">
+            <div className="page-glow flex h-[100dvh] flex-col overflow-hidden text-slate-900">
 
       {/* ================= HEADER ================= */}
 
@@ -2148,17 +2148,17 @@ function App() {
 
       {/* ================= WORKSPACE ================= */}
 
-      <main className="mx-auto flex w-full max-w-[1800px] flex-1 flex-col gap-3 p-3 pb-24 lg:min-h-0 lg:flex-row lg:gap-3 lg:p-3">
+      <main className="mx-auto flex w-full max-w-[1800px] flex-1 min-h-0 flex-col gap-3 overflow-hidden p-3 pb-[calc(76px_+_env(safe-area-inset-bottom))] lg:flex-row lg:gap-3 lg:p-3 lg:pb-3">
 
         {/* Mobile premium header (symbol + live price, on Chart/Signals tabs) */}
-        <div className={`-mt-1 lg:hidden ${mobileTab === "chart" || mobileTab === "signals" ? "block" : "hidden"}`}>
+        <div className={`-mt-1 shrink-0 lg:hidden ${mobileTab === "chart" || mobileTab === "signals" ? "block" : "hidden"}`}>
           <Card className="overflow-hidden border-0 bg-white/80 p-0">
             {/* Live symbol + price header */}
-            <div className="px-3 pb-2 pt-2.5">
+            <div className="px-3 pb-1.5 pt-2">
               {/* Tappable symbol selector */}
               <button
                 onClick={() => setMobileSymbolOpen(true)}
-                className="flex w-full items-center justify-between rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 transition hover:bg-slate-100"
+                className="flex w-full items-center justify-between rounded-xl border border-slate-200 bg-slate-50 px-3 py-1.5 transition hover:bg-slate-100"
               >
                 <div className="flex items-center gap-2">
                   <span className="flex h-7 w-7 items-center justify-center rounded-full bg-navy text-[11px] font-bold text-white">
@@ -2177,12 +2177,12 @@ function App() {
               </button>
 
               {/* Live price + change */}
-              <div className="mt-2">
+              <div className="mt-1">
                 <div className="flex items-baseline gap-2">
-                  <span className="font-mono text-[26px] font-bold tabular-nums tracking-[-0.02em] text-slate-900">
+                  <span className="font-mono text-[22px] font-bold tabular-nums tracking-[-0.02em] text-slate-900">
                     {fmt(livePrice ?? dayStats?.close)}
                   </span>
-                  <span className={`font-mono text-[13px] font-semibold tabular-nums ${(() => {
+                  <span className={`font-mono text-[12px] font-semibold tabular-nums ${(() => {
                     const pc = dayStats?.prevClose ?? null;
                     const chg = livePrice != null && pc != null ? livePrice - pc : null;
                     return (chg ?? 0) >= 0 ? "text-emerald-600" : "text-rose-600";
@@ -2294,10 +2294,33 @@ function App() {
 
         {/* ============ LEFT: CHART ============ */}
 
-                <aside className={`flex w-full shrink-0 flex-col gap-3 lg:w-[300px] lg:min-h-0 order-3 lg:order-1 ${mobileTab === "signals" ? "flex" : "hidden"} lg:flex`}>
+                <aside className={`flex w-full flex-col gap-3 lg:w-[300px] lg:min-h-0 lg:shrink-0 max-lg:min-h-0 max-lg:flex-1 order-3 lg:order-1 ${mobileTab === "signals" ? "flex" : "hidden"} lg:flex`}>
+
+          {/* TIMEFRAME — premium segmented selector (drives strategy + chart) */}
+          <div className="flex shrink-0 items-center gap-1 overflow-x-auto rounded-full border border-slate-200/70 bg-white/60 p-1 shadow-sm slim-scroll">
+            {TIMEFRAMES.map(tf => {
+              const active = tf.value === selectedTimeframe;
+              return (
+                <button
+                  key={tf.value}
+                  onClick={() => setSelectedTimeframe(tf.value)}
+                  aria-pressed={active}
+                  className={[
+                    "shrink-0 rounded-full px-2.5 py-1.5 text-[10px] font-bold tracking-wide transition-all",
+                    active
+                      ? "tf-active text-white"
+                      : "text-slate-500 hover:bg-slate-100 hover:text-slate-900",
+                  ].join(" ")}
+                >
+                  {tf.label}
+                </button>
+              );
+            })}
+          </div>
+
           {/* BULLIONAI STRATEGY */}
 
-          <Card className="shrink-0">
+          <Card className="min-h-0 flex-1 overflow-y-auto slim-scroll">
 
             <CardTitle
 
@@ -2579,9 +2602,9 @@ function App() {
 
         </aside>
 
-<section className={`flex min-w-0 flex-col gap-3 lg:min-h-0 lg:flex-1 order-2 lg:order-2 max-lg:h-[calc(100dvh-200px)] ${mobileTab === "chart" ? "flex" : "hidden"} lg:flex`}>
+<section className={`flex min-w-0 min-h-0 flex-1 flex-col gap-3 order-2 lg:order-2 ${mobileTab === "chart" ? "flex" : "hidden"} lg:flex`}>
 
-          <Card className="flex flex-1 flex-col overflow-hidden min-h-[320px] lg:h-auto">
+          <Card className="flex min-h-0 flex-1 flex-col overflow-hidden">
 
             {/* Chart canvas */}
 
@@ -2753,7 +2776,7 @@ function App() {
                       }
 
                       className={[
-                        "min-w-[38px] rounded-md px-2 py-1 text-[11px] transition-colors",
+                        "min-w-[34px] rounded-md px-1.5 py-1 text-[10px] transition-colors lg:min-w-[38px] lg:px-2 lg:text-[11px]",
 
                         active
 
@@ -2802,7 +2825,7 @@ function App() {
 
         {/* ============ RIGHT: SIDEBAR ============ */}
 
-        <aside className={`flex w-full shrink-0 flex-col gap-2 lg:w-[360px] lg:min-h-0 order-1 lg:order-3 ${mobileTab === "watchlist" ? "flex" : "hidden"} lg:flex`}>
+        <aside className={`flex w-full flex-col gap-2 lg:w-[360px] lg:min-h-0 lg:shrink-0 max-lg:min-h-0 max-lg:flex-1 order-1 lg:order-3 ${mobileTab === "watchlist" ? "flex" : "hidden"} lg:flex`}>
 
           {/* Mobile-only: add a script to the watchlist */}
           <div className="lg:hidden">
@@ -2816,7 +2839,7 @@ function App() {
           {/* MCX SESSION */}
           {/* WATCHLIST */}
 
-          <Card className="shrink-0 overflow-hidden">
+          <Card className="flex min-h-0 flex-1 flex-col overflow-hidden">
 
             <CardTitle
 
@@ -2849,7 +2872,7 @@ function App() {
             </CardTitle>
 
             {/* Watchlist — same Quotes rows on mobile and desktop */}
-            <div className="divide-y divide-slate-100">
+            <div className="divide-y divide-slate-100 min-h-0 flex-1 overflow-y-auto slim-scroll">
               {filteredCustomSyms.length === 0 && (
                 <div className="px-4 py-10 text-center text-[12px] text-slate-400">
                   {customSyms.length === 0
@@ -2886,31 +2909,31 @@ function App() {
                     role="button"
                     tabIndex={0}
                     onClick={() => setSelectedSymbol(sym)}
-                    className={`flex cursor-pointer select-none items-center gap-3 px-4 py-2.5 transition ${isSel ? "bg-slate-50" : "active:bg-slate-50"}`}
+                    className={`flex cursor-pointer select-none items-center gap-3 px-4 py-2.5 transition lg:gap-2.5 lg:px-3 lg:py-[7px] ${isSel ? "bg-slate-50" : "active:bg-slate-50"}`}
                   >
                     <span className="min-w-0 flex-1 leading-tight">
-                      <span className="block truncate text-[17px] font-extrabold tracking-tight text-slate-900">{quotesNameRow}</span>
-                      <span className={`block font-mono text-[11px] font-bold tabular-nums ${dirUpRow ? "text-blue-600" : "text-rose-600"}`}>
+                      <span className="block truncate text-[16px] font-extrabold tracking-tight text-slate-900 lg:text-[13px]">{quotesNameRow}</span>
+                      <span className={`block font-mono text-[11px] font-bold tabular-nums lg:text-[10px] ${dirUpRow ? "text-blue-600" : "text-rose-600"}`}>
                         {chgrow != null ? `${chgrow >= 0 ? "+" : ""}${fmt(chgrow)}` : "—"}{" "}
                         {pctrow != null ? `${pctrow >= 0 ? "+" : ""}${pctrow.toFixed(2)}%` : ""}
                       </span>
                     </span>
                     {hasBARow ? (
-                      <span className="grid shrink-0 grid-cols-[80px_1px_80px] grid-rows-[auto_auto_auto] gap-x-3 text-right leading-tight">
+                      <span className="grid shrink-0 grid-cols-[80px_1px_80px] grid-rows-[auto_auto_auto] gap-x-3 text-right leading-tight lg:grid-cols-[70px_1px_70px] lg:gap-x-2">
                         <span className="text-[9px] font-bold uppercase tracking-[0.18em] text-slate-400">Bid</span>
                         <span className="row-span-3 w-px rounded-full bg-slate-200" aria-hidden />
                         <span className="text-[9px] font-bold uppercase tracking-[0.18em] text-slate-400">Ask</span>
-                        <span title="Bid (Buy)" className="rounded-md bg-blue-50/80 px-1.5 py-0.5 font-mono text-[15px] font-extrabold tabular-nums tracking-tight text-blue-700">{fmtRow(bidrow, (sym as any)?.tickSize)}</span>
-                        <span title="Ask (Sell)" className="rounded-md bg-rose-50/80 px-1.5 py-0.5 font-mono text-[15px] font-extrabold tabular-nums tracking-tight text-rose-700">{fmtRow(askrow, (sym as any)?.tickSize)}</span>
-                        <span title="Day low" className="font-mono text-[10px] tabular-nums text-slate-500">L: {fmtRow(lorow, (sym as any)?.tickSize)}</span>
-                        <span title="Day high" className="font-mono text-[10px] tabular-nums text-slate-500">H: {fmtRow(hirow, (sym as any)?.tickSize)}</span>
+                        <span title="Bid (Buy)" className="rounded-md bg-blue-50/80 px-1.5 py-0.5 font-mono text-[15px] font-extrabold tabular-nums tracking-tight text-blue-700 lg:text-[12px]">{fmtRow(bidrow, (sym as any)?.tickSize)}</span>
+                        <span title="Ask (Sell)" className="rounded-md bg-rose-50/80 px-1.5 py-0.5 font-mono text-[15px] font-extrabold tabular-nums tracking-tight text-rose-700 lg:text-[12px]">{fmtRow(askrow, (sym as any)?.tickSize)}</span>
+                        <span title="Day low" className="font-mono text-[10px] tabular-nums text-slate-500 lg:text-[9px]">L: {fmtRow(lorow, (sym as any)?.tickSize)}</span>
+                        <span title="Day high" className="font-mono text-[10px] tabular-nums text-slate-500 lg:text-[9px]">H: {fmtRow(hirow, (sym as any)?.tickSize)}</span>
                       </span>
                     ) : (
                     <span className="text-right">
-                      <span className={`block font-mono text-[15px] font-bold tabular-nums ${uprow ? "text-slate-900" : "text-slate-900"}`}>
+                      <span className={`block font-mono text-[15px] font-bold tabular-nums lg:text-[12px] ${uprow ? "text-slate-900" : "text-slate-900"}`}>
                         {fmt(lprow)}
                       </span>
-                      <span className={`block font-mono text-[12px] font-medium tabular-nums ${uprow ? "text-emerald-600" : "text-rose-600"}`}>
+                      <span className={`block font-mono text-[12px] font-medium tabular-nums lg:text-[10px] ${uprow ? "text-emerald-600" : "text-rose-600"}`}>
                         {chgrow != null ? `${chgrow >= 0 ? "+" : ""}${fmt(chgrow)}` : "—"}{" "}
                         {pctrow != null ? `${pctrow >= 0 ? "+" : ""}${pctrow.toFixed(2)}%` : ""}
                       </span>
@@ -2978,7 +3001,7 @@ function App() {
               <span
 
                 className={[
-                  "font-mono text-[27px] font-bold leading-none tracking-[-0.03em] tabular-nums",
+                  "font-mono text-[22px] font-bold leading-none tracking-[-0.03em] tabular-nums",
 
                   priceFlash === "up"
                     ? "price-flash-up text-blue-600"
