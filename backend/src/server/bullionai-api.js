@@ -2271,6 +2271,173 @@ const allowedTimeframes =
                     ?.market;
 
 
+            /* HISTORY DEEPENING — 2-month target
+             *
+             * Files created before the 60-day lookback only
+             * hold ~7 days of intraday history, and the
+             * freshness refresh never looks backwards. When
+             * the stored dataset starts more recently than
+             * the two-month target, fetch the missing older
+             * window (chunked by MarketDataService) and merge.
+             * Retried at most hourly per file so illiquid or
+             * pre-listing windows can't spam the API.
+             */
+
+            const deepenTargetMs =
+
+                Date.now() -
+
+                Math.min(
+
+                    Math.max(
+                        tf.seconds * 400,
+                        60 * 86400
+                    ),
+
+                    180 * 86400
+                ) *
+                    1000;
+
+
+            const earliestMs =
+
+                Number(
+                    candles[0]?.time
+                ) || 0;
+
+
+            this._deepenAttempts =
+                this._deepenAttempts ||
+                new Map();
+
+            const deepenKey = fileName;
+
+            const deepenLast =
+                this._deepenAttempts.get(
+                    deepenKey
+                ) || 0;
+
+
+            if (
+
+                market &&
+                market.isAuthenticated() &&
+                isMinuteTf &&
+                earliestMs > 0 &&
+                earliestMs >
+                    deepenTargetMs +
+                        tfSec * 1000 &&
+                Date.now() -
+                    deepenLast >
+                    60 * 60 * 1000
+
+            ) {
+
+                this._deepenAttempts.set(
+                    deepenKey,
+                    Date.now()
+                );
+
+                try {
+
+                    const older =
+                        await market.fetchCandles({
+                            startSeconds:
+                                Math.floor(
+                                    deepenTargetMs /
+                                        1000
+                                ),
+                            endSeconds:
+                                Math.floor(
+                                    earliestMs /
+                                        1000
+                                ),
+                            exchange,
+                            token:
+                                inst.token,
+                            interval:
+                                tf.interval,
+                        });
+
+                    if (
+                        older &&
+                        older.length >
+                            0
+                    ) {
+
+                        const seenDeepen =
+                            new Map();
+
+                        for (
+                            const c of candles
+                        ) {
+                            seenDeepen.set(
+                                Number(
+                                    c.time
+                                ),
+                                c
+                            );
+                        }
+
+                        for (
+                            const c of older
+                        ) {
+                            seenDeepen.set(
+                                Number(
+                                    c.time
+                                ),
+                                c
+                            );
+                        }
+
+                        const deepened =
+                            Array.from(
+                                seenDeepen.values()
+                            ).sort(
+                                (a, b) =>
+                                    a.time -
+                                    b.time
+                            );
+
+                        if (
+                            deepened.length >
+                            candles.length
+                        ) {
+
+                            fs.writeFileSync(
+                                filePath,
+                                JSON.stringify(
+                                    deepened,
+                                    null,
+                                    2
+                                ),
+                                "utf8"
+                            );
+
+                            console.log(
+                                `[deepen] ${fileName} ${candles.length} -> ${deepened.length} candles (2-month history)`
+                            );
+
+                            candles =
+                                deepened;
+
+                        }
+
+                    }
+
+                } catch (error) {
+
+                    console.error(
+                        `[deepen] failed for ${fileName}:`,
+                        error?.message ||
+                            error
+                    );
+
+                }
+
+            }
+
+
             if (
 
                 market &&
@@ -2415,9 +2582,13 @@ const allowedTimeframes =
                         exchange: inst.exchange || "MCX",
                         token: inst.token,
                         lookbackSeconds:
-                            tf.seconds > 3600
-                                ? 30 * 86400
-                                : 7 * 86400,
+                            Math.min(
+                                Math.max(
+                                    tf.seconds * 400,
+                                    60 * 86400
+                                ),
+                                180 * 86400
+                            ),
                     });
 
                     if (upd.candles.length > 0) {
@@ -2525,13 +2696,19 @@ const allowedTimeframes =
             );
 
 
+        /*
+         * Two-month history for every timeframe: at least
+         * 60 days (or tf × 400 bars when that is longer),
+         * capped at 180 days. Minute intervals are fetched
+         * in <=20-day chunks by MarketDataService.
+         */
         const lookbackSeconds =
             Math.min(
 
                 Math.max(
                     tf.seconds *
                       400,
-                    7 * 86400
+                    60 * 86400
                 ),
 
                 180 * 86400

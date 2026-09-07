@@ -393,7 +393,7 @@ class LiveStrategyRunner {
                         this.timeframe.seconds,
 
                     lookbackSeconds:
-                        30 * 24 * 60 * 60,
+                        60 * 24 * 60 * 60,
                 }
             );
 

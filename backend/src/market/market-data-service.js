@@ -401,19 +401,143 @@ class MarketDataService {
             intrv: String(interval),
         };
 
-        const response =
-            await this.client._post(
-                "/NorenWClientAPI/TPSeries",
-                payload
+        /*
+         * Long intraday ranges (60+ days) can be silently
+         * truncated by the TPSeries endpoint, so minute
+         * intervals are fetched in <=20-day windows, oldest
+         * first, and the rows merged. EOD intervals are small
+         * enough to fetch in a single call. A failed window
+         * never aborts the others — partial history beats none.
+         */
+
+        const CHUNK_SECONDS =
+            20 * 24 * 60 * 60;
+
+        const isIntraday =
+            Number.isFinite(
+                Number(interval)
             );
 
-        if (!Array.isArray(response)) {
-            throw new Error(
-                "TPSeries did not return an array."
-            );
+        const windows = [];
+
+        if (
+            !isIntraday ||
+            endSeconds -
+                startSeconds <=
+                CHUNK_SECONDS
+        ) {
+
+            windows.push([
+                startSeconds,
+                endSeconds,
+            ]);
+
+        } else {
+
+            let cursor =
+                startSeconds;
+
+            while (
+                cursor <
+                endSeconds
+            ) {
+
+                const chunkEnd =
+                    Math.min(
+                        cursor +
+                            CHUNK_SECONDS,
+                        endSeconds
+                    );
+
+                windows.push([
+                    cursor,
+                    chunkEnd,
+                ]);
+
+                cursor =
+                    chunkEnd;
+
+            }
+
         }
 
-        return response;
+        const rows = [];
+
+        let sawArray =
+            false;
+
+        let lastError =
+            null;
+
+        for (
+            const [
+                st,
+                et,
+            ] of windows
+        ) {
+
+            try {
+
+                const response =
+                    await this.client._post(
+                        "/NorenWClientAPI/TPSeries",
+                        {
+                            ...payload,
+                            st: String(st),
+                            et: String(et),
+                        }
+                    );
+
+                if (
+                    Array.isArray(
+                        response
+                    )
+                ) {
+
+                    sawArray =
+                        true;
+
+                    rows.push(
+                        ...response
+                    );
+
+                }
+
+            } catch (
+                error
+            ) {
+
+                lastError =
+                    error;
+
+            }
+
+        }
+
+        if (
+            rows.length ===
+            0
+        ) {
+
+            if (
+                sawArray
+            ) {
+
+                // Valid empty response (e.g. pre-listing window).
+                return [];
+
+            }
+
+            throw (
+                lastError ||
+                new Error(
+                    "TPSeries did not return an array."
+                )
+            );
+
+        }
+
+        return rows;
     }
 
     // =========================================================
@@ -646,7 +770,10 @@ class MarketDataService {
     getUpdateWindow({
         latestTime = 0,
         overlapSeconds = 2 * 60 * 60,
-        lookbackSeconds = 7 * 24 * 60 * 60,
+        // Default 60 days so EMPTY datasets bootstrap two months
+        // of history (existing datasets ignore this — they refresh
+        // from their latest candle minus the overlap).
+        lookbackSeconds = 60 * 24 * 60 * 60,
     } = {}) {
         const nowSeconds =
             Math.floor(
