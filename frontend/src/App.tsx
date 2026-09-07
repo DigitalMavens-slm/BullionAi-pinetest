@@ -1112,20 +1112,25 @@ function App() {
 
     const source = createEventStream(
       (ev) => {
-        if (ev.type === "tick" && ev.price != null) {
+        if (ev.type === "tick") {
+          const tickAny = ev as any;
+          const hasPrice = ev.price != null;
+          const hasQuote =
+            tickAny.bestBid != null ||
+            tickAny.bestAsk != null;
+          if (!hasPrice && !hasQuote) return;
           setState(prev => {
             if (!prev?.livePrices) return prev;
             const token = String(ev.token || "");
             const live = prev.livePrices as Record<string, any>;
             const existing = live[token] || {};
-            const tickAny = ev as any;
             return {
               ...prev,
               livePrices: {
                 ...live,
                 [token]: {
                   ...existing,
-                  price: ev.price,
+                  price: hasPrice ? ev.price : (existing?.price ?? null),
                   tickTime: ev.timestamp || Date.now(),
                   receivedAt: Date.now(),
                   exchange: ev.exchange ?? existing?.exchange,

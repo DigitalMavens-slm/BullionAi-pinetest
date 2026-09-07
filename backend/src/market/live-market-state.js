@@ -207,6 +207,48 @@ class LiveMarketState extends EventEmitter {
 
 
         // -----------------------------------------------------
+        // DEPTH QUOTE (ROUTED BY TOKEN — bid/ask only)
+        //
+        // Depth ticks arrive far more often than LTP snapshots.
+        // Applies bestBid/bestAsk without touching price/candles.
+        // -----------------------------------------------------
+
+        this.feed.on(
+            "depth",
+            quote => {
+
+                const token =
+                    String(
+                        quote?.token ??
+                        ""
+                    );
+
+                if (!token) {
+                    return;
+                }
+
+                const priceState =
+                    this.priceStates.get(
+                        token
+                    );
+
+                if (!priceState) {
+                    return;
+                }
+
+                // No emitUpdate here: full state still broadcasts on
+                // every touchline tick via the price path. Depth reaches
+                // the app through the lightweight tick SSE lane below,
+                // keeping per-message cost constant at high depth rates.
+                priceState.updateQuote(
+                    quote
+                );
+
+            }
+        );
+
+
+        // -----------------------------------------------------
         // DISCONNECTED
         // -----------------------------------------------------
 

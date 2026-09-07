@@ -293,19 +293,30 @@ class ShoonyaLiveFeed extends EventEmitter {
 
 
         // =====================================================
-        // DEPTH
+        // DEPTH (5-level book, top-of-book bid/ask)
         //
-        // We don't currently need depth for the strategy,
-        // but keep the event available for future UI features.
+        // Depth updates stream far more often than touchline
+        // LTP snapshots. Normalized into lightweight quotes so
+        // Bid/Ask reach the watchlist instantly. Never touches
+        // candles or the strategy — quotes carry no OHLC.
         // =====================================================
 
         this.socket.on(
             "depth",
-            tick => {
+            raw => {
+
+                const quote =
+                    this.normalizeDepthTick(
+                        raw
+                    );
+
+                if (!quote) {
+                    return;
+                }
 
                 this.emit(
                     "depth",
-                    tick
+                    quote
                 );
 
             }
@@ -553,6 +564,11 @@ class ShoonyaLiveFeed extends EventEmitter {
 
         this.socket.subscribeTouchline(toAdd);
 
+        // Depth rides along so Bid/Ask update faster than touchline LTP.
+        try {
+            this.socket.subscribeDepth(toAdd);
+        } catch {}
+
         console.log(
             "Live touchline subscribe (dynamic):",
             toAdd.join(", ")
@@ -570,6 +586,10 @@ class ShoonyaLiveFeed extends EventEmitter {
 
         try {
             this.socket.unsubscribeTouchline(toRemove);
+        } catch {}
+
+        try {
+            this.socket.unsubscribeDepth(toRemove);
         } catch {}
 
         console.log(
@@ -607,6 +627,13 @@ class ShoonyaLiveFeed extends EventEmitter {
         this.socket.subscribeTouchline(
             this.subscriptions
         );
+
+        // Depth rides along so Bid/Ask update faster than touchline LTP.
+        try {
+            this.socket.subscribeDepth(
+                this.subscriptions
+            );
+        } catch {}
 
 
         this.subscribed =
@@ -852,6 +879,115 @@ class ShoonyaLiveFeed extends EventEmitter {
 
             raw:
                 tick,
+
+        };
+
+    }
+
+
+    // =========================================================
+    // NORMALIZE DEPTH QUOTE (df)
+    //
+    // Depth messages carry top-of-book bid/ask (bp1/sp1) at a
+    // much higher rate than touchline LTP. Returns a lightweight
+    // quote (no OHLC) or null when unusable. Never throws.
+    // =========================================================
+
+    normalizeDepthTick(raw) {
+
+        if (!raw) {
+            return null;
+        }
+
+        const exchange =
+            raw.e ||
+            this.exchange;
+
+        const token =
+            String(
+                raw.tk ||
+                this.token
+            );
+
+        if (!token) {
+            return null;
+        }
+
+        const bestBid =
+            this.toNumber(
+                raw.bp1
+            );
+
+        const bestAsk =
+            this.toNumber(
+                raw.sp1
+            );
+
+        const lpRaw =
+            raw.lp ??
+            raw.ltp ??
+            null;
+
+        const price =
+            lpRaw == null
+                ? null
+                : Number(lpRaw);
+
+        if (
+            bestBid == null &&
+            bestAsk == null &&
+            (
+                price == null ||
+                !Number.isFinite(price)
+            )
+        ) {
+            return null;
+        }
+
+        const feedTime =
+            Number(
+                raw.ft
+            );
+
+        return {
+
+            exchange:
+                String(
+                    exchange
+                ),
+
+            token,
+
+            price:
+                Number.isFinite(price)
+                    ? price
+                    : null,
+
+            bestBid,
+            bestAsk,
+
+            high:
+                this.toNumber(
+                    raw.h
+                ),
+
+            low:
+                this.toNumber(
+                    raw.l
+                ),
+
+            time:
+                Number.isFinite(
+                    feedTime
+                ) &&
+                feedTime > 0
+
+                    ? feedTime * 1000
+
+                    : Date.now(),
+
+            depth:
+                true,
 
         };
 

@@ -199,6 +199,66 @@ class LivePriceState extends EventEmitter {
 
 
     // =========================================================
+    // UPDATE QUOTE (depth bid/ask only — never touches LTP)
+    //
+    // Depth messages arrive far more often than touchline LTP.
+    // Applies bestBid/bestAsk (+ freshness) without altering
+    // price/change, so LTP stays exchange-authoritative.
+    // =========================================================
+
+    updateQuote(
+        quote
+    ) {
+
+        if (!quote) {
+            return this.getState();
+        }
+
+
+        const toNum = v => {
+            const n = Number(v);
+            return Number.isFinite(n) && n > 0 ? n : null;
+        };
+
+        const bid = toNum(quote.bestBid);
+        const ask = toNum(quote.bestAsk);
+
+        if (
+            bid == null &&
+            ask == null
+        ) {
+            return this.getState();
+        }
+
+        if (bid != null) this.state.bestBid = bid;
+        if (ask != null) this.state.bestAsk = ask;
+
+        const hi = toNum(quote.high);
+        const lo = toNum(quote.low);
+        if (hi != null) this.state.high = hi;
+        if (lo != null) this.state.low = lo;
+
+        if (quote.time != null) {
+            this.state.tickTime = quote.time;
+        }
+
+        this.state.receivedAt =
+            Date.now();
+
+        this.state.tickCount +=
+            1;
+
+        this.emit(
+            "update",
+            this.getState()
+        );
+
+        return this.getState();
+
+    }
+
+
+    // =========================================================
     // GET CURRENT STATE
     // =========================================================
 

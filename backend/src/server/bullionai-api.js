@@ -305,6 +305,18 @@ class BullionAIApi {
                 }
             );
 
+            // Depth quotes (bid/ask) stream faster than touchline LTP.
+            // Forward on their own throttle lane so a chatty book never
+            // starves LTP delivery. Never touches candles/strategy.
+            feed.on(
+                "depth",
+                quote => {
+                    this.emitDepthEvent(
+                        quote
+                    );
+                }
+            );
+
         }
 
 
@@ -4128,8 +4140,67 @@ const allowedTimeframes =
 
     // Tick events are high-frequency; throttle them so the SSE
     // stream stays cheap while still updating live prices.
+    // Depth has its own lane so book updates never starve LTP.
     _lastTickEmit =
         0;
+
+    _lastDepthEmit =
+        0;
+
+    emitDepthEvent(quote) {
+
+        const now =
+            Date.now();
+
+        if (
+            now - this._lastDepthEmit <
+                500
+        ) {
+            return;
+        }
+
+        this._lastDepthEmit =
+            now;
+
+        this.broadcastEvent(
+            "tick",
+            this.segmentEvent(
+                "tick",
+                {
+                    exchange:
+                        quote?.exchange ??
+                        null,
+                    token:
+                        quote?.token ??
+                        null,
+                    symbol:
+                        quote?.symbol ??
+                        null,
+                    price:
+                        quote?.price ??
+                        null,
+                    timestamp:
+                        quote?.time ??
+                        Date.now(),
+                    volume:
+                        null,
+                    bestBid:
+                        quote?.bestBid ??
+                        null,
+                    bestAsk:
+                        quote?.bestAsk ??
+                        null,
+                    high:
+                        quote?.high ??
+                        null,
+                    low:
+                        quote?.low ??
+                        null,
+                }
+            )
+        );
+
+    }
 
     emitTickEvent(tick) {
 
