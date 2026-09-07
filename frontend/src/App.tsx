@@ -1118,6 +1118,7 @@ function App() {
             const token = String(ev.token || "");
             const live = prev.livePrices as Record<string, any>;
             const existing = live[token] || {};
+            const tickAny = ev as any;
             return {
               ...prev,
               livePrices: {
@@ -1129,6 +1130,10 @@ function App() {
                   receivedAt: Date.now(),
                   exchange: ev.exchange ?? existing?.exchange,
                   token,
+                  bestBid: tickAny.bestBid ?? existing?.bestBid ?? null,
+                  bestAsk: tickAny.bestAsk ?? existing?.bestAsk ?? null,
+                  high: tickAny.high ?? existing?.high ?? null,
+                  low: tickAny.low ?? existing?.low ?? null,
                 },
               },
             };

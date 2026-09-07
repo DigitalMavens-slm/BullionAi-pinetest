@@ -4170,6 +4170,18 @@ const allowedTimeframes =
                     volume:
                         tick?.volume ??
                         null,
+                    bestBid:
+                        tick?.bestBid ??
+                        null,
+                    bestAsk:
+                        tick?.bestAsk ??
+                        null,
+                    high:
+                        tick?.high ??
+                        null,
+                    low:
+                        tick?.low ??
+                        null,
                 }
             )
         );

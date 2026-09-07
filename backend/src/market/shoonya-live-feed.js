@@ -668,41 +668,51 @@ class ShoonyaLiveFeed extends EventEmitter {
         );
 
 
-        console.log("");
+        // Per-tick logging is gated — console I/O on every market tick
+        // blocks the event loop and delays SSE delivery to the app.
+        // Set BULLIONAI_DEBUG_TICKS=1 to re-enable for debugging.
+        if (
+            process.env.BULLIONAI_DEBUG_TICKS ===
+                "1"
+        ) {
 
-        console.log(
-            "------------------------------------"
-        );
+            console.log("");
 
-        console.log(
-            "LIVE TICK"
-        );
+            console.log(
+                "------------------------------------"
+            );
 
-        console.log(
-            "Exchange:",
-            normalized.exchange
-        );
+            console.log(
+                "LIVE TICK"
+            );
 
-        console.log(
-            "Token:",
-            normalized.token
-        );
+            console.log(
+                "Exchange:",
+                normalized.exchange
+            );
 
-        console.log(
-            "Price:",
-            normalized.price
-        );
+            console.log(
+                "Token:",
+                normalized.token
+            );
 
-        console.log(
-            "Time:",
-            formatISTDateTime(
-                normalized.time
-            )
-        );
+            console.log(
+                "Price:",
+                normalized.price
+            );
 
-        console.log(
-            "------------------------------------"
-        );
+            console.log(
+                "Time:",
+                formatISTDateTime(
+                    normalized.time
+                )
+            );
+
+            console.log(
+                "------------------------------------"
+            );
+
+        }
 
     }
 
