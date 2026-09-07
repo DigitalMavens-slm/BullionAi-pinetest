@@ -2230,10 +2230,6 @@ function App() {
                     const dirUp = (chg ?? 0) >= 0;
                     const dirCls = dirUp ? "text-blue-600" : "text-rose-600";
                     const quotesName = String(sym.label ?? sym.tsym ?? "").toUpperCase().replace(/[^A-Z]/g, "") || String(sym.tsym ?? "").toUpperCase();
-                    const tickMs = live?.tickTime ?? live?.receivedAt ?? null;
-                    const tickStr = tickMs != null
-                      ? new Date(tickMs).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false })
-                      : "—";
                     const isSel = selectedSymbol?.token === sym.token && selectedSymbol?.exch === sym.exch;
                     return (
                       <button
@@ -2242,12 +2238,11 @@ function App() {
                         className={`flex w-full items-center gap-3 px-4 py-2.5 text-left transition ${isSel ? "bg-slate-50" : "active:bg-slate-50"}`}
                       >
                         <span className="min-w-0 flex-1 leading-tight">
+                          <span className="block truncate text-[19px] font-extrabold tracking-tight text-slate-900">{quotesName}</span>
                           <span className={`block font-mono text-[12px] font-bold tabular-nums ${dirUp ? "text-blue-600" : "text-rose-600"}`}>
                             {chg != null ? `${chg >= 0 ? "+" : ""}${fmtRow(chg, (sym as any)?.tickSize)}` : "—"}{" "}
                             {pct != null ? `${pct >= 0 ? "+" : ""}${pct.toFixed(2)}%` : ""}
                           </span>
-                          <span className="block truncate text-[19px] font-extrabold tracking-tight text-slate-900">{quotesName}</span>
-                          <span className="block text-[11px] tabular-nums text-slate-400">{tickStr}</span>
                         </span>
                         {hasBidAsk ? (
                           <span className="shrink-0 text-right leading-tight">
@@ -2873,10 +2868,6 @@ function App() {
                 const dirUpRow = (chgrow ?? 0) >= 0;
                 const dirClsRow = dirUpRow ? "text-blue-600" : "text-rose-600";
                 const quotesNameRow = String(sym.label ?? sym.tsym ?? "").toUpperCase().replace(/[^A-Z]/g, "") || String(sym.tsym ?? "").toUpperCase();
-                const tickRowMs = liverow?.tickTime ?? liverow?.receivedAt ?? null;
-                const tickRowStr = tickRowMs != null
-                  ? new Date(tickRowMs).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false })
-                  : "—";
                 const isSel = selectedSymbol?.token === sym.token && selectedSymbol?.exch === sym.exch;
                 return (
                   <div
@@ -2887,12 +2878,11 @@ function App() {
                     className={`flex items-center gap-3 px-4 py-2.5 transition ${isSel ? "bg-slate-50" : "active:bg-slate-50"}`}
                   >
                     <span className="min-w-0 flex-1 leading-tight">
+                      <span className="block truncate text-[19px] font-extrabold tracking-tight text-slate-900">{quotesNameRow}</span>
                       <span className={`block font-mono text-[12px] font-bold tabular-nums ${dirUpRow ? "text-blue-600" : "text-rose-600"}`}>
                         {chgrow != null ? `${chgrow >= 0 ? "+" : ""}${fmt(chgrow)}` : "—"}{" "}
                         {pctrow != null ? `${pctrow >= 0 ? "+" : ""}${pctrow.toFixed(2)}%` : ""}
                       </span>
-                      <span className="block truncate text-[19px] font-extrabold tracking-tight text-slate-900">{quotesNameRow}</span>
-                      <span className="block text-[11px] tabular-nums text-slate-400">{tickRowStr}</span>
                     </span>
                     {hasBARow ? (
                       <span className="shrink-0 text-right leading-tight">
