@@ -7,9 +7,12 @@ import {
 
 import {
   BarChart3,
+  CandlestickChart,
   ChevronDown,
   Circle,
   Clock,
+  List,
+  Activity,
   ShieldCheck,
   Trash2,
   X,
@@ -555,8 +558,12 @@ function App() {
   const [selectedSymbol, setSelectedSymbol] =
     useState<SelectedSymbol | null>(null);
 
+  // Mobile tabs — each component (Watchlist / Chart / Signals) in its own
+  // labeled tab. Desktop ignores this and shows the full 3-column terminal.
+  const [mobileTab, setMobileTab] =
+    useState<"chart" | "watchlist" | "signals">("watchlist");
+
   // Premium mobile symbol picker (bottom sheet).
-  // Mobile and desktop share the same stacked terminal — no tab gating.
   const [mobileSymbolOpen, setMobileSymbolOpen] =
     useState(false);
 
@@ -2131,10 +2138,10 @@ function App() {
 
       {/* ================= WORKSPACE ================= */}
 
-      <main className="mx-auto flex w-full max-w-[1800px] flex-1 flex-col gap-3 p-3 lg:min-h-0 lg:flex-row lg:gap-3 lg:p-3">
+      <main className="mx-auto flex w-full max-w-[1800px] flex-1 flex-col gap-3 p-3 pb-24 lg:min-h-0 lg:flex-row lg:gap-3 lg:p-3">
 
-        {/* Mobile premium header (symbol + live price) */}
-        <div className="-mt-1 lg:hidden">
+        {/* Mobile premium header (symbol + live price, on Chart/Signals tabs) */}
+        <div className={`-mt-1 lg:hidden ${mobileTab === "chart" || mobileTab === "signals" ? "block" : "hidden"}`}>
           <Card className="overflow-hidden border-0 bg-white/80 p-0">
             {/* Live symbol + price header */}
             <div className="px-3 pb-2 pt-2.5">
@@ -2277,7 +2284,7 @@ function App() {
 
         {/* ============ LEFT: CHART ============ */}
 
-                <aside className="flex w-full shrink-0 flex-col gap-3 lg:w-[300px] lg:min-h-0 order-3 lg:order-1">
+                <aside className={`flex w-full shrink-0 flex-col gap-3 lg:w-[300px] lg:min-h-0 order-3 lg:order-1 ${mobileTab === "signals" ? "flex" : "hidden"} lg:flex`}>
           {/* BULLIONAI STRATEGY */}
 
           <Card className="shrink-0">
@@ -2562,7 +2569,7 @@ function App() {
 
         </aside>
 
-<section className="flex min-w-0 flex-col gap-3 lg:min-h-0 lg:flex-1 order-2 lg:order-2 max-lg:h-[calc(100dvh-200px)]">
+<section className={`flex min-w-0 flex-col gap-3 lg:min-h-0 lg:flex-1 order-2 lg:order-2 max-lg:h-[calc(100dvh-200px)] ${mobileTab === "chart" ? "flex" : "hidden"} lg:flex`}>
 
           <Card className="flex flex-1 flex-col overflow-hidden min-h-[320px] lg:h-auto">
 
@@ -2785,7 +2792,7 @@ function App() {
 
         {/* ============ RIGHT: SIDEBAR ============ */}
 
-        <aside className="flex w-full shrink-0 flex-col gap-2 lg:w-[360px] lg:min-h-0 order-1 lg:order-3">
+        <aside className={`flex w-full shrink-0 flex-col gap-2 lg:w-[360px] lg:min-h-0 order-1 lg:order-3 ${mobileTab === "watchlist" ? "flex" : "hidden"} lg:flex`}>
 
           {/* Mobile-only: add a script to the watchlist */}
           <div className="lg:hidden">
@@ -3149,6 +3156,39 @@ function App() {
 
 
         </aside>
+
+        {/* Mobile bottom tabs — Watchlist / Chart / Signals, icon + label */}
+        <nav
+          className="fixed bottom-0 left-0 right-0 z-30 border-t border-slate-200/80 bg-white/95 backdrop-blur-xl lg:hidden"
+          aria-label="Mobile terminal tabs"
+        >
+          <div className="mx-auto grid max-w-md grid-cols-3 gap-1 px-3 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2">
+          {[
+            { id: "watchlist", label: "Watchlist", icon: List },
+            { id: "chart", label: "Chart", icon: CandlestickChart },
+            { id: "signals", label: "Signals", icon: Activity },
+          ].map(tab => {
+            const Icon = tab.icon;
+            const active = mobileTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setMobileTab(tab.id as any)}
+                aria-label={tab.label}
+                className={[
+                  "flex flex-col items-center gap-1 rounded-2xl px-2 py-2 text-[10px] font-bold transition-colors",
+                  active
+                    ? "bg-accent/10 text-accent"
+                    : "text-slate-400 hover:text-slate-600",
+                ].join(" ")}
+              >
+                <Icon className="h-5 w-5" strokeWidth={active ? 2.4 : 2} />
+                {tab.label}
+              </button>
+            );
+          })}
+          </div>
+        </nav>
 
       </main>
 
