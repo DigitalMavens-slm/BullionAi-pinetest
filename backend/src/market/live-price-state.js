@@ -37,6 +37,11 @@ class LivePriceState extends EventEmitter {
             low: null,
             prevClose: null,
 
+            // Best bid/ask from Shoonya touchline (bp1/sp1).
+            // Shown in the watchlist as Buy/Sell.
+            bestBid: null,
+            bestAsk: null,
+
             change:
                 null,
 
@@ -153,6 +158,13 @@ class LivePriceState extends EventEmitter {
         if (tHigh != null) this.state.high = tHigh;
         if (tLow != null) this.state.low = tLow;
         if (tPrev != null) this.state.prevClose = tPrev;
+
+        // Best bid/ask (Buy/Sell) — normalized tick carries bestBid/bestAsk;
+        // accept raw bp1/sp1/bid/ask as fallback for direct callers.
+        const tBid = toNum(tick.bestBid ?? tick.bp1 ?? tick.bid);
+        const tAsk = toNum(tick.bestAsk ?? tick.sp1 ?? tick.ask);
+        if (tBid != null) this.state.bestBid = tBid;
+        if (tAsk != null) this.state.bestAsk = tAsk;
 
         // -----------------------------------------------------
         // DAY CHANGE (exchange)
@@ -277,6 +289,11 @@ class LivePriceState extends EventEmitter {
         this.state.low =
             null;
         this.state.prevClose =
+            null;
+
+        this.state.bestBid =
+            null;
+        this.state.bestAsk =
             null;
 
         this.state.change =

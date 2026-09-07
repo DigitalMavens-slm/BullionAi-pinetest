@@ -1597,24 +1597,6 @@ function App() {
     });
   };
 
-  const fmtRowSigned = (
-    v: number | null | undefined,
-    tickSize: number | null | undefined
-  ) => {
-    if (v == null || !Number.isFinite(v)) {
-      return "—";
-    }
-    const decimals = decimalsFor(tickSize, v);
-    return (
-      (v >= 0 ? "+" : "") +
-      v.toLocaleString("en-IN", {
-        minimumFractionDigits: decimals,
-        maximumFractionDigits: decimals,
-      })
-    );
-  };
-
-
   /* Price tick flash direction */
 
   const prevLiveRef =
@@ -2228,11 +2210,23 @@ function App() {
                 )}
                 <div className="divide-y divide-slate-50">
                   {filteredCustomSyms.map((sym, i) => {
-                    const lp = (state as any)?.livePrices?.[sym.token]?.price ?? customLastCloses[`${sym.exch}:${sym.token}`] ?? null;
+                    const live = (state as any)?.livePrices?.[sym.token] ?? null;
+                    const lp = live?.price ?? customLastCloses[`${sym.exch}:${sym.token}`] ?? null;
                     const pc = customPrevCloses[`${sym.exch}:${sym.token}`] ?? dayStats?.prevClose ?? null;
                     const chg = lp != null && pc != null ? lp - pc : null;
                     const pct = chg != null && pc ? (chg / pc) * 100 : null;
                     const up = (chg ?? 0) >= 0;
+                    const bid = live?.bestBid ?? null;
+                    const ask = live?.bestAsk ?? null;
+                    const hi = live?.high ?? null;
+                    const lo = live?.low ?? null;
+                    const hasBidAsk = bid != null || ask != null;
+                    const flash = watchlistFlash.get(sym.token);
+                    const flashCls = flash === "up"
+                      ? "price-flash-up"
+                      : flash === "down"
+                        ? "price-flash-down"
+                        : "";
                     const isSel = selectedSymbol?.token === sym.token && selectedSymbol?.exch === sym.exch;
                     const palette = ["bg-amber-500", "bg-slate-500", "bg-slate-800", "bg-indigo-500", "bg-emerald-600"];
                     return (
@@ -2248,28 +2242,38 @@ function App() {
                           <span className="block truncate text-[15px] font-semibold text-slate-900">{sym.label ?? sym.tsym}</span>
                           <span className="block truncate text-[11px] text-slate-400">{sym.exch} · {sym.token}</span>
                         </span>
-                        <span className="text-right">
-                          <span
-                            className={[
-                              "block font-mono text-[14px] font-bold tabular-nums",
-                              watchlistFlash.get(
-                                sym.token
-                              ) === "up"
-                                ? "price-flash-up text-blue-600"
-                                : watchlistFlash.get(
-                                      sym.token
-                                    ) === "down"
-                                  ? "price-flash-down text-rose-600"
-                                  : "text-slate-900",
-                            ].join(" ")}
-                          >
-                            {fmt(lp)}
+                        {hasBidAsk ? (
+                          <span className="shrink-0 text-right">
+                            <span className={`flex items-center justify-end gap-2 font-mono text-[13px] font-bold tabular-nums ${flashCls}`}>
+                              <span className="text-blue-600" title="Bid (Buy)">B {fmtRow(bid, (sym as any)?.tickSize)}</span>
+                              <span className="text-slate-300">|</span>
+                              <span className="text-rose-600" title="Ask (Sell)">S {fmtRow(ask, (sym as any)?.tickSize)}</span>
+                            </span>
+                            <span className="mt-0.5 flex items-center justify-end gap-2 font-mono text-[10px] tabular-nums text-slate-400">
+                              <span title="Day high">H {fmtRow(hi, (sym as any)?.tickSize)}</span>
+                              <span title="Day low">L {fmtRow(lo, (sym as any)?.tickSize)}</span>
+                            </span>
                           </span>
-                          <span className={`block font-mono text-[11px] tabular-nums ${up ? "text-emerald-600" : "text-rose-600"}`}>
-                            {chg != null ? `${chg >= 0 ? "+" : ""}${fmt(chg)}` : "—"}{" "}
-                            {pct != null ? `${pct >= 0 ? "+" : ""}${pct.toFixed(2)}%` : ""}
+                        ) : (
+                          <span className="text-right">
+                            <span
+                              className={[
+                                "block font-mono text-[14px] font-bold tabular-nums",
+                                flash === "up"
+                                  ? "price-flash-up text-blue-600"
+                                  : flash === "down"
+                                    ? "price-flash-down text-rose-600"
+                                    : "text-slate-900",
+                              ].join(" ")}
+                            >
+                              {fmt(lp)}
+                            </span>
+                            <span className={`block font-mono text-[11px] tabular-nums ${up ? "text-emerald-600" : "text-rose-600"}`}>
+                              {chg != null ? `${chg >= 0 ? "+" : ""}${fmt(chg)}` : "—"}{" "}
+                              {pct != null ? `${pct >= 0 ? "+" : ""}${pct.toFixed(2)}%` : ""}
+                            </span>
                           </span>
-                        </span>
+                        )}
                       </button>
                     );
                   })}
@@ -2843,8 +2847,9 @@ function App() {
                 </div>
               )}
               {filteredCustomSyms.map((sym, i) => {
+                const liverow = (state as any)?.livePrices?.[sym.token] ?? null;
                 const lprow =
-                  (state as any)?.livePrices?.[sym.token]?.price ??
+                  liverow?.price ??
                   customLastCloses[`${sym.exch}:${sym.token}`] ??
                   null;
                 const pcrow =
@@ -2854,6 +2859,11 @@ function App() {
                 const chgrow = lprow != null && pcrow != null ? lprow - pcrow : null;
                 const pctrow = chgrow != null && pcrow ? (chgrow / pcrow) * 100 : null;
                 const uprow = (chgrow ?? 0) >= 0;
+                const bidrow = liverow?.bestBid ?? null;
+                const askrow = liverow?.bestAsk ?? null;
+                const hirow = liverow?.high ?? null;
+                const lorow = liverow?.low ?? null;
+                const hasBARow = bidrow != null || askrow != null;
                 const isSel = selectedSymbol?.token === sym.token && selectedSymbol?.exch === sym.exch;
                 const palette = ["bg-amber-500", "bg-slate-500", "bg-slate-800", "bg-indigo-500", "bg-emerald-600"];
                 return (
@@ -2875,6 +2885,19 @@ function App() {
                         {sym.exch} · {String(sym.token)}
                       </span>
                     </span>
+                    {hasBARow ? (
+                      <span className="shrink-0 text-right">
+                        <span className="flex items-center justify-end gap-2 font-mono text-[13px] font-bold tabular-nums">
+                          <span className="text-blue-600" title="Bid (Buy)">B {fmtRow(bidrow, (sym as any)?.tickSize)}</span>
+                          <span className="text-slate-300">|</span>
+                          <span className="text-rose-600" title="Ask (Sell)">S {fmtRow(askrow, (sym as any)?.tickSize)}</span>
+                        </span>
+                        <span className="mt-0.5 flex items-center justify-end gap-2 font-mono text-[10px] tabular-nums text-slate-400">
+                          <span title="Day high">H {fmtRow(hirow, (sym as any)?.tickSize)}</span>
+                          <span title="Day low">L {fmtRow(lorow, (sym as any)?.tickSize)}</span>
+                        </span>
+                      </span>
+                    ) : (
                     <span className="text-right">
                       <span className={`block font-mono text-[15px] font-bold tabular-nums ${uprow ? "text-slate-900" : "text-slate-900"}`}>
                         {fmt(lprow)}
@@ -2884,6 +2907,7 @@ function App() {
                         {pctrow != null ? `${pctrow >= 0 ? "+" : ""}${pctrow.toFixed(2)}%` : ""}
                       </span>
                     </span>
+                    )}
                     <button
                       onClick={e => { e.stopPropagation(); removeCustomSym(sym); }}
                       className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-slate-300 hover:bg-rose-50 hover:text-rose-500"
@@ -2896,14 +2920,15 @@ function App() {
               })}
             </div>
 
-            {/* DESKTOP table (unchanged) */}
+            {/* DESKTOP table — Bid/Ask + High/Low */}
             <div className="hidden lg:block">
               <div className="flex items-center gap-2 border-b border-slate-100 bg-slate-50/70 px-2.5 py-2 text-[9px] font-semibold uppercase tracking-[0.12em] text-slate-400">
               <span className="w-6 shrink-0" aria-hidden />
               <span className="flex-1">Symbol</span>
-              <span className="w-[62px] text-right">LTP</span>
-              <span className="w-[48px] text-right">Chg</span>
-              <span className="w-[48px] text-right">Chg%</span>
+              <span className="w-[62px] text-right text-blue-500">Bid</span>
+              <span className="w-[62px] text-right text-rose-500">Ask</span>
+              <span className="w-[48px] text-right">High</span>
+              <span className="w-[48px] text-right">Low</span>
               <span className="hidden w-7 shrink-0 sm:block" aria-hidden />
               </div>
 
@@ -2933,21 +2958,15 @@ function App() {
                   (state as any)?.livePrices ?
                       (state as any).livePrices[sym.token] ?? null :
                       null;
+                const bid = lp?.bestBid ?? null;
+                const ask = lp?.bestAsk ?? null;
+                const hi = lp?.high ?? null;
+                const lo = lp?.low ?? null;
+                const hasBA = bid != null || ask != null;
                 const price =
                   lp?.price ??
                   customLastCloses[`${sym.exch}:${sym.token}`] ??
                   null;
-                const prevClose =
-                  customPrevCloses[`${sym.exch}:${sym.token}`] ?? null;
-                const change =
-                  price != null && prevClose != null
-                    ? price - prevClose
-                    : null;
-                const changePct =
-                  change != null && prevClose
-                    ? (change / prevClose) * 100
-                    : null;
-                const up = (change ?? 0) >= 0;
                 const active =
                   selectedSymbol?.token ===
                     sym.token &&
@@ -2982,38 +3001,52 @@ function App() {
                       </span>
                     </span>
 
-                    <span
-                      className={[
-                        "w-[62px] text-right font-mono text-[12px] font-semibold tabular-nums",
+                    {hasBA ? (
+                      <>
+                        <span
+                          className="w-[62px] text-right font-mono text-[12px] font-semibold tabular-nums text-blue-600"
+                          title="Bid (Buy)"
+                        >
+                          {fmtRow(bid, (sym as any)?.tickSize)}
+                        </span>
 
-                        up ? UP : DOWN,
-                      ].join(" ")}
-                    >
-                      {fmtRow(price, (sym as any)?.tickSize)}
-                    </span>
+                        <span
+                          className="w-[62px] text-right font-mono text-[12px] font-semibold tabular-nums text-rose-600"
+                          title="Ask (Sell)"
+                        >
+                          {fmtRow(ask, (sym as any)?.tickSize)}
+                        </span>
 
-                    <span
-                      className={[
-                        "w-[48px] text-right font-mono text-[10px] font-medium tabular-nums",
+                        <span
+                          className="w-[48px] text-right font-mono text-[10px] font-medium tabular-nums text-slate-500"
+                          title="Day high"
+                        >
+                          {hi != null ? fmtRow(hi, (sym as any)?.tickSize) : "—"}
+                        </span>
 
-                        up ? UP : DOWN,
-                      ].join(" ")}
-                    >
-                      {change != null
-                        ? fmtRowSigned(change, (sym as any)?.tickSize)
-                        : "—"}
-                    </span>
-
-                    <span
-                      className={[
-                        "w-[48px] text-right font-mono text-[10px] font-medium tabular-nums",
-                        up ? UP : DOWN,
-                      ].join(" ")}
-                    >
-                      {changePct != null
-                        ? (up ? "+" : "") + changePct.toFixed(2) + "%"
-                        : "—"}
-                    </span>
+                        <span
+                          className="w-[48px] text-right font-mono text-[10px] font-medium tabular-nums text-slate-500"
+                          title="Day low"
+                        >
+                          {lo != null ? fmtRow(lo, (sym as any)?.tickSize) : "—"}
+                        </span>
+                      </>
+                    ) : (
+                      <>
+                        <span className="w-[62px] text-right font-mono text-[12px] font-semibold tabular-nums text-slate-800">
+                          {fmtRow(price, (sym as any)?.tickSize)}
+                        </span>
+                        <span className="w-[62px] text-right font-mono text-[12px] tabular-nums text-slate-300">
+                          —
+                        </span>
+                        <span className="w-[48px] text-right font-mono text-[10px] tabular-nums text-slate-300">
+                          —
+                        </span>
+                        <span className="w-[48px] text-right font-mono text-[10px] tabular-nums text-slate-300">
+                          —
+                        </span>
+                      </>
+                    )}
 
                     <button
                       title="Remove"

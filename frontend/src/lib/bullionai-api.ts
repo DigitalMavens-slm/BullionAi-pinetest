@@ -103,6 +103,12 @@ export type LivePriceInfo = {
   tickTime: number | null;
   receivedAt: number | null;
   connected: boolean;
+  bestBid?: number | null;
+  bestAsk?: number | null;
+  high?: number | null;
+  low?: number | null;
+  open?: number | null;
+  prevClose?: number | null;
 };
 
 export type StrategyRunResponse = {
