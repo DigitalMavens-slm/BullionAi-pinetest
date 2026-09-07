@@ -2209,7 +2209,7 @@ function App() {
                   </div>
                 )}
                 <div className="divide-y divide-slate-50">
-                  {filteredCustomSyms.map((sym, i) => {
+                  {filteredCustomSyms.map((sym) => {
                     const live = (state as any)?.livePrices?.[sym.token] ?? null;
                     const lp = live?.price ?? customLastCloses[`${sym.exch}:${sym.token}`] ?? null;
                     const pc = customPrevCloses[`${sym.exch}:${sym.token}`] ?? dayStats?.prevClose ?? null;
@@ -2227,31 +2227,37 @@ function App() {
                       : flash === "down"
                         ? "price-flash-down"
                         : "";
+                    const dirUp = (chg ?? 0) >= 0;
+                    const dirCls = dirUp ? "text-blue-600" : "text-rose-600";
+                    const quotesName = String(sym.label ?? sym.tsym ?? "").toUpperCase().replace(/[^A-Z]/g, "") || String(sym.tsym ?? "").toUpperCase();
+                    const tickMs = live?.tickTime ?? live?.receivedAt ?? null;
+                    const tickStr = tickMs != null
+                      ? new Date(tickMs).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false })
+                      : "—";
                     const isSel = selectedSymbol?.token === sym.token && selectedSymbol?.exch === sym.exch;
-                    const palette = ["bg-amber-500", "bg-slate-500", "bg-slate-800", "bg-indigo-500", "bg-emerald-600"];
                     return (
                       <button
                         key={`${sym.exch}:${sym.token}`}
                         onClick={() => { setSelectedSymbol(sym); setMobileSymbolOpen(false); }}
-                        className={`flex w-full items-center gap-3 px-4 py-3 text-left transition ${isSel ? "bg-slate-50" : "active:bg-slate-50"}`}
+                        className={`flex w-full items-center gap-3 px-4 py-2.5 text-left transition ${isSel ? "bg-slate-50" : "active:bg-slate-50"}`}
                       >
-                        <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-[13px] font-bold text-white ${palette[i % palette.length]}`}>
-                          {(sym.label ?? sym.tsym).charAt(0)}
-                        </span>
-                        <span className="min-w-0 flex-1">
-                          <span className="block truncate text-[15px] font-semibold text-slate-900">{sym.label ?? sym.tsym}</span>
-                          <span className="block truncate text-[11px] text-slate-400">{sym.exch} · {sym.token}</span>
+                        <span className="min-w-0 flex-1 leading-tight">
+                          <span className={`block font-mono text-[12px] font-bold tabular-nums ${dirUp ? "text-blue-600" : "text-rose-600"}`}>
+                            {chg != null ? `${chg >= 0 ? "+" : ""}${fmtRow(chg, (sym as any)?.tickSize)}` : "—"}{" "}
+                            {pct != null ? `${pct >= 0 ? "+" : ""}${pct.toFixed(2)}%` : ""}
+                          </span>
+                          <span className="block truncate text-[19px] font-extrabold tracking-tight text-slate-900">{quotesName}</span>
+                          <span className="block text-[11px] tabular-nums text-slate-400">{tickStr}</span>
                         </span>
                         {hasBidAsk ? (
-                          <span className="shrink-0 text-right">
-                            <span className={`flex items-center justify-end gap-2 font-mono text-[13px] font-bold tabular-nums ${flashCls}`}>
-                              <span className="text-blue-600" title="Bid (Buy)">B {fmtRow(bid, (sym as any)?.tickSize)}</span>
-                              <span className="text-slate-300">|</span>
-                              <span className="text-rose-600" title="Ask (Sell)">S {fmtRow(ask, (sym as any)?.tickSize)}</span>
+                          <span className="shrink-0 text-right leading-tight">
+                            <span className={`flex items-center justify-end gap-3 font-mono text-[20px] font-extrabold tabular-nums tracking-tight ${dirCls} ${flashCls}`}>
+                              <span title="Bid (Buy)">{fmtRow(bid, (sym as any)?.tickSize)}</span>
+                              <span title="Ask (Sell)">{fmtRow(ask, (sym as any)?.tickSize)}</span>
                             </span>
-                            <span className="mt-0.5 flex items-center justify-end gap-2 font-mono text-[10px] tabular-nums text-slate-400">
-                              <span title="Day high">H {fmtRow(hi, (sym as any)?.tickSize)}</span>
-                              <span title="Day low">L {fmtRow(lo, (sym as any)?.tickSize)}</span>
+                            <span className="mt-1 flex items-center justify-end gap-3 font-mono text-[11px] tabular-nums text-slate-500">
+                              <span title="Day low">L: {fmtRow(lo, (sym as any)?.tickSize)}</span>
+                              <span title="Day high">H: {fmtRow(hi, (sym as any)?.tickSize)}</span>
                             </span>
                           </span>
                         ) : (
@@ -2846,7 +2852,7 @@ function App() {
                   No symbols yet. Add scripts using the search box above.
                 </div>
               )}
-              {filteredCustomSyms.map((sym, i) => {
+              {filteredCustomSyms.map((sym) => {
                 const liverow = (state as any)?.livePrices?.[sym.token] ?? null;
                 const lprow =
                   liverow?.price ??
@@ -2864,37 +2870,39 @@ function App() {
                 const hirow = liverow?.high ?? null;
                 const lorow = liverow?.low ?? null;
                 const hasBARow = bidrow != null || askrow != null;
+                const dirUpRow = (chgrow ?? 0) >= 0;
+                const dirClsRow = dirUpRow ? "text-blue-600" : "text-rose-600";
+                const quotesNameRow = String(sym.label ?? sym.tsym ?? "").toUpperCase().replace(/[^A-Z]/g, "") || String(sym.tsym ?? "").toUpperCase();
+                const tickRowMs = liverow?.tickTime ?? liverow?.receivedAt ?? null;
+                const tickRowStr = tickRowMs != null
+                  ? new Date(tickRowMs).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false })
+                  : "—";
                 const isSel = selectedSymbol?.token === sym.token && selectedSymbol?.exch === sym.exch;
-                const palette = ["bg-amber-500", "bg-slate-500", "bg-slate-800", "bg-indigo-500", "bg-emerald-600"];
                 return (
                   <div
                     key={sym.exch + sym.token}
                     role="button"
                     tabIndex={0}
                     onClick={() => setSelectedSymbol(sym)}
-                    className={`flex items-center gap-3 px-4 py-3 transition ${isSel ? "bg-slate-50" : "active:bg-slate-50"}`}
+                    className={`flex items-center gap-3 px-4 py-2.5 transition ${isSel ? "bg-slate-50" : "active:bg-slate-50"}`}
                   >
-                    <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-[13px] font-bold text-white ${palette[i % palette.length]}`}>
-                      {(sym.label ?? sym.tsym).charAt(0)}
-                    </span>
-                    <span className="min-w-0 flex-1">
-                      <span className="flex items-center gap-1 text-[15px] font-semibold text-slate-900">
-                        <span className="truncate">{sym.label ?? sym.tsym}</span>
+                    <span className="min-w-0 flex-1 leading-tight">
+                      <span className={`block font-mono text-[12px] font-bold tabular-nums ${dirUpRow ? "text-blue-600" : "text-rose-600"}`}>
+                        {chgrow != null ? `${chgrow >= 0 ? "+" : ""}${fmt(chgrow)}` : "—"}{" "}
+                        {pctrow != null ? `${pctrow >= 0 ? "+" : ""}${pctrow.toFixed(2)}%` : ""}
                       </span>
-                      <span className="block truncate text-[12px] text-slate-400">
-                        {sym.exch} · {String(sym.token)}
-                      </span>
+                      <span className="block truncate text-[19px] font-extrabold tracking-tight text-slate-900">{quotesNameRow}</span>
+                      <span className="block text-[11px] tabular-nums text-slate-400">{tickRowStr}</span>
                     </span>
                     {hasBARow ? (
-                      <span className="shrink-0 text-right">
-                        <span className="flex items-center justify-end gap-2 font-mono text-[13px] font-bold tabular-nums">
-                          <span className="text-blue-600" title="Bid (Buy)">B {fmtRow(bidrow, (sym as any)?.tickSize)}</span>
-                          <span className="text-slate-300">|</span>
-                          <span className="text-rose-600" title="Ask (Sell)">S {fmtRow(askrow, (sym as any)?.tickSize)}</span>
+                      <span className="shrink-0 text-right leading-tight">
+                        <span className={`flex items-center justify-end gap-3 font-mono text-[20px] font-extrabold tabular-nums tracking-tight ${dirClsRow}`}>
+                          <span title="Bid (Buy)">{fmtRow(bidrow, (sym as any)?.tickSize)}</span>
+                          <span title="Ask (Sell)">{fmtRow(askrow, (sym as any)?.tickSize)}</span>
                         </span>
-                        <span className="mt-0.5 flex items-center justify-end gap-2 font-mono text-[10px] tabular-nums text-slate-400">
-                          <span title="Day high">H {fmtRow(hirow, (sym as any)?.tickSize)}</span>
-                          <span title="Day low">L {fmtRow(lorow, (sym as any)?.tickSize)}</span>
+                        <span className="mt-1 flex items-center justify-end gap-3 font-mono text-[11px] tabular-nums text-slate-500">
+                          <span title="Day low">L: {fmtRow(lorow, (sym as any)?.tickSize)}</span>
+                          <span title="Day high">H: {fmtRow(hirow, (sym as any)?.tickSize)}</span>
                         </span>
                       </span>
                     ) : (
