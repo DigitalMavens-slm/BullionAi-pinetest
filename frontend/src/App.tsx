@@ -2886,7 +2886,7 @@ function App() {
                     role="button"
                     tabIndex={0}
                     onClick={() => setSelectedSymbol(sym)}
-                    className={`flex items-center gap-3 px-4 py-2.5 transition ${isSel ? "bg-slate-50" : "active:bg-slate-50"}`}
+                    className={`flex cursor-pointer select-none items-center gap-3 px-4 py-2.5 transition ${isSel ? "bg-slate-50" : "active:bg-slate-50"}`}
                   >
                     <span className="min-w-0 flex-1 leading-tight">
                       <span className="block truncate text-[17px] font-extrabold tracking-tight text-slate-900">{quotesNameRow}</span>
