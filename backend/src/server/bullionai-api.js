@@ -2421,6 +2421,68 @@ const allowedTimeframes =
                             candles =
                                 deepened;
 
+                            /*
+                             * STRATEGY REFRESH — re-run Pine immediately
+                             * on the deepened two-month dataset for every
+                             * timeframe EXCEPT the 15m fixed-target lane,
+                             * so chart arrows and the Signals panel update
+                             * without waiting for the next poll. 15m keeps
+                             * its existing cadence (DB-persisted trades).
+                             */
+
+                            const exchDeepen =
+                                String(
+                                    exchange ||
+                                        ""
+                                ).toUpperCase();
+
+                            const isFixedTgtLane =
+                                tf.key ===
+                                    "15m" &&
+                                (exchDeepen ===
+                                    "MCX" ||
+                                    exchDeepen ===
+                                        "SPOT");
+
+                            if (
+                                !isFixedTgtLane
+                            ) {
+
+                                const warmSymbol =
+                                    inst.symbol ||
+                                    inst.token;
+
+                                console.log(
+                                    `[deepen] warming strategy ${exchDeepen} ${warmSymbol} ${tf.key} on 2-month data`
+                                );
+
+                                setImmediate(
+                                    () => {
+
+                                        this.runStrategyFor(
+                                            `${exchDeepen}_${inst.token}_${tf.key}`,
+                                            tf.key,
+                                            {
+                                                key: warmSymbol,
+                                                symbol: warmSymbol,
+                                                name:
+                                                    inst.name ||
+                                                    warmSymbol,
+                                                token: String(
+                                                    inst.token
+                                                ),
+                                                exchange:
+                                                    exchDeepen,
+                                            }
+                                        ).catch(
+                                            () => {}
+                                        );
+
+                                    }
+                                );
+
+                            }
+
                         }
 
                     }
