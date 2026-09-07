@@ -1667,6 +1667,53 @@ function App() {
 
   }, [livePrice]);
 
+  const prevWatchlistRef =
+    useRef<Map<string, number>>(new Map());
+  const [watchlistFlash, setWatchlistFlash] =
+    useState<Map<string, "up" | "down">>(
+      new Map()
+    );
+
+  useEffect(() => {
+    const livePrices = (state as any)
+      ?.livePrices as
+      | Record<string, { price?: number }>
+      | null
+      | undefined;
+    if (!livePrices) return;
+    const next = new Map<string, "up" | "down">();
+    for (const sym of filteredCustomSyms) {
+      const lp =
+        livePrices[sym.token]?.price ?? null;
+      if (lp == null) continue;
+      const prev =
+        prevWatchlistRef.current.get(
+          sym.token
+        );
+      if (
+        prev != null &&
+        prev !== lp
+      ) {
+        next.set(
+          sym.token,
+          lp > prev ? "up" : "down"
+        );
+      }
+      prevWatchlistRef.current.set(
+        sym.token,
+        lp
+      );
+    }
+    if (next.size > 0) {
+      setWatchlistFlash(next);
+      const t = setTimeout(
+        () => setWatchlistFlash(new Map()),
+        660
+      );
+      return () => clearTimeout(t);
+    }
+  }, [state?.livePrices, filteredCustomSyms]);
+
 
   /* Live day-range endpoints — tick-accurate between polls */
 
@@ -2202,7 +2249,22 @@ function App() {
                           <span className="block truncate text-[11px] text-slate-400">{sym.exch} · {sym.token}</span>
                         </span>
                         <span className="text-right">
-                          <span className="block font-mono text-[14px] font-bold tabular-nums text-slate-900">{fmt(lp)}</span>
+                          <span
+                            className={[
+                              "block font-mono text-[14px] font-bold tabular-nums",
+                              watchlistFlash.get(
+                                sym.token
+                              ) === "up"
+                                ? "price-flash-up text-blue-600"
+                                : watchlistFlash.get(
+                                      sym.token
+                                    ) === "down"
+                                  ? "price-flash-down text-rose-600"
+                                  : "text-slate-900",
+                            ].join(" ")}
+                          >
+                            {fmt(lp)}
+                          </span>
                           <span className={`block font-mono text-[11px] tabular-nums ${up ? "text-emerald-600" : "text-rose-600"}`}>
                             {chg != null ? `${chg >= 0 ? "+" : ""}${fmt(chg)}` : "—"}{" "}
                             {pct != null ? `${pct >= 0 ? "+" : ""}${pct.toFixed(2)}%` : ""}
@@ -3022,7 +3084,7 @@ function App() {
                   "font-mono text-[27px] font-bold leading-none tracking-[-0.03em] tabular-nums",
 
                   priceFlash === "up"
-                    ? "price-flash-up text-emerald-600"
+                    ? "price-flash-up text-blue-600"
 
                     : priceFlash === "down"
                       ? "price-flash-down text-rose-600"

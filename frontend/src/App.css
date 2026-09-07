@@ -227,10 +227,10 @@ html { font-family: var(--font-sans); }
     #f6f7f9;
 }
 
-/* ---------- Price tick flash ---------- */
+/* ---------- Price tick flash — blue up, red down ---------- */
 
 @keyframes bullionai-flash-up {
-  0% { color:#059669; text-shadow:0 0 18px rgba(16,185,129,.45);}
+  0% { color:#2563eb; text-shadow:0 0 18px rgba(37,99,235,.45);}
   100% { text-shadow:none; }
 }
 
