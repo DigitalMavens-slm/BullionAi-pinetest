@@ -2221,7 +2221,6 @@ function App() {
                         ? "price-flash-down"
                         : "";
                     const dirUp = (chg ?? 0) >= 0;
-                    const dirCls = dirUp ? "text-blue-600" : "text-rose-600";
                     const quotesName = String(sym.label ?? sym.tsym ?? "").toUpperCase().replace(/[^A-Z]/g, "") || String(sym.tsym ?? "").toUpperCase();
                     const isSel = selectedSymbol?.token === sym.token && selectedSymbol?.exch === sym.exch;
                     return (
@@ -2239,9 +2238,16 @@ function App() {
                         </span>
                         {hasBidAsk ? (
                           <span className="shrink-0 text-right leading-tight">
-                            <span className={`flex items-center justify-end gap-3 font-mono text-[20px] font-extrabold tabular-nums tracking-tight ${dirCls} ${flashCls}`}>
-                              <span title="Bid (Buy)">{fmtRow(bid, (sym as any)?.tickSize)}</span>
-                              <span title="Ask (Sell)">{fmtRow(ask, (sym as any)?.tickSize)}</span>
+                            <span className={`flex items-stretch justify-end gap-3 ${flashCls}`}>
+                              <span className="flex flex-col items-end">
+                                <span className="text-[9px] font-bold uppercase tracking-[0.14em] text-slate-400">Bid</span>
+                                <span title="Bid (Buy)" className="font-mono text-[20px] font-extrabold tabular-nums tracking-tight text-blue-600">{fmtRow(bid, (sym as any)?.tickSize)}</span>
+                              </span>
+                              <span className="w-px self-stretch bg-slate-200" aria-hidden />
+                              <span className="flex flex-col items-end">
+                                <span className="text-[9px] font-bold uppercase tracking-[0.14em] text-slate-400">Ask</span>
+                                <span title="Ask (Sell)" className="font-mono text-[20px] font-extrabold tabular-nums tracking-tight text-rose-600">{fmtRow(ask, (sym as any)?.tickSize)}</span>
+                              </span>
                             </span>
                             <span className="mt-1 flex items-center justify-end gap-3 font-mono text-[11px] tabular-nums text-slate-500">
                               <span title="Day low">L: {fmtRow(lo, (sym as any)?.tickSize)}</span>
@@ -2863,7 +2869,6 @@ function App() {
                 const lorow = liverow?.low ?? null;
                 const hasBARow = bidrow != null || askrow != null;
                 const dirUpRow = (chgrow ?? 0) >= 0;
-                const dirClsRow = dirUpRow ? "text-blue-600" : "text-rose-600";
                 const quotesNameRow = String(sym.label ?? sym.tsym ?? "").toUpperCase().replace(/[^A-Z]/g, "") || String(sym.tsym ?? "").toUpperCase();
                 const isSel = selectedSymbol?.token === sym.token && selectedSymbol?.exch === sym.exch;
                 return (
@@ -2883,9 +2888,16 @@ function App() {
                     </span>
                     {hasBARow ? (
                       <span className="shrink-0 text-right leading-tight">
-                        <span className={`flex items-center justify-end gap-3 font-mono text-[20px] font-extrabold tabular-nums tracking-tight ${dirClsRow}`}>
-                          <span title="Bid (Buy)">{fmtRow(bidrow, (sym as any)?.tickSize)}</span>
-                          <span title="Ask (Sell)">{fmtRow(askrow, (sym as any)?.tickSize)}</span>
+                        <span className="flex items-stretch justify-end gap-3">
+                          <span className="flex flex-col items-end">
+                            <span className="text-[9px] font-bold uppercase tracking-[0.14em] text-slate-400">Bid</span>
+                            <span title="Bid (Buy)" className="font-mono text-[20px] font-extrabold tabular-nums tracking-tight text-blue-600">{fmtRow(bidrow, (sym as any)?.tickSize)}</span>
+                          </span>
+                          <span className="w-px self-stretch bg-slate-200" aria-hidden />
+                          <span className="flex flex-col items-end">
+                            <span className="text-[9px] font-bold uppercase tracking-[0.14em] text-slate-400">Ask</span>
+                            <span title="Ask (Sell)" className="font-mono text-[20px] font-extrabold tabular-nums tracking-tight text-rose-600">{fmtRow(askrow, (sym as any)?.tickSize)}</span>
+                          </span>
                         </span>
                         <span className="mt-1 flex items-center justify-end gap-3 font-mono text-[11px] tabular-nums text-slate-500">
                           <span title="Day low">L: {fmtRow(lorow, (sym as any)?.tickSize)}</span>
