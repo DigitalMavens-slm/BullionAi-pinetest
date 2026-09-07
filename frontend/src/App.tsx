@@ -2931,9 +2931,9 @@ function App() {
           </Card>
 
 
-          {/* QUOTE DETAILS */}
+          {/* QUOTE DETAILS — desktop only (hidden on mobile watchlist) */}
 
-          <Card className="shrink-0 p-3.5">
+          <Card className="hidden shrink-0 p-3.5 lg:block">
 
             <div className="flex items-center gap-3">
 
