@@ -7,12 +7,9 @@ import {
 
 import {
   BarChart3,
-  CandlestickChart,
   ChevronDown,
   Circle,
   Clock,
-  List,
-  Activity,
   ShieldCheck,
   Trash2,
   X,
@@ -558,12 +555,8 @@ function App() {
   const [selectedSymbol, setSelectedSymbol] =
     useState<SelectedSymbol | null>(null);
 
-  // Mobile tab: 'chart' | 'watchlist' | 'signals'. Desktop ignores this
-  // and shows the full 3-column terminal. Defaults to watchlist.
-  const [mobileTab, setMobileTab] =
-    useState<"chart" | "watchlist" | "signals">("watchlist");
-
-  // Premium mobile symbol picker (bottom sheet) on Chart/Signals tabs.
+  // Premium mobile symbol picker (bottom sheet).
+  // Mobile and desktop share the same stacked terminal — no tab gating.
   const [mobileSymbolOpen, setMobileSymbolOpen] =
     useState(false);
 
@@ -2092,7 +2085,7 @@ function App() {
 
       {(customTickerRows.length > 0 ||
         importantIndicesLive.length > 0) && (
-        <div className="ticker-viewport z-10 hidden shrink-0 border-b border-slate-200/60 bg-white/80 py-1 lg:flex">
+        <div className="ticker-viewport z-10 flex shrink-0 border-b border-slate-200/60 bg-white/80 py-1">
 
           <div className="ticker-track">
 
@@ -2138,10 +2131,10 @@ function App() {
 
       {/* ================= WORKSPACE ================= */}
 
-      <main className="mx-auto flex w-full max-w-[1800px] flex-1 flex-col gap-3 p-3 pb-20 lg:min-h-0 lg:flex-row lg:gap-3 lg:p-3">
+      <main className="mx-auto flex w-full max-w-[1800px] flex-1 flex-col gap-3 p-3 lg:min-h-0 lg:flex-row lg:gap-3 lg:p-3">
 
-        {/* Mobile premium header (shown on Chart + Signals tabs) */}
-        <div className={`-mt-1 lg:hidden ${mobileTab === "chart" || mobileTab === "signals" ? "block" : "hidden"}`}>
+        {/* Mobile premium header (symbol + live price) */}
+        <div className="-mt-1 lg:hidden">
           <Card className="overflow-hidden border-0 bg-white/80 p-0">
             {/* Live symbol + price header */}
             <div className="px-3 pb-2 pt-2.5">
@@ -2286,7 +2279,7 @@ function App() {
 
         {/* ============ LEFT: CHART ============ */}
 
-                <aside className={`flex w-full shrink-0 flex-col gap-3 lg:w-[300px] lg:min-h-0 order-3 lg:order-1 ${mobileTab === "signals" ? "flex" : "hidden"} lg:flex`}>
+                <aside className="flex w-full shrink-0 flex-col gap-3 lg:w-[300px] lg:min-h-0 order-3 lg:order-1">
           {/* BULLIONAI STRATEGY */}
 
           <Card className="shrink-0">
@@ -2571,7 +2564,7 @@ function App() {
 
         </aside>
 
-<section className={`flex min-w-0 flex-col gap-3 lg:min-h-0 lg:flex-1 order-2 lg:order-2 max-lg:h-[calc(100dvh-200px)] ${mobileTab === "chart" ? "flex" : "hidden"} lg:flex`}>
+<section className="flex min-w-0 flex-col gap-3 lg:min-h-0 lg:flex-1 order-2 lg:order-2 max-lg:h-[calc(100dvh-200px)]">
 
           <Card className="flex flex-1 flex-col overflow-hidden min-h-[320px] lg:h-auto">
 
@@ -2794,7 +2787,7 @@ function App() {
 
         {/* ============ RIGHT: SIDEBAR ============ */}
 
-        <aside className={`flex w-full shrink-0 flex-col gap-2 lg:w-[360px] lg:min-h-0 order-1 lg:order-3 ${mobileTab === "watchlist" ? "flex" : "hidden"} lg:flex`}>
+        <aside className="flex w-full shrink-0 flex-col gap-2 lg:w-[360px] lg:min-h-0 order-1 lg:order-3">
 
           {/* Mobile-only: add a script to the watchlist */}
           <div className="lg:hidden">
@@ -2840,11 +2833,15 @@ function App() {
 
             </CardTitle>
 
-            {/* MOBILE premium TradingView-style list */}
-            <div className="divide-y divide-slate-100 lg:hidden">
+            {/* Watchlist — same Quotes rows on mobile and desktop */}
+            <div className="divide-y divide-slate-100">
               {filteredCustomSyms.length === 0 && (
                 <div className="px-4 py-10 text-center text-[12px] text-slate-400">
-                  No symbols yet. Add scripts using the search box above.
+                  {customSyms.length === 0
+                    ? "No scripts added yet."
+                    : "No scripts match your segments."}
+                  <br />
+                  Add scripts using the search box above.
                 </div>
               )}
               {filteredCustomSyms.map((sym) => {
@@ -2916,150 +2913,6 @@ function App() {
                   </div>
                 );
               })}
-            </div>
-
-            {/* DESKTOP table — Bid/Ask + High/Low */}
-            <div className="hidden lg:block">
-              <div className="flex items-center gap-2 border-b border-slate-100 bg-slate-50/70 px-2.5 py-2 text-[9px] font-semibold uppercase tracking-[0.12em] text-slate-400">
-              <span className="w-6 shrink-0" aria-hidden />
-              <span className="flex-1">Symbol</span>
-              <span className="w-[62px] text-right text-blue-500">Bid</span>
-              <span className="w-[62px] text-right text-rose-500">Ask</span>
-              <span className="w-[48px] text-right">High</span>
-              <span className="w-[48px] text-right">Low</span>
-              <span className="hidden w-7 shrink-0 sm:block" aria-hidden />
-              </div>
-
-            <div className="p-1">
-
-              {filteredCustomSyms.length ===
-                0 && (
-                <div className="px-3 py-6 text-center text-[11px] leading-relaxed text-slate-400">
-
-                  {customSyms.length === 0
-                    ? "No scripts added yet."
-                    : "No scripts match your segments."}
-
-                  <br />
-
-                  Use the search box above to
-                  add one.
-
-                </div>
-              )}
-
-                          {/* CUSTOM SYMBOL ROWS */}
-
-              {filteredCustomSyms.map(sym => {
-                const lp =
-                  state &&
-                  (state as any)?.livePrices ?
-                      (state as any).livePrices[sym.token] ?? null :
-                      null;
-                const bid = lp?.bestBid ?? null;
-                const ask = lp?.bestAsk ?? null;
-                const hi = lp?.high ?? null;
-                const lo = lp?.low ?? null;
-                const hasBA = bid != null || ask != null;
-                const price =
-                  lp?.price ??
-                  customLastCloses[`${sym.exch}:${sym.token}`] ??
-                  null;
-                const active =
-                  selectedSymbol?.token ===
-                    sym.token &&
-                  selectedSymbol?.exch ===
-                    sym.exch;
-
-                return (
-                  <div
-                    key={sym.exch + sym.token}
-                    role="button"
-                    tabIndex={0}
-                    onClick={() =>
-                      setSelectedSymbol(sym)
-                    }
-                    className={[
-                      "group flex w-full cursor-pointer items-center gap-2 rounded-xl px-2.5 py-2 text-left transition",
-                      active
-                        ? "bg-blue-50 ring-1 ring-blue-200"
-                        : "hover:bg-slate-50",
-                    ].join(" ")}
-                  >
-                    <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-slate-200 text-[10px] font-bold text-slate-600">
-                      {sym.tsym[0]}
-                    </span>
-
-                    <span className="min-w-0 flex-1 leading-tight">
-                      <span className="block truncate text-[12px] font-semibold text-slate-800">
-                        {sym.label ?? sym.tsym}
-                      </span>
-                      <span className="block text-[9px] font-medium uppercase tracking-wider text-slate-400">
-                        {sym.exch} · {sym.token}
-                      </span>
-                    </span>
-
-                    {hasBA ? (
-                      <>
-                        <span
-                          className="w-[62px] text-right font-mono text-[12px] font-semibold tabular-nums text-blue-600"
-                          title="Bid (Buy)"
-                        >
-                          {fmtRow(bid, (sym as any)?.tickSize)}
-                        </span>
-
-                        <span
-                          className="w-[62px] text-right font-mono text-[12px] font-semibold tabular-nums text-rose-600"
-                          title="Ask (Sell)"
-                        >
-                          {fmtRow(ask, (sym as any)?.tickSize)}
-                        </span>
-
-                        <span
-                          className="w-[48px] text-right font-mono text-[10px] font-medium tabular-nums text-slate-500"
-                          title="Day high"
-                        >
-                          {hi != null ? fmtRow(hi, (sym as any)?.tickSize) : "—"}
-                        </span>
-
-                        <span
-                          className="w-[48px] text-right font-mono text-[10px] font-medium tabular-nums text-slate-500"
-                          title="Day low"
-                        >
-                          {lo != null ? fmtRow(lo, (sym as any)?.tickSize) : "—"}
-                        </span>
-                      </>
-                    ) : (
-                      <>
-                        <span className="w-[62px] text-right font-mono text-[12px] font-semibold tabular-nums text-slate-800">
-                          {fmtRow(price, (sym as any)?.tickSize)}
-                        </span>
-                        <span className="w-[62px] text-right font-mono text-[12px] tabular-nums text-slate-300">
-                          —
-                        </span>
-                        <span className="w-[48px] text-right font-mono text-[10px] tabular-nums text-slate-300">
-                          —
-                        </span>
-                        <span className="w-[48px] text-right font-mono text-[10px] tabular-nums text-slate-300">
-                          —
-                        </span>
-                      </>
-                    )}
-
-                    <button
-                      title="Remove"
-                      onClick={e => {
-                        e.stopPropagation();
-                        removeCustomSym(sym);
-                      }}
-                      className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-slate-400 transition hover:bg-rose-50 hover:text-rose-500 sm:opacity-0 sm:group-hover:opacity-100"
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </button>
-                  </div>
-                );
-              })}
-</div>
             </div>
 
           </Card>
@@ -3300,40 +3153,6 @@ function App() {
 
 
         </aside>
-
-        {/* Mobile bottom tab bar (TradingView-style compact; hidden on desktop) */}
-        <nav
-          className="fixed bottom-0 left-0 right-0 z-30 border-t border-slate-200/80 bg-white/95 backdrop-blur-xl lg:hidden"
-          aria-label="Mobile terminal tabs"
-        >
-          <div className="mx-auto flex max-w-md items-stretch justify-around py-1">
-          {[
-            { id: "watchlist", label: "Watchlist", icon: List },
-            { id: "chart", label: "Chart", icon: CandlestickChart },
-            { id: "signals", label: "Signals", icon: Activity },
-          ].map(tab => {
-            const Icon = tab.icon;
-            const active = mobileTab === tab.id;
-            return (
-              <button
-                key={tab.id}
-                onClick={() => setMobileTab(tab.id as any)}
-                className={[
-                  "flex min-w-[70px] flex-1 flex-col items-center justify-center gap-0.5 pb-[max(0.45rem,env(safe-area-inset-bottom))] pt-1.5 text-[10px] font-semibold transition-colors",
-                  active
-                    ? "text-accent"
-                    : "text-slate-400 hover:text-slate-600",
-                ].join(" ")}
-              >
-                <span className={`h-5 w-5 ${active ? "text-accent" : ""}`}>
-                  <Icon className={`h-5 w-5 ${active ? "fill-accent/15" : ""}`} strokeWidth={active ? 2.4 : 2} />
-                </span>
-                {tab.label}
-              </button>
-            );
-          })}
-          </div>
-        </nav>
 
       </main>
 
