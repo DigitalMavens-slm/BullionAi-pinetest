@@ -2230,29 +2230,21 @@ function App() {
                         className={`flex w-full items-center gap-3 px-4 py-2.5 text-left transition ${isSel ? "bg-slate-50" : "active:bg-slate-50"}`}
                       >
                         <span className="min-w-0 flex-1 leading-tight">
-                          <span className="block truncate text-[19px] font-extrabold tracking-tight text-slate-900">{quotesName}</span>
-                          <span className={`block font-mono text-[12px] font-bold tabular-nums ${dirUp ? "text-blue-600" : "text-rose-600"}`}>
+                          <span className="block truncate text-[17px] font-extrabold tracking-tight text-slate-900">{quotesName}</span>
+                          <span className={`block font-mono text-[11px] font-bold tabular-nums ${dirUp ? "text-blue-600" : "text-rose-600"}`}>
                             {chg != null ? `${chg >= 0 ? "+" : ""}${fmtRow(chg, (sym as any)?.tickSize)}` : "—"}{" "}
                             {pct != null ? `${pct >= 0 ? "+" : ""}${pct.toFixed(2)}%` : ""}
                           </span>
                         </span>
                         {hasBidAsk ? (
-                          <span className="shrink-0 text-right leading-tight">
-                            <span className={`flex items-stretch justify-end gap-3 ${flashCls}`}>
-                              <span className="flex flex-col items-end">
-                                <span className="text-[9px] font-bold uppercase tracking-[0.14em] text-slate-400">Bid</span>
-                                <span title="Bid (Buy)" className="font-mono text-[20px] font-extrabold tabular-nums tracking-tight text-blue-600">{fmtRow(bid, (sym as any)?.tickSize)}</span>
-                              </span>
-                              <span className="w-px self-stretch bg-slate-200" aria-hidden />
-                              <span className="flex flex-col items-end">
-                                <span className="text-[9px] font-bold uppercase tracking-[0.14em] text-slate-400">Ask</span>
-                                <span title="Ask (Sell)" className="font-mono text-[20px] font-extrabold tabular-nums tracking-tight text-rose-600">{fmtRow(ask, (sym as any)?.tickSize)}</span>
-                              </span>
-                            </span>
-                            <span className="mt-1 flex items-center justify-end gap-3 font-mono text-[11px] tabular-nums text-slate-500">
-                              <span title="Day low">L: {fmtRow(lo, (sym as any)?.tickSize)}</span>
-                              <span title="Day high">H: {fmtRow(hi, (sym as any)?.tickSize)}</span>
-                            </span>
+                          <span className="grid shrink-0 grid-cols-[72px_1px_72px] grid-rows-[auto_auto_auto] gap-x-3 text-right leading-tight">
+                            <span className="text-[9px] font-bold uppercase tracking-[0.14em] text-slate-400">Bid</span>
+                            <span className="row-span-3 w-px bg-slate-200" aria-hidden />
+                            <span className="text-[9px] font-bold uppercase tracking-[0.14em] text-slate-400">Ask</span>
+                            <span title="Bid (Buy)" className={`font-mono text-[16px] font-extrabold tabular-nums tracking-tight text-blue-600 ${flashCls}`}>{fmtRow(bid, (sym as any)?.tickSize)}</span>
+                            <span title="Ask (Sell)" className={`font-mono text-[16px] font-extrabold tabular-nums tracking-tight text-rose-600 ${flashCls}`}>{fmtRow(ask, (sym as any)?.tickSize)}</span>
+                            <span title="Day low" className="font-mono text-[10px] tabular-nums text-slate-500">L: {fmtRow(lo, (sym as any)?.tickSize)}</span>
+                            <span title="Day high" className="font-mono text-[10px] tabular-nums text-slate-500">H: {fmtRow(hi, (sym as any)?.tickSize)}</span>
                           </span>
                         ) : (
                           <span className="text-right">
@@ -2880,29 +2872,21 @@ function App() {
                     className={`flex items-center gap-3 px-4 py-2.5 transition ${isSel ? "bg-slate-50" : "active:bg-slate-50"}`}
                   >
                     <span className="min-w-0 flex-1 leading-tight">
-                      <span className="block truncate text-[19px] font-extrabold tracking-tight text-slate-900">{quotesNameRow}</span>
-                      <span className={`block font-mono text-[12px] font-bold tabular-nums ${dirUpRow ? "text-blue-600" : "text-rose-600"}`}>
+                      <span className="block truncate text-[17px] font-extrabold tracking-tight text-slate-900">{quotesNameRow}</span>
+                      <span className={`block font-mono text-[11px] font-bold tabular-nums ${dirUpRow ? "text-blue-600" : "text-rose-600"}`}>
                         {chgrow != null ? `${chgrow >= 0 ? "+" : ""}${fmt(chgrow)}` : "—"}{" "}
                         {pctrow != null ? `${pctrow >= 0 ? "+" : ""}${pctrow.toFixed(2)}%` : ""}
                       </span>
                     </span>
                     {hasBARow ? (
-                      <span className="shrink-0 text-right leading-tight">
-                        <span className="flex items-stretch justify-end gap-3">
-                          <span className="flex flex-col items-end">
-                            <span className="text-[9px] font-bold uppercase tracking-[0.14em] text-slate-400">Bid</span>
-                            <span title="Bid (Buy)" className="font-mono text-[20px] font-extrabold tabular-nums tracking-tight text-blue-600">{fmtRow(bidrow, (sym as any)?.tickSize)}</span>
-                          </span>
-                          <span className="w-px self-stretch bg-slate-200" aria-hidden />
-                          <span className="flex flex-col items-end">
-                            <span className="text-[9px] font-bold uppercase tracking-[0.14em] text-slate-400">Ask</span>
-                            <span title="Ask (Sell)" className="font-mono text-[20px] font-extrabold tabular-nums tracking-tight text-rose-600">{fmtRow(askrow, (sym as any)?.tickSize)}</span>
-                          </span>
-                        </span>
-                        <span className="mt-1 flex items-center justify-end gap-3 font-mono text-[11px] tabular-nums text-slate-500">
-                          <span title="Day low">L: {fmtRow(lorow, (sym as any)?.tickSize)}</span>
-                          <span title="Day high">H: {fmtRow(hirow, (sym as any)?.tickSize)}</span>
-                        </span>
+                      <span className="grid shrink-0 grid-cols-[72px_1px_72px] grid-rows-[auto_auto_auto] gap-x-3 text-right leading-tight">
+                        <span className="text-[9px] font-bold uppercase tracking-[0.14em] text-slate-400">Bid</span>
+                        <span className="row-span-3 w-px bg-slate-200" aria-hidden />
+                        <span className="text-[9px] font-bold uppercase tracking-[0.14em] text-slate-400">Ask</span>
+                        <span title="Bid (Buy)" className="font-mono text-[16px] font-extrabold tabular-nums tracking-tight text-blue-600">{fmtRow(bidrow, (sym as any)?.tickSize)}</span>
+                        <span title="Ask (Sell)" className="font-mono text-[16px] font-extrabold tabular-nums tracking-tight text-rose-600">{fmtRow(askrow, (sym as any)?.tickSize)}</span>
+                        <span title="Day low" className="font-mono text-[10px] tabular-nums text-slate-500">L: {fmtRow(lorow, (sym as any)?.tickSize)}</span>
+                        <span title="Day high" className="font-mono text-[10px] tabular-nums text-slate-500">H: {fmtRow(hirow, (sym as any)?.tickSize)}</span>
                       </span>
                     ) : (
                     <span className="text-right">
