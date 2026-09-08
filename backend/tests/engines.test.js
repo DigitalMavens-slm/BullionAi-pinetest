@@ -16,6 +16,9 @@ const {
 const {
     TradeEngine,
 } = require("../src/strategy/trade-engine");
+const {
+    StrategyEngine,
+} = require("../src/strategy/strategy-engine");
 
 let passed = 0;
 let failed = 0;
@@ -235,6 +238,48 @@ test("Multi-instrument isolation (no cross contamination)", () => {
     const nseState = te.getState({ exchange: "NSE", symbol: "RELIANCE", timeframe: "15m" });
     assert.strictEqual(goldState.active.signal, "BUY");
     assert.strictEqual(nseState.active.signal, "SELL");
+});
+
+console.log("\n=== STRATEGY ENGINE (PINETS WINDOW) ===");
+
+test("pinets -n equals candle count (plot[i] aligns with candles[i])", () => {
+    const se = new StrategyEngine({
+        strategyFile: "BullionAI-fixedtgt.pine",
+        candlesFile: "data/MCX_483079_15m.json",
+        resultsFile: "tmp-test-results.json",
+    });
+    const cmd = se.buildPinetsCommand({
+        bin: "/bin",
+        strategyPath: "BullionAI-fixedtgt.pine",
+        candlesPath: "candles.json",
+        resultsPath: "results.json",
+        candleCount: 2434,
+    });
+    assert.ok(
+        cmd.includes("-n 2434"),
+        "command must evaluate all 2434 bars, got: " + cmd
+    );
+});
+
+test("pinets -n falls back to 500 for invalid counts", () => {
+    const se = new StrategyEngine({
+        strategyFile: "BullionAI.pine",
+        candlesFile: "data/MCX_483079_15m.json",
+        resultsFile: "tmp-test-results.json",
+    });
+    for (const bad of [0, -5, NaN, null, undefined, "abc"]) {
+        const cmd = se.buildPinetsCommand({
+            bin: "/bin",
+            strategyPath: "s.pine",
+            candlesPath: "c.json",
+            resultsPath: "r.json",
+            candleCount: bad,
+        });
+        assert.ok(
+            cmd.includes("-n 500"),
+            `candleCount=${bad} must fall back to -n 500, got: ${cmd}`
+        );
+    }
 });
 
 console.log("\n====================================");

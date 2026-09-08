@@ -105,6 +105,46 @@ class StrategyEngine {
 
 
     // =========================================================
+    // PINETS COMMAND
+    //
+    // -n MUST equal the candle count. pinets-cli evaluates only the
+    // last N bars by default (N=500) while emitting plot indices
+    // 0..N-1 — the engine maps plot[i] onto candles[i], so any
+    // N < candles.length silently shifts recent signals onto old
+    // bars (wrong prices, wrong dates). Full-length -n keeps the
+    // 1:1 alignment for files of any size.
+    // =========================================================
+
+    buildPinetsCommand({
+        bin,
+        strategyPath,
+        candlesPath,
+        resultsPath,
+        candleCount,
+    }) {
+        const n =
+            Number.isFinite(Number(candleCount)) &&
+            Number(candleCount) > 0
+                ? Math.floor(Number(candleCount))
+                : 500;
+
+        return [
+            `"${process.execPath}"`,
+            `"${bin}"`,
+            "run",
+            `"${strategyPath}"`,
+            "--data",
+            `"${candlesPath}"`,
+            "-n",
+            String(n),
+            "--pretty",
+            "--output",
+            `"${resultsPath}"`,
+        ].join(" ");
+    }
+
+
+    // =========================================================
     // PATH FOR PINETS CLI
     // =========================================================
 
@@ -331,18 +371,13 @@ class StrategyEngine {
                       "node_modules/pinets-cli/dist/pinets-cli.min.cjs"
                   );
 
-        const command =
-            [
-                `"${process.execPath}"`,
-                `"${bin}"`,
-                "run",
-                `"${strategyPath}"`,
-                "--data",
-                `"${candlesPath}"`,
-                "--pretty",
-                "--output",
-                `"${resultsPath}"`,
-            ].join(" ");
+        const command = this.buildPinetsCommand({
+            bin,
+            strategyPath,
+            candlesPath,
+            resultsPath,
+            candleCount: candles.length,
+        });
 
 
         try {
