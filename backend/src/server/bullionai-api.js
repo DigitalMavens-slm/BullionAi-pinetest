@@ -3231,8 +3231,8 @@ const allowedTimeframes =
 
 
         const strategyFileForInst =
-            (exchUpper === "MCX" || exchUpper === "SPOT") &&
-            tf.key === "15m"
+            (((exchUpper === "MCX" || exchUpper === "SPOT") &&
+            tf.key === "15m") || exchUpper === "NSE" || exchUpper === "BSE")
                 ? "BullionAI-fixedtgt.pine"
                 : "BullionAI.pine";
 
@@ -4141,8 +4141,9 @@ const allowedTimeframes =
         }
 
         // Use exact Pine via PineTS for every scrip/timeframe — no JS drift
-        // 15m MCX → BullionAI-fixedtgt.pine (TGT1/TGT2), all else → BullionAI.pine (trailing)
-        const pineFile = exch === "MCX" && tf.key === "15m" ? "BullionAI-fixedtgt.pine" : "BullionAI.pine";
+        // Fixed-target: MCX 15m + NSE/* + BSE/* (all TFs) → BullionAI-fixedtgt.pine; all else → trailing
+        const isFixedTgtPine = (exch === "MCX" && tf.key === "15m") || exch === "NSE" || exch === "BSE";
+        const pineFile = isFixedTgtPine ? "BullionAI-fixedtgt.pine" : "BullionAI.pine";
         let pineState = null;
         let pineResults = null;
         let sig = null;
@@ -4180,7 +4181,7 @@ const allowedTimeframes =
         const active = this.tradeEngine.getState({ exchange: exch, symbol: token, timeframe: tf.key });
 
         let openResult = null;
-        const isFixedTgt = exch === "MCX" && tf.key === "15m";
+        const isFixedTgt = isFixedTgtPine;
         if (isFixedTgt && sig && (sig.signal === "BUY" || sig.signal === "SELL")) {
             // Only open if no active trade exists for this key (canonical: token).
             if (!active.active) {
@@ -4216,7 +4217,7 @@ const allowedTimeframes =
             }));
         }
 
-        // Advance the active trade with the latest close (for live P/L / max points) — ONLY 15m fixedtgt
+        // Advance the active trade with the latest close (for live P/L / max points) — fixed-target lane
         if (isFixedTgt && active.active) {
             const upd = this.tradeEngine.updatePrice({
                 exchange: exch, symbol: token, timeframe: tf.key,
@@ -4231,20 +4232,18 @@ const allowedTimeframes =
                 }));
             }
 
-            // Persist the lifecycle update — ONLY 15m
-            if (tf.key === "15m") {
-                const hitTimes = {};
-                const lastCloseMs = candles[candles.length - 1]?.time || Date.now();
-                for (const ev of upd.events) {
-                    if (ev.type === "target1") hitTimes.target1 = lastCloseMs;
-                    if (ev.type === "trade_close" && ev.trade?.target2Status === "ACHIEVED") hitTimes.target2 = lastCloseMs;
-                }
-                await this.persistPerfTrade({
-                    exchange: exch, symbol: token, token: String(token), timeframe: tf.key,
-                    trade: upd.trade,
-                    hitTimes,
-                }).catch(() => {});
+            // Persist the lifecycle update — fixed-target (all TFs for NSE/BSE, 15m for MCX)
+            const hitTimes = {};
+            const lastCloseMs = candles[candles.length - 1]?.time || Date.now();
+            for (const ev of upd.events) {
+                if (ev.type === "target1") hitTimes.target1 = lastCloseMs;
+                if (ev.type === "trade_close" && ev.trade?.target2Status === "ACHIEVED") hitTimes.target2 = lastCloseMs;
             }
+            await this.persistPerfTrade({
+                exchange: exch, symbol: token, token: String(token), timeframe: tf.key,
+                trade: upd.trade,
+                hitTimes,
+            }).catch(() => {});
         }
 
         const state = this.tradeEngine.getState({ exchange: exch, symbol: token, timeframe: tf.key });
@@ -4252,7 +4251,7 @@ const allowedTimeframes =
         // Completion-gated signal persistence: store the signal row ONLY when its trade is
         // CLOSED or has achieved TGT1/TGT2. ON CONFLICT(signal_uid) DO NOTHING keeps it once.
         // Uses trade's canonical entryTime/entryPrice (rounded) so uid exactly matches perf_trades.
-        if (exch === "MCX" && tf.key === "15m" && t && t.entryTime && t.entryPrice != null) {
+        if (isFixedTgt && t && t.entryTime && t.entryPrice != null) {
             const isCompleted =
                 String(t.status).toUpperCase() === "CLOSED" ||
                 t.target1Status === "ACHIEVED" ||
