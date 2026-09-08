@@ -5,6 +5,7 @@ import { Layout } from "../components/Layout";
 import { SignalDetailRows, sigStatusLabel } from "../components/SignalDetailRows";
 import {
   fetchSignalDetail,
+  fetchSymbolSignals,
   type EnrichedSignalRow,
 } from "../lib/bullionai-api";
 import { formatISTShortDateTime } from "../lib/ist-time";
@@ -39,6 +40,7 @@ function fmtSigned(v: number | null | undefined): string {
 export function SignalDetailPage() {
   const { uid } = useParams<{ uid: string }>();
   const [detail, setDetail] = useState<EnrichedSignalRow | null>(null);
+  const [related, setRelated] = useState<EnrichedSignalRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -55,6 +57,8 @@ export function SignalDetailPage() {
       } else {
         setDetail(d);
         setError(null);
+        // Per-script list: all stored signals for this token/timeframe
+        fetchSymbolSignals({ exchange: d.exchange, token: d.token, symbol: d.symbol, timeframe: d.timeframe || "15m", limit: 50 }).then(setRelated).catch(() => {});
       }
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to load signal.");
@@ -208,6 +212,31 @@ export function SignalDetailPage() {
               fmtSigned={fmtSigned}
               formatISTShortDateTime={formatISTShortDateTime}
             />
+          </div>
+        )}
+        {detail && related.length > 0 && (
+          <div className="mt-6 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+            <div className="text-[11px] font-black uppercase tracking-wider text-slate-500">
+              All stored signals — {detail.token || detail.symbol} · {detail.exchange} {detail.timeframe} ({related.length})
+            </div>
+            <div className="mt-3 divide-y divide-slate-100">
+              {related.map((r) => (
+                <Link
+                  key={r.signalUid}
+                  to={`/signal/${encodeURIComponent(r.signalUid)}`}
+                  className={`flex items-center justify-between py-2 ${r.signalUid === detail.signalUid ? "bg-amber-50/60 rounded-lg px-2" : "hover:bg-slate-50 px-1 rounded-lg"}`}
+                >
+                  <span className="flex items-center gap-2">
+                    <span className={`inline-flex h-5 items-center rounded px-1.5 text-[10px] font-black ${r.signal === "BUY" ? "bg-emerald-50 text-emerald-600" : "bg-rose-50 text-rose-600"}`}>{r.signal}</span>
+                    <span className="font-mono text-[12px] font-bold text-slate-800">{r.price != null ? fmt(r.price) : "—"}</span>
+                    <span className="text-[11px] text-slate-400">{r.time ? formatISTShortDateTime(r.time) : ""}</span>
+                  </span>
+                  <span className={`font-mono text-[11px] font-bold ${r.tradeStatus === "CLOSED" ? ((r.pl ?? 0) >= 0 ? "text-emerald-600" : "text-rose-600") : "text-slate-400"}`}>
+                    {r.tradeStatus === "CLOSED" ? fmtSigned(r.pl) : r.tradeStatus}
+                  </span>
+                </Link>
+              ))}
+            </div>
           </div>
         )}
       </div>

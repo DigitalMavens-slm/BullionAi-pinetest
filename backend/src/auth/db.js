@@ -863,6 +863,19 @@ async function getStrategySignal(signalUid) {
     }
 }
 
+async function wipePerfAndSignals() {
+    if (!pgEnabled()) {
+        try { savePerfJson([]); } catch {}
+        try { saveSignalsJson([]); } catch {}
+        return { engine: "json", perf: 0, signals: 0 };
+    }
+    await init();
+    const p = getPool();
+    const r1 = await p.query(`DELETE FROM perf_trades`);
+    const r2 = await p.query(`DELETE FROM strategy_signals`);
+    return { engine: "postgres", perf: r1.rowCount || 0, signals: r2.rowCount || 0 };
+}
+
 // IST day key "YYYY-MM-DD".
 function dayKey(ms) {
     try {
@@ -877,6 +890,7 @@ module.exports = {
     pgEnabled,
     init,
     getPool,
+    wipePerfAndSignals,
     createUser,
     findUserByEmail,
     listUsers,

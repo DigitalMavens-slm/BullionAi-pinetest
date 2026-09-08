@@ -3968,9 +3968,10 @@ const allowedTimeframes =
         const t1HitTime = hitTimes.target1 ?? null;
         const t2HitTime = hitTimes.target2 ?? null;
 
+        const isOpen = String(trade.status).toUpperCase() === "OPEN";
         const { upsertPerfTrade } = require("../auth/db");
         await upsertPerfTrade({
-            tradeUid: `${String(exchange).toUpperCase()}:${symbol}:${timeframe}:${trade.entryTime}:${trade.signal}:${trade.entryPrice}`,
+            tradeUid: `${String(exchange).toUpperCase()}:${symbol}:${timeframe}:${trade.entryTime}:${trade.signal}:${Math.round(Number(trade.entryPrice))}`,
             exchange: String(exchange).toUpperCase(),
             symbol,
             token: token || null,
@@ -3988,16 +3989,16 @@ const allowedTimeframes =
             target2Status: trade.target2Status === "ACHIEVED" ? "ACHIEVED" : (trade.target2Status || "WAITING"),
             target2HitTime: t2HitTime,
             target2Profit: t2Profit,
-            exitPrice: trade.exitPrice ?? null,
-            exitTime: trade.exitTime ?? null,
-            exitReason: trade.result
+            exitPrice: isOpen ? null : (trade.exitPrice ?? null),
+            exitTime: isOpen ? null : (trade.exitTime ?? null),
+            exitReason: isOpen ? null : (trade.result
                 ? (String(trade.result).includes("TGT2") ? "TGT2" :
                    String(trade.result).includes("TGT1") ? "MODIFIED_SL" :
                    String(trade.result).includes("SL") ? "SL" : null)
-                : null,
+                : null),
             status: trade.status,
-            result: trade.result ?? null,
-            resultPoints: trade.resultPoints ?? null,
+            result: isOpen ? null : (trade.result ?? null),
+            resultPoints: isOpen ? null : (trade.resultPoints ?? null),
             currentPL: trade.currentPL ?? null,
             maxPoints: trade.maxPoints ?? null,
         });
@@ -4175,27 +4176,19 @@ const allowedTimeframes =
             const jsSig = latestSignal(candles);
             sig = { signal: jsSig.signal, close: jsSig.close, time: jsSig.time, indicators: jsSig.indicators, state: null, results: null };
         }
-        // Persist every real BUY/SELL signal — ONLY 15m MCX, complete audit trail
-        if (exch === "MCX" && tf.key === "15m" && sig && (sig.signal === "BUY" || sig.signal === "SELL")) {
-            const signalUid = `${exch}:${symbol}:${tf.key}:${sig.time || Date.now()}:${sig.signal}:${sig.close}`;
-            try {
-                const { upsertStrategySignal } = require("../auth/db");
-                upsertStrategySignal({ signalUid, exchange: exch, symbol, token: String(token), timeframe: tf.key, signal: sig.signal, price: sig.close, time: sig.time || Date.now() }).catch(() => {});
-            } catch {}
-        }
-        const tradeKey = `${exch}:${symbol}:${tf.key}`;
-        const active = this.tradeEngine.getState({ exchange: exch, symbol, timeframe: tf.key });
+        const tradeKey = `${exch}:${token}:${tf.key}`;
+        const active = this.tradeEngine.getState({ exchange: exch, symbol: token, timeframe: tf.key });
 
         let openResult = null;
         const isFixedTgt = exch === "MCX" && tf.key === "15m";
         if (isFixedTgt && sig && (sig.signal === "BUY" || sig.signal === "SELL")) {
-            // Only open if no active trade exists for this key.
+            // Only open if no active trade exists for this key (canonical: token).
             if (!active.active) {
                 const atr = sig.indicators?.atr;
                 if (atr && Number.isFinite(atr) && atr > 0) {
                     const res = this.tradeEngine.openTrade({
                         exchange: exch,
-                        symbol,
+                        symbol: token,
                         timeframe: tf.key,
                         signal: sig.signal,
                         entryPrice: sig.close,
@@ -4205,12 +4198,12 @@ const allowedTimeframes =
                     if (res.ok) {
                         openResult = { signal: sig.signal, entry: res.trade.entryPrice, sl: res.trade.initialSL, t1: res.trade.target1, t2: res.trade.target2 };
                         this.broadcastEvent("trade_open", this.segmentEvent("trade_open", {
-                            exchange: exch, symbol, timeframe: tf.key, signal: sig.signal,
+                            exchange: exch, symbol: token, timeframe: tf.key, signal: sig.signal,
                             entry: res.trade.entryPrice, sl: res.trade.initialSL, target1: res.trade.target1, target2: res.trade.target2,
                         }));
-                        // Persist the freshly-opened trade — ONLY 15m
+                        // Persist the freshly-opened trade — ONLY 15m (canonical symbol=token)
                         await this.persistPerfTrade({
-                            exchange: exch, symbol, token: String(token), timeframe: tf.key,
+                            exchange: exch, symbol: token, token: String(token), timeframe: tf.key,
                             trade: res.trade,
                         }).catch(() => {});
                     }
@@ -4226,7 +4219,7 @@ const allowedTimeframes =
         // Advance the active trade with the latest close (for live P/L / max points) — ONLY 15m fixedtgt
         if (isFixedTgt && active.active) {
             const upd = this.tradeEngine.updatePrice({
-                exchange: exch, symbol, timeframe: tf.key,
+                exchange: exch, symbol: token, timeframe: tf.key,
                 price: candles[candles.length - 1].close,
                 time: candles[candles.length - 1].time,
             });
@@ -4247,15 +4240,31 @@ const allowedTimeframes =
                     if (ev.type === "trade_close" && ev.trade?.target2Status === "ACHIEVED") hitTimes.target2 = lastCloseMs;
                 }
                 await this.persistPerfTrade({
-                    exchange: exch, symbol, token: String(token), timeframe: tf.key,
+                    exchange: exch, symbol: token, token: String(token), timeframe: tf.key,
                     trade: upd.trade,
                     hitTimes,
                 }).catch(() => {});
             }
         }
 
-        const state = this.tradeEngine.getState({ exchange: exch, symbol, timeframe: tf.key });
+        const state = this.tradeEngine.getState({ exchange: exch, symbol: token, timeframe: tf.key });
         const t = state.active || state.lastClosed;
+        // Completion-gated signal persistence: store the signal row ONLY when its trade is
+        // CLOSED or has achieved TGT1/TGT2. ON CONFLICT(signal_uid) DO NOTHING keeps it once.
+        // Uses trade's canonical entryTime/entryPrice (rounded) so uid exactly matches perf_trades.
+        if (exch === "MCX" && tf.key === "15m" && t && t.entryTime && t.entryPrice != null) {
+            const isCompleted =
+                String(t.status).toUpperCase() === "CLOSED" ||
+                t.target1Status === "ACHIEVED" ||
+                t.target2Status === "ACHIEVED";
+            if (isCompleted) {
+                const sigUid = `${exch}:${token}:${tf.key}:${t.entryTime}:${t.signal}:${Math.round(Number(t.entryPrice))}`;
+                try {
+                    const { upsertStrategySignal } = require("../auth/db");
+                    await upsertStrategySignal({ signalUid: sigUid, exchange: exch, symbol: token, token: String(token), timeframe: tf.key, signal: t.signal, price: Math.round(Number(t.entryPrice)), time: Number(t.entryTime) }).catch(() => {});
+                } catch {}
+            }
+        }
 
         // ---------------------------------------------------------
         // RECENT SIGNALS (per script): combine the ACTIVE trade with the
@@ -4274,7 +4283,7 @@ const allowedTimeframes =
             if (!tr || !tr.entryTime) return;
             const ts = Number(tr.entryTime);
             if (!Number.isFinite(ts) || ts <= 0) return;
-            const uid = `${exch}:${symbol}:${tf.key}:${ts}:${tr.signal}:${tr.entryPrice}`;
+            const uid = `${exch}:${token}:${tf.key}:${ts}:${tr.signal}:${Math.round(Number(tr.entryPrice))}`;
             if (seenUid.has(uid)) return;
             seenUid.add(uid);
             recentList.push({
@@ -6162,6 +6171,28 @@ const allowedTimeframes =
                 this.sendJson(response, 400, { ok: false, error: error?.message || String(error) });
             }
             return;
+        }
+
+        // ADMIN — wipe signals + trades (fresh start for completion-gated storage)
+        if (
+            url.pathname === "/api/admin/wipe-signals" &&
+            request.method === "POST" &&
+            isAdminRoute
+        ) {
+            try {
+                if (!(await checkAdmin())) {
+                    this.sendJson(response, 401, { ok: false, error: "Admin authorization required." });
+                    return;
+                }
+                const { wipePerfAndSignals } = require("../auth/db");
+                const res = await wipePerfAndSignals();
+                console.log("[admin] wipe signals+trades:", res);
+                this.sendJson(response, 200, { ok: true, ...res });
+                return;
+            } catch (error) {
+                this.sendJson(response, 400, { ok: false, error: error?.message || String(error) });
+                return;
+            }
         }
 
         // ADMIN — restart the server

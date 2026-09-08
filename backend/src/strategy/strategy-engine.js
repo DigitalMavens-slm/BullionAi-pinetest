@@ -1285,6 +1285,55 @@ class StrategyEngine {
 
 
     // =========================================================
+    // ENTRY BAR SELECTION
+    // =========================================================
+
+    /*
+     * Anchor the entry marker to Pine's own last same-side emission
+     * — a real bar that cannot drift. Price-matching (scan backward
+     * for a close near the table entry price) is only a fallback for
+     * when the plot history lacks that side entirely: in a range
+     * printing near the entry price, price-match hops to the newest
+     * bar on every new candle, so the arrow "moves to latest".
+     */
+    selectEntryIndex({
+        entries,
+        tradeSide,
+        priceMatchIndex,
+    } = {}) {
+
+        if (
+            tradeSide &&
+            Array.isArray(entries)
+        ) {
+
+            for (
+                let i = entries.length - 1;
+                i >= 0;
+                i--
+            ) {
+
+                const ev = entries[i];
+
+                if (
+                    ev &&
+                    ev.signal === tradeSide &&
+                    Number.isFinite(ev.index)
+                ) {
+
+                    return ev.index;
+
+                }
+
+            }
+
+        }
+
+        return priceMatchIndex ?? null;
+
+    }
+
+    // =========================================================
     // BUILD STATE FROM PINE
     // =========================================================
 
@@ -1437,42 +1486,11 @@ class StrategyEngine {
          * indices cannot be trusted.
          */
 
-        let entryIndex =
-            signalIndex;
-
-
-        if (
-            entryIndex ===
-                null &&
-            tradeSide
-        ) {
-
-            for (
-                let i =
-                    entries.length - 1;
-                i >= 0;
-                i--
-
-            ) {
-
-                if (
-                    entries[i]
-                        .signal ===
-                    tradeSide
-                ) {
-
-                    entryIndex =
-
-                        entries[i]
-                            .index;
-
-                    break;
-
-                }
-
-            }
-
-        }
+        let entryIndex = this.selectEntryIndex({
+            entries,
+            tradeSide,
+            priceMatchIndex: signalIndex,
+        });
 
 
         let entryTimestamp = null;

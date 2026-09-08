@@ -36,6 +36,7 @@ import {
   createAdminUser,
   resetAdminPassword,
   restartServer,
+  wipeSignalsAndTrades,
   warmupBackend,
 } from "../lib/admin";
 import {
@@ -931,6 +932,28 @@ export function AdminDashboard({ onExit }: { onExit: () => void }) {
                     className="mt-3 w-full rounded-xl bg-rose-600 py-2 text-[12px] font-bold text-white hover:bg-rose-700"
                   >
                     Restart Server
+                  </button>
+                </div>
+                {/* Wipe Signals + Trades */}
+                <div className="rounded-xl border border-amber-200 bg-amber-50/60 p-4">
+                  <div className="text-xs font-bold text-slate-700">Wipe Signals & Trades</div>
+                  <p className="mt-1 text-[11px] text-slate-500">
+                    Fresh start: clears completion-gated storage. Rail + Performance reset.
+                  </p>
+                  <button
+                    onClick={async () => {
+                      if (!confirm("Wipe ALL stored signals and trades? This clears the left-rail last-5 and Performance portal. Cannot be undone.")) return;
+                      if (!confirm("Confirm again: wipe signals + trades?")) return;
+                      try {
+                        const res = await wipeSignalsAndTrades();
+                        alert(`Wiped — perf: ${res.perf ?? 0}, signals: ${res.signals ?? 0}. Fresh accumulation will resume on next completed trade.`);
+                      } catch (e: any) {
+                        alert(e.message || "Wipe failed");
+                      }
+                    }}
+                    className="mt-3 w-full rounded-xl bg-amber-600 py-2 text-[12px] font-bold text-white hover:bg-amber-700"
+                  >
+                    Wipe Signals + Trades
                   </button>
                 </div>
               </div>

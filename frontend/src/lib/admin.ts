@@ -147,6 +147,16 @@ export async function restartServer() {
   return d;
 }
 
+export async function wipeSignalsAndTrades() {
+  const r = await fetch(`${API_BASE}/api/admin/wipe-signals`, {
+    method: "POST",
+    headers: adminHeaders(),
+  });
+  const d = await r.json();
+  if (!r.ok || !d.ok) throw new Error(d.error || "Wipe failed");
+  return d as { perf: number; signals: number };
+}
+
 // Warm the backend (ping /health) so Render's free tier doesn't sleep
 // between admin actions / Shoonya login.
 export function warmupBackend(host?: string) {

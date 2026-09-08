@@ -61,7 +61,7 @@ export function SignalDetailRows({
     { label: "Final Status", value: sigStatusLabel(signal as any) },
     { label: "Final Result", value: s.result ?? null },
     { label: "Current P&L", value: s.currentPL != null ? fmtSigned(s.currentPL) : null },
-    { label: "Final P&L", value: s.resultPoints != null ? fmtSigned(s.resultPoints) : (s.currentPL != null && s.status === "CLOSED" ? fmtSigned(s.currentPL) : null) },
+    { label: "Final P&L", value: s.status === "CLOSED" ? (s.resultPoints != null ? fmtSigned(s.resultPoints) : (s.currentPL != null ? fmtSigned(s.currentPL) : null)) : null },
     { label: "Max Points", value: s.maxPoints != null ? fmt(s.maxPoints) : null },
   ];
   // Only render fields that actually have a value (no fabricated zeros).
