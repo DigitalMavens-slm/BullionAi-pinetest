@@ -169,6 +169,88 @@ function stitchWithBackAdjust(currentCandles, nextCandles) {
     return Array.from(map.values()).sort((a, b) => a.time - b.time);
 }
 
+/*
+ * Resample intraday candles into EOD buckets (day / week / month, IST).
+ *
+ * The live aggregator only builds minute timeframes and Shoonya cannot
+ * backfill EOD (D/W/M) for freshly-rolled contracts, so daily/weekly/
+ * monthly series are derived from the minute file for the SAME token.
+ * Deriving from the same token guarantees the day high/low can never
+ * show another contract's (or another venue's) price levels.
+ *
+ * Buckets are IST calendar buckets: day = IST midnight->midnight,
+ * week = IST Monday 00:00, month = IST 1st 00:00. Returns ascending
+ * candles shaped { time, open, high, low, close, volume } where time
+ * is the bucket-start ms. Bars with non-finite OHLC are skipped.
+ */
+const IST_OFFSET_MS = 5.5 * 3600_000;
+
+function bucketStartMs(timeMs, bucket) {
+    const t = Number(timeMs);
+    if (!Number.isFinite(t)) return null;
+    const dayStart = istDayStart(t);
+    if (bucket === "day") return dayStart;
+    if (bucket === "week") {
+        const ist = new Date(t + IST_OFFSET_MS);
+        const dow = ist.getUTCDay(); // 0 = Sunday
+        const daysBack = (dow + 6) % 7; // Monday = 0
+        return dayStart - daysBack * 86400000;
+    }
+    if (bucket === "month") {
+        const ist = new Date(t + IST_OFFSET_MS);
+        return (
+            Date.UTC(ist.getUTCFullYear(), ist.getUTCMonth(), 1) -
+            IST_OFFSET_MS
+        );
+    }
+    return null;
+}
+
+function resampleCandles(sourceCandles, bucket) {
+    if (!Array.isArray(sourceCandles) || !sourceCandles.length) return [];
+    if (bucket !== "day" && bucket !== "week" && bucket !== "month") {
+        return [];
+    }
+
+    const sorted = sourceCandles
+        .filter(
+            c =>
+                c &&
+                Number.isFinite(Number(c.time)) &&
+                Number.isFinite(Number(c.open)) &&
+                Number.isFinite(Number(c.high)) &&
+                Number.isFinite(Number(c.low)) &&
+                Number.isFinite(Number(c.close))
+        )
+        .sort((a, b) => Number(a.time) - Number(b.time));
+
+    const groups = new Map();
+    for (const c of sorted) {
+        const start = bucketStartMs(Number(c.time), bucket);
+        if (start == null) continue;
+        let g = groups.get(start);
+        if (!g) {
+            g = {
+                time: start,
+                open: Number(c.open),
+                high: Number(c.high),
+                low: Number(c.low),
+                close: Number(c.close),
+                volume: 0,
+            };
+            groups.set(start, g);
+        } else {
+            g.high = Math.max(g.high, Number(c.high));
+            g.low = Math.min(g.low, Number(c.low));
+            g.close = Number(c.close);
+        }
+        const v = Number(c.volume);
+        if (Number.isFinite(v) && v > 0) g.volume += v;
+    }
+
+    return Array.from(groups.values()).sort((a, b) => a.time - b.time);
+}
+
 function getStitchedCandles({ exchange, token, tfKey, getRegistryRows }) {
     const cur = loadCandlesForToken(exchange, token, tfKey);
     if (!cur.length) return cur;
@@ -244,6 +326,8 @@ module.exports = {
     findNextContract,
     shouldRollover,
     stitchWithBackAdjust,
+    resampleCandles,
+    bucketStartMs,
     getStitchedCandles,
     getCandlesWithPreviousFallback,
 };

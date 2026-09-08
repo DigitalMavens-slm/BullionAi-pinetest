@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "node tests/engines.test.js"
+    "test": "node tests/engines.test.js && node tests/eod-resample.test.js"
   },
   "keywords": [],
   "author": "",

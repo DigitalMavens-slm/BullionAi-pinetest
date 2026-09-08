@@ -69,6 +69,8 @@ const {
     getStitchedCandles,
     stitchWithBackAdjust,
     getCandlesWithPreviousFallback,
+    resampleCandles,
+    loadCandlesForToken,
 } = require("../market/rollover-manager");
 
 const {
@@ -1864,6 +1866,130 @@ const allowedTimeframes =
         return result.candles;
     }
 
+    // Live LTP anchor for contract-level adjustments. Returns the
+    // current WebSocket LTP for a token, or null when unknown.
+    getLivePriceAnchor(token) {
+        try {
+            const ps =
+                this.coordinator?.liveMarket?.priceStates?.get(
+                    String(token)
+                );
+            const s = ps?.getState?.();
+            const p = Number(s?.price);
+            return Number.isFinite(p) && p > 0 ? p : null;
+        } catch {
+            return null;
+        }
+    }
+
+    /* EOD AGGREGATES (1d/1w/1m) — resampled from the minute file.
+     *
+     * The live aggregator only builds minute timeframes and Shoonya
+     * cannot backfill EOD (D/W/M) for freshly-rolled contracts, so
+     * daily/weekly/monthly series are derived from the SAME token's
+     * minute file (15m, then 30m, then 60m). Deriving from the same
+     * token guarantees the day high/low can never show another
+     * contract's price levels.
+     *
+     * Runs on every ensure: rebuilds from the minute file (cheap —
+     * a few thousand bars) so today's bucket always reflects live
+     * data, and persists the result. Older existing EOD bars are kept
+     * only when their levels are continuous with the resampled range
+     * (<=10% gap); a larger discontinuity means foreign-contract data
+     * (rollover fallback poisoning) and is dropped with a log line.
+     * Returns the EOD candles, or null when no minute file exists.
+     */
+    buildEODCandles({ exchange, token, tfKey, filePath }) {
+        const k = String(tfKey || "").toLowerCase();
+        const bucket =
+            k === "1w" ? "week" : k === "1m" ? "month" : "day";
+
+        let src = [];
+        for (const sk of ["15m", "30m", "60m"]) {
+            try {
+                src = loadCandlesForToken(exchange, token, sk);
+            } catch {
+                src = [];
+            }
+            if (Array.isArray(src) && src.length) break;
+        }
+        if (!Array.isArray(src) || !src.length) return null;
+
+        let built;
+        try {
+            built = resampleCandles(src, bucket);
+        } catch {
+            return null;
+        }
+        if (!built.length) return null;
+
+        // Keep older existing EOD bars only when continuous with the
+        // resampled range (same-contract history). A level jump means
+        // foreign-contract fallback data — drop it (self-heal).
+        try {
+            if (fs.existsSync(filePath)) {
+                const parsed = JSON.parse(
+                    fs.readFileSync(filePath, "utf8")
+                );
+                if (Array.isArray(parsed) && parsed.length) {
+                    const start = Number(built[0].time);
+                    const older = parsed.filter(
+                        c =>
+                            c &&
+                            Number.isFinite(Number(c.time)) &&
+                            Number(c.time) < start
+                    );
+                    if (older.length) {
+                        const lastOlderClose = Number(
+                            older[older.length - 1]?.close
+                        );
+                        const firstNewClose = Number(built[0].close);
+                        const gapOk =
+                            Number.isFinite(lastOlderClose) &&
+                            lastOlderClose > 0 &&
+                            Number.isFinite(firstNewClose) &&
+                            firstNewClose > 0 &&
+                            Math.abs(
+                                firstNewClose - lastOlderClose
+                            ) /
+                                lastOlderClose <=
+                                0.1;
+                        if (gapOk) {
+                            const seen = new Map();
+                            for (const c of [...older, ...built]) {
+                                seen.set(Number(c.time), c);
+                            }
+                            built = Array.from(seen.values()).sort(
+                                (a, b) => a.time - b.time
+                            );
+                        } else {
+                            console.log(
+                                `[eod] ${exchange}_${token}_${k} dropping ${older.length} discontinuous older bars (foreign-contract levels)`
+                            );
+                        }
+                    }
+                }
+            }
+        } catch {
+            // Corrupt EOD file — the resampled rebuild replaces it.
+        }
+
+        try {
+            fs.writeFileSync(
+                filePath,
+                JSON.stringify(built, null, 2),
+                "utf8"
+            );
+        } catch (error) {
+            console.error(
+                "[eod] persist failed " + String(filePath) + ":",
+                error?.message || error
+            );
+        }
+
+        return built;
+    }
+
     async ensureCandles(
         instrumentKey,
         timeframeKey,
@@ -1907,6 +2033,10 @@ const allowedTimeframes =
         // Track whether the current contract had no candles before the
         // previous-contract fallback, so we know to persist the fallback.
         let hadNoCandles = true;
+        // True only when the served candles are previous-contract data
+        // shifted to the live price (safe levels). Declared here so the
+        // persist gate below can see it (the stitch block is try-scoped).
+        let fallbackAnchored = false;
 
 
         // -----------------------------------------------------
@@ -2150,8 +2280,33 @@ const allowedTimeframes =
                     getRegistryRows: allRows,
                 });
                 if (stitched.length) {
+                    // Back-adjust the foreign-contract levels to the live
+                    // price so the chart/dayStats never show another
+                    // contract's OHLC (e.g. its day low) as today's.
+                    const anchor = this.getLivePriceAnchor(inst.token);
+                    const prevLastClose = Number(
+                        stitched[stitched.length - 1]?.close
+                    );
+                    if (
+                        Number.isFinite(anchor) &&
+                        anchor > 0 &&
+                        Number.isFinite(prevLastClose) &&
+                        prevLastClose > 0
+                    ) {
+                        const gap = anchor - prevLastClose;
+                        if (gap !== 0) {
+                            stitched = stitched.map(c => ({
+                                ...c,
+                                open: Number(c.open) + gap,
+                                high: Number(c.high) + gap,
+                                low: Number(c.low) + gap,
+                                close: Number(c.close) + gap,
+                            }));
+                        }
+                        fallbackAnchored = true;
+                    }
                     console.log(
-                        `[rollover] ${exchange}_${inst.token}_${tf.key} empty -> using previous contract (${stitched.length} candles)`
+                        `[rollover] ${exchange}_${inst.token}_${tf.key} empty -> using previous contract (${stitched.length} candles${fallbackAnchored ? ", back-adjusted to live" : ", UNANCHORED — not persisted"})`
                     );
                 }
             } else {
@@ -2175,9 +2330,12 @@ const allowedTimeframes =
         // Persist previous-contract fallback data so the strategy engine
         // (which reads the current token's file directly) still gets candles
         // even though Shoonya's historical endpoint can't backfill it.
+        // ONLY when back-adjusted to the live price — raw foreign-contract
+        // levels must never be written into the current token's file.
         if (
             hadNoCandles &&
-            candles.length > 0
+            candles.length > 0 &&
+            fallbackAnchored
         ) {
             try {
                 fs.writeFileSync(
@@ -2195,6 +2353,35 @@ const allowedTimeframes =
             } catch (error) {
                 console.error(
                     "[ensure] failed to persist fallback:",
+                    error?.message || error
+                );
+            }
+        }
+
+        /* EOD AGGREGATES (1d/1w/1m) — resampled from the minute file.
+         *
+         * Nothing else builds D/W/M: the live aggregator only writes
+         * minute TFs, Shoonya won't backfill EOD for fresh contracts,
+         * and the empty-dataset backfill below is minute-only. Without
+         * this the daily/weekly/monthly chart is permanently empty.
+         * Resampling runs on every ensure so today's bucket always
+         * reflects the latest minute bars.
+         */
+        if (!Number.isFinite(Number(tf.interval))) {
+            try {
+                const eod = this.buildEODCandles({
+                    exchange,
+                    token: inst.token,
+                    tfKey: tf.key,
+                    filePath,
+                });
+                if (eod && eod.length) {
+                    candles = eod;
+                    hadNoCandles = false;
+                }
+            } catch (error) {
+                console.error(
+                    "[eod] rebuild failed " + fileName + ":",
                     error?.message || error
                 );
             }
@@ -3411,9 +3598,17 @@ const allowedTimeframes =
         inst
     ) {
 
-        const exchange =
-            process.env.SHOONYA_EXCHANGE ||
-            "MCX";
+        // Scope candle files AND the REST fallback to the instrument's
+        // own exchange. (Previously the env default leaked in, so NSE/BSE
+        // scripts looked for MCX_* files and queried MCX quotes —
+        // dayStats always came back null for them.)
+        const exchange = String(
+            inst.exchange ||
+                process.env.SHOONYA_EXCHANGE ||
+                "MCX"
+        )
+            .trim()
+            .toUpperCase();
 
 
         const candidates = [
@@ -3676,8 +3871,14 @@ const allowedTimeframes =
                             return null;
                         };
                         const qo = pick(q, ["o", "open", "day_open", "open_price"]);
-                        const qh = pick(q, ["h", "high", "day_high", "wh", "weekHigh"]);
-                        const ql = pick(q, ["l", "low", "day_low", "wl", "weekLow"]);
+                        // NOTE: week/life-time highs/lows ("wh", "52h",
+                        // "weekHigh", "wl", "52l", "weekLow") must NEVER be
+                        // picked here — on MCX "52l" is the LIFE-TIME low.
+                        // A week low shown as the day low is a price that
+                        // never traded today. When "h"/"l" are absent the
+                        // candle-derived values below are used instead.
+                        const qh = pick(q, ["h", "high", "day_high"]);
+                        const ql = pick(q, ["l", "low", "day_low"]);
                         const qc = pick(q, ["c", "close", "prev_close", "prevClose", "previous_close", "lp_close", "settlement"]);
                         if (qo != null || qh != null || ql != null || qc != null) {
                             liveDay = { open: qo, high: qh, low: ql, prevClose: qc };
@@ -3830,7 +4031,9 @@ const allowedTimeframes =
         let sig = null;
         try {
             const { StrategyEngine } = require("../strategy/strategy-engine");
-            const fileName = `${exch}_${token}_${tf.key}.json`;
+            // Lowercase suffix matches ensureCandles' file convention
+            // (tf.key is "1D"/"1W"/"1M" for EOD).
+            const fileName = `${exch}_${token}_${tf.key.toLowerCase()}.json`;
             const resultsFile = `results-${token}-${tf.key}.json`;
             if (candles.length > 0) {
                 const strat = new StrategyEngine({ strategyFile: pineFile, candlesFile: fileName, resultsFile });
