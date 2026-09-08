@@ -820,11 +820,13 @@ async function upsertStrategySignal(s) {
         return false;
     }
 }
-async function getStrategySignals({ exchange, timeframe, limit = 100 } = {}) {
+async function getStrategySignals({ exchange, timeframe, symbol, token, limit = 100 } = {}) {
     if (!pgEnabled()) {
         let rows = loadSignalsJson().map(signalRow).filter(Boolean);
         if (exchange) rows = rows.filter((r) => r.exchange === String(exchange).toUpperCase());
         if (timeframe) rows = rows.filter((r) => r.timeframe === String(timeframe));
+        if (symbol) rows = rows.filter((r) => String(r.symbol).toUpperCase() === String(symbol).toUpperCase());
+        if (token) rows = rows.filter((r) => String(r.token) === String(token));
         rows.sort((a, b) => (b.time || 0) - (a.time || 0));
         return rows.slice(0, limit);
     }
@@ -834,6 +836,8 @@ async function getStrategySignals({ exchange, timeframe, limit = 100 } = {}) {
         const params = [];
         if (exchange) { params.push(exchange); where.push(`exchange = $${params.length}`); }
         if (timeframe) { params.push(timeframe); where.push(`timeframe = $${params.length}`); }
+        if (symbol) { params.push(symbol); where.push(`symbol = $${params.length}`); }
+        if (token) { params.push(String(token)); where.push(`token = $${params.length}`); }
         const whereSql = where.length ? `WHERE ${where.join(" AND ")}` : "";
         params.push(limit);
         const r = await getPool().query(`SELECT * FROM strategy_signals ${whereSql} ORDER BY time DESC NULLS LAST LIMIT $${params.length}`, params);
@@ -841,6 +845,21 @@ async function getStrategySignals({ exchange, timeframe, limit = 100 } = {}) {
     } catch (e) {
         console.error("[db] getStrategySignals failed:", e?.message || e);
         return [];
+    }
+}
+async function getStrategySignal(signalUid) {
+    if (!signalUid) return null;
+    if (!pgEnabled()) {
+        const r = loadSignalsJson().find((x) => String(x.signal_uid ?? x.signalUid) === String(signalUid));
+        return r ? signalRow(r) : null;
+    }
+    try {
+        await init();
+        const r = await getPool().query(`SELECT * FROM strategy_signals WHERE signal_uid = $1`, [String(signalUid)]);
+        return r.rows[0] ? signalRow(r.rows[0]) : null;
+    } catch (e) {
+        console.error("[db] getStrategySignal failed:", e?.message || e);
+        return null;
     }
 }
 
@@ -877,6 +896,7 @@ module.exports = {
     getPerfRecentSignals,
     upsertStrategySignal,
     getStrategySignals,
+    getStrategySignal,
     rowToUser,
     jsonRowToUser,
 };

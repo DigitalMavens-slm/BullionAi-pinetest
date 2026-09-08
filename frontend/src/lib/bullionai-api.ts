@@ -793,5 +793,29 @@ export async function fetchStrategySignals(opts: { limit?: number; timeframe?: s
   const d = await perfGet<{ signals: StrategySignalRow[] }>("/signals", { limit: opts.limit || 100, timeframe: opts.timeframe || "15m" });
   return d.signals || [];
 }
+// DB signal row enriched with its trade (when the signal opened one)
+// plus live engine state for OPEN trades. Backs the left-rail recent
+// list and the /signal/:uid detail page.
+export type EnrichedSignalRow = StrategySignalRow & {
+  tradeStatus: string;
+  trade: PerfTrade | null;
+  live: {
+    ltp: number | null; currentPL: number | null; activeSL: number | null;
+    entryPrice: number | null; target1: number | null; target2: number | null;
+    target1Status: string | null; target2Status: string | null; maxPoints: number | null;
+  } | null;
+  pl: number | null;
+};
+export async function fetchSymbolSignals(opts: { exchange?: string | null; token?: string | null; symbol?: string | null; timeframe?: string; limit?: number } = {}): Promise<EnrichedSignalRow[]> {
+  const d = await perfGet<{ signals: EnrichedSignalRow[] }>("/signals", {
+    enrich: 1, exchange: opts.exchange, token: opts.token, symbol: opts.symbol,
+    timeframe: opts.timeframe || "15m", limit: opts.limit || 5,
+  });
+  return d.signals || [];
+}
+export async function fetchSignalDetail(uid: string): Promise<EnrichedSignalRow | null> {
+  const d = await perfGet<EnrichedSignalRow>("/signal", { uid });
+  return d && (d as any).signalUid ? (d as EnrichedSignalRow) : null;
+}
 
 

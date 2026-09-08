@@ -4003,6 +4003,122 @@ const allowedTimeframes =
         });
     }
 
+    /* Enrich a strategy_signals row with its trade (if the signal opened
+     * one) plus live engine state. A signal that opened a trade shares
+     * the trade's uid (same exchange/symbol/timeframe/time/side/price
+     * components); otherwise fall back to a ±5min fuzzy match on the
+     * same script and side. Returns {...row, tradeStatus, trade, live,
+     * pl} — pl is realized points when CLOSED, live P/L when OPEN,
+     * null for signal-only rows. Never throws.
+     */
+    async enrichSignalRow(row) {
+        if (!row) return row;
+        let trade = null;
+        try {
+            const { getPerfTrade, getPerfTrades } = require("../auth/db");
+            trade =
+                await getPerfTrade(row.signalUid).catch(() => null);
+            if (!trade) {
+                const cands =
+                    await getPerfTrades({
+                        exchange: row.exchange,
+                        timeframe: row.timeframe,
+                        symbol: row.symbol,
+                        limit: 50,
+                    }).catch(() => ({ rows: [] }));
+                const list = cands?.rows || cands || [];
+                trade =
+                    list.find(
+                        t =>
+                            String(t.signal).toUpperCase() ===
+                                String(row.signal).toUpperCase() &&
+                            (row.token == null ||
+                                t.token == null ||
+                                String(t.token) ===
+                                    String(row.token)) &&
+                            Math.abs(
+                                Number(t.entryTime || 0) -
+                                    Number(row.time || 0)
+                            ) <=
+                                5 * 60 * 1000
+                    ) || null;
+            }
+        } catch {
+            trade = null;
+        }
+        let live = null;
+        if (trade && String(trade.status).toUpperCase() === "OPEN") {
+            try {
+                const st = this.tradeEngine?.getState?.({
+                    exchange: row.exchange,
+                    symbol: row.symbol,
+                    timeframe: row.timeframe,
+                });
+                const active = st?.active || null;
+                let ltp = null;
+                try {
+                    const ps = this.coordinator?.liveMarket?.priceStates?.get(
+                        String(row.token)
+                    );
+                    const pv = Number(ps?.getState?.()?.price);
+                    ltp = Number.isFinite(pv) && pv > 0 ? pv : null;
+                } catch {
+                    ltp = null;
+                }
+                let livePL = active?.currentPL ?? trade.currentPL ?? null;
+                if (
+                    livePL == null &&
+                    ltp != null &&
+                    trade.entryPrice != null
+                ) {
+                    livePL =
+                        String(row.signal).toUpperCase() === "BUY"
+                            ? ltp - trade.entryPrice
+                            : trade.entryPrice - ltp;
+                }
+                live = {
+                    ltp,
+                    currentPL: livePL,
+                    activeSL:
+                        active?.activeSL ?? trade.activeSL ?? null,
+                    entryPrice:
+                        active?.entryPrice ?? trade.entryPrice ?? null,
+                    target1:
+                        active?.target1 ?? trade.target1 ?? null,
+                    target2:
+                        active?.target2 ?? trade.target2 ?? null,
+                    target1Status:
+                        active?.target1Status ??
+                        trade.target1Status ??
+                        null,
+                    target2Status:
+                        active?.target2Status ??
+                        trade.target2Status ??
+                        null,
+                    maxPoints:
+                        active?.maxPoints ?? trade.maxPoints ?? null,
+                };
+            } catch {
+                live = null;
+            }
+        }
+        const closed =
+            trade &&
+            String(trade.status).toUpperCase() === "CLOSED";
+        const pl = trade
+            ? closed
+                ? trade.resultPoints ?? trade.currentPL ?? null
+                : live?.currentPL ?? trade.currentPL ?? null
+            : null;
+        return {
+            ...row,
+            tradeStatus: trade ? trade.status : "SIGNAL_ONLY",
+            trade: trade || null,
+            live,
+            pl,
+        };
+    }
+
     async analyzeSegmentForInstrument(inst, timeframeKey) {
         const exch = String(inst.exchange || "MCX").toUpperCase();
         const token = String(inst.token);
@@ -6437,10 +6553,42 @@ const allowedTimeframes =
 
             const exchange = url.searchParams.get("exchange") || "MCX";
             const timeframe = url.searchParams.get("timeframe") || "15m";
+            const symbol = url.searchParams.get("symbol") || null;
+            const token = url.searchParams.get("token") || null;
+            const enrich = url.searchParams.get("enrich") === "1";
             const limit = Math.min(200, Number(url.searchParams.get("limit")) || 100);
             const { getStrategySignals } = require("../auth/db");
-            const signals = await getStrategySignals({ exchange, timeframe, limit });
+            let signals = await getStrategySignals({ exchange, timeframe, symbol, token, limit });
+            if (enrich && signals.length) {
+                signals = await Promise.all(
+                    signals.map(s => this.enrichSignalRow(s).catch(() => s))
+                );
+            }
             this.sendJson(response, 200, { ok: true, signals });
+            return;
+        }
+
+        // Signal detail: /api/performance/signal?uid=<signalUid>
+        // Full signal component: DB row + linked trade (exact uid, else
+        // ±5min fuzzy) + live engine state when the trade is OPEN.
+        if (
+            url.pathname ===
+            "/api/performance/signal"
+        ) {
+
+            const uid = url.searchParams.get("uid");
+            if (!uid) {
+                this.sendJson(response, 400, { ok: false, error: "signal uid required" });
+                return;
+            }
+            const { getStrategySignal } = require("../auth/db");
+            const signal = await getStrategySignal(uid);
+            if (!signal) {
+                this.sendJson(response, 404, { ok: false, error: "Signal not found" });
+                return;
+            }
+            const enriched = await this.enrichSignalRow(signal).catch(() => signal);
+            this.sendJson(response, 200, { ok: true, ...enriched });
             return;
         }
 

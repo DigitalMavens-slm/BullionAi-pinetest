@@ -40,6 +40,7 @@ import { FAQPage } from "./pages/FAQPage";
 import { PaymentPage } from "./pages/PaymentPage";
 import { LegalPage, TERMS_DOC, PRIVACY_DOC, RISK_DOC, REFUND_DOC } from "./pages/LegalPage";
 import { PerformancePage } from "./pages/PerformancePage";
+import { SignalDetailPage } from "./pages/SignalDetailPage";
 
 import "./App.css";
 
@@ -49,6 +50,8 @@ import {
   subscribeSymbol,
   fetchCandles,
   fetchStrategy,
+  fetchSymbolSignals,
+  type EnrichedSignalRow,
   getCurrentContract,
   getApiSessionStatus,
   type ApiSessionStatus,
@@ -264,96 +267,8 @@ function CardTitle({
 }
 
 
-/* =============================================================
-   RECENT SIGNALS — status label helper (DB trade)
-   ============================================================= */
-
-function sigStatusLabel(sig: RecentSignalTrade): string {
-  if (!sig) return "—";
-  const s: any = sig;
-  // CLOSED trades: prefer the result text (e.g. "TGT2 ACHIEVED +20 pts").
-  if (s.status === "CLOSED") {
-    if (s.result) return s.result;
-    if (s.target2Status === "ACHIEVED") return "TGT2 HIT";
-    return "CLOSED";
-  }
-  // OPEN trade lifecycle.
-  if (s.target1Status === "ACHIEVED") {
-    if (s.target2Status === "ACHIEVED") return "TGT2 HIT";
-    return "WAITING FOR TGT2";
-  }
-  if (s.target2Status === "ACHIEVED") return "TGT2 HIT";
-  return "OPEN";
-}
-
-/* =============================================================
-   RECENT SIGNAL DETAIL — lifecycle rows (DB authoritative)
-   Spec 9: show all fields that exist; do NOT fabricate missing.
-   ============================================================= */
-
-function SignalDetailRows({
-  signal,
-  fmt,
-  fmtSigned,
-  formatISTShortDateTime,
-}: {
-  signal: RecentSignalTrade;
-  fmt: (v: number | null | undefined) => string;
-  fmtSigned: (v: number | null) => string;
-  formatISTShortDateTime: (ts: number) => string;
-}) {
-  const s: any = signal;
-  const entrySL = s.entrySL ?? s.initialSL ?? null;
-  const rows: Array<{ label: string; value?: string | null }> = [
-    { label: "Script", value: s.symbol ?? null },
-    { label: "Exchange", value: s.exchange ?? null },
-    { label: "Timeframe", value: s.timeframe ?? null },
-    { label: "Signal", value: s.signal ?? null },
-    { label: "Signal Generated Time", value: s.entryTime ? formatISTShortDateTime(s.entryTime) : null },
-    { label: "Entry Price", value: s.entryPrice != null ? fmt(s.entryPrice) : null },
-    { label: "Entry Time", value: s.entryTime ? formatISTShortDateTime(s.entryTime) : null },
-    { label: "Initial SL", value: entrySL != null ? fmt(entrySL) : null },
-    { label: "Target 1", value: s.target1 != null ? fmt(s.target1) : null },
-    { label: "TGT1 Status", value: s.target1Status ?? null },
-    { label: "TGT1 Hit Time", value: s.target1HitTime ? formatISTShortDateTime(s.target1HitTime) : null },
-    { label: "TGT1 Profit", value: s.target1Profit != null ? fmtSigned(s.target1Profit) : null },
-    { label: "Modified SL", value: s.activeSL != null && s.target1Status === "ACHIEVED" ? fmt(s.activeSL) : null },
-    { label: "Target 2", value: s.target2 != null ? fmt(s.target2) : null },
-    { label: "TGT2 Status", value: s.target2Status ?? null },
-    { label: "TGT2 Hit Time", value: s.target2HitTime ? formatISTShortDateTime(s.target2HitTime) : null },
-    { label: "TGT2 Profit", value: s.target2Profit != null ? fmtSigned(s.target2Profit) : null },
-    { label: "Exit Price", value: s.exitPrice != null ? fmt(s.exitPrice) : null },
-    { label: "Exit Time", value: s.exitTime ? formatISTShortDateTime(s.exitTime) : null },
-    { label: "Exit Reason", value: s.exitReason ?? null },
-    { label: "Final Status", value: sigStatusLabel(signal as any) },
-    { label: "Final Result", value: s.result ?? null },
-    { label: "Current P&L", value: s.currentPL != null ? fmtSigned(s.currentPL) : null },
-    { label: "Final P&L", value: s.resultPoints != null ? fmtSigned(s.resultPoints) : (s.currentPL != null && s.status === "CLOSED" ? fmtSigned(s.currentPL) : null) },
-    { label: "Max Points", value: s.maxPoints != null ? fmt(s.maxPoints) : null },
-  ];
-  // Only render fields that actually have a value (no fabricated zeros).
-  const present = rows.filter((r) => r.value != null && r.value !== "");
-
-  return (
-    <div className="mt-4 divide-y divide-slate-100">
-      {present.map((r) => (
-        <div key={r.label} className="flex items-center justify-between py-1.5">
-          <span className="text-[11px] font-medium uppercase tracking-wider text-slate-400">
-            {r.label}
-          </span>
-          <span className="font-mono text-[12px] font-bold tabular-nums text-slate-800">
-            {r.value}
-          </span>
-        </div>
-      ))}
-      {present.length === 0 && (
-        <div className="py-4 text-center text-[11px] text-slate-400">
-          No additional details available.
-        </div>
-      )}
-    </div>
-  );
-}
+/* Shared signal lifecycle rows (drawer + /signal/:uid page). */
+import { SignalDetailRows } from "./components/SignalDetailRows";
 
 
 /* =============================================================
@@ -535,6 +450,15 @@ function App() {
     setStrategyError,
   ] = useState<string | null>(
     null
+  );
+
+  // Left-rail recent signals — last 5 DB rows for the selected script
+  // (MCX 15m is what's persisted), each enriched with trade + live P/L.
+  const [
+    recentSignals,
+    setRecentSignals,
+  ] = useState<EnrichedSignalRow[]>(
+    []
   );
 
   const [
@@ -1057,6 +981,52 @@ function App() {
 
   }, [
     selectedTimeframe,
+    selectedSymbol,
+  ]);
+
+
+  // Left-rail recent signals — last 5 DB rows for the selected script.
+  // Always 15m: that is the only timeframe the DB records.
+  // Enriched with trade + live P/L. 45s cadence.
+
+  useEffect(() => {
+
+    let cancelled = false;
+
+    const rsExch: string | null = selectedSymbol?.exch ?? null;
+    const rsToken: string | null = selectedSymbol?.token ?? null;
+    const rsTsym: string | null = selectedSymbol?.tsym ?? null;
+
+    if (!rsExch || !rsToken || !rsTsym) {
+      setRecentSignals([]);
+      return;
+    }
+
+    async function load() {
+      try {
+        const rows = await fetchSymbolSignals({
+          exchange: rsExch,
+          token: rsToken,
+          symbol: rsTsym,
+          timeframe: "15m",
+          limit: 5,
+        });
+        if (!cancelled) setRecentSignals(rows);
+      } catch {
+        if (!cancelled) setRecentSignals([]);
+      }
+    }
+
+    load();
+
+    const poll = setInterval(load, 45_000);
+
+    return () => {
+      cancelled = true;
+      clearInterval(poll);
+    };
+
+  }, [
     selectedSymbol,
   ]);
 
@@ -2600,6 +2570,101 @@ function App() {
           </Card>
 
 
+          {/* RECENT SIGNALS — last 5 DB rows for the selected script,
+              each with trade + live P/L. Tap opens the full page. */}
+
+          <Card className="shrink-0 p-3.5">
+
+            <CardTitle
+              right={
+                recentSignals.length > 0 ? (
+                  <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[9px] font-bold text-slate-500">
+                    LAST {recentSignals.length}
+                  </span>
+                ) : null
+              }
+            >
+
+              Recent Signals
+
+            </CardTitle>
+
+
+            {recentSignals.length === 0 ? (
+
+              <div className="px-1 py-4 text-center text-[11px] leading-5 text-slate-400">
+                No recorded signals yet
+                {selectedSymbol ? ` for ${selectedSymbol.tsym}` : ""}.
+                <br />
+                Signals are recorded on MCX 15m going forward.
+              </div>
+
+            ) : (
+
+              <div className="mt-1 divide-y divide-slate-100">
+                {recentSignals.map(row => {
+                  const buy = row.signal === "BUY";
+                  const entry = row.trade?.entryPrice ?? row.price ?? null;
+                  const pl = row.pl ?? null;
+                  const status =
+                    row.tradeStatus === "SIGNAL_ONLY"
+                      ? "SIGNAL"
+                      : (row.trade?.result && row.tradeStatus === "CLOSED"
+                        ? row.trade.result
+                        : row.tradeStatus);
+                  return (
+                    <button
+                      key={row.signalUid}
+                      onClick={() =>
+                        navigate(`/signal/${encodeURIComponent(row.signalUid)}`)
+                      }
+                      className="flex w-full items-center gap-2.5 py-2 text-left transition hover:bg-slate-50"
+                    >
+                      <span
+                        className={[
+                          "flex h-6 w-[44px] shrink-0 items-center justify-center rounded-md text-[10px] font-black tracking-wider",
+                          buy
+                            ? "bg-emerald-50 text-emerald-600 ring-1 ring-emerald-200"
+                            : "bg-rose-50 text-rose-600 ring-1 ring-rose-200",
+                        ].join(" ")}
+                      >
+                        {row.signal}
+                      </span>
+                      <span className="min-w-0 flex-1 leading-tight">
+                        <span className="block truncate font-mono text-[13px] font-extrabold tabular-nums text-slate-900">
+                          {fmt(entry)}
+                        </span>
+                        <span className="block truncate text-[10px] font-medium text-slate-400">
+                          {row.time ? formatISTShortDateTime(row.time) : "—"}
+                        </span>
+                      </span>
+                      <span className="shrink-0 text-right leading-tight">
+                        <span
+                          className={[
+                            "block font-mono text-[12px] font-extrabold tabular-nums",
+                            pl == null
+                              ? "text-slate-400"
+                              : pl >= 0
+                                ? "text-emerald-600"
+                                : "text-rose-600",
+                          ].join(" ")}
+                        >
+                          {pl == null ? status : fmtSigned(pl)}
+                        </span>
+                        <span className="block text-[9px] font-bold uppercase tracking-wider text-slate-400">
+                          {pl == null ? "" : status}
+                        </span>
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+
+            )}
+
+          </Card>
+
+
 
 
         </aside>
@@ -3238,6 +3303,10 @@ function App() {
             <PerformancePage />
           </Layout>
         }
+      />
+      <Route
+        path="/signal/:uid"
+        element={<SignalDetailPage />}
       />
       <Route path="*" element={<Navigate to="/" replace />} />
 
