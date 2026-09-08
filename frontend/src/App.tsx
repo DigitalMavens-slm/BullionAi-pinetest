@@ -50,8 +50,6 @@ import {
   subscribeSymbol,
   fetchCandles,
   fetchStrategy,
-  fetchSymbolSignals,
-  type EnrichedSignalRow,
   getCurrentContract,
   getApiSessionStatus,
   type ApiSessionStatus,
@@ -450,15 +448,6 @@ function App() {
     setStrategyError,
   ] = useState<string | null>(
     null
-  );
-
-  // Left-rail recent signals — last 5 DB rows for the selected script
-  // (MCX 15m is what's persisted), each enriched with trade + live P/L.
-  const [
-    recentSignals,
-    setRecentSignals,
-  ] = useState<EnrichedSignalRow[]>(
-    []
   );
 
   const [
@@ -981,52 +970,6 @@ function App() {
 
   }, [
     selectedTimeframe,
-    selectedSymbol,
-  ]);
-
-
-  // Left-rail recent signals — last 5 DB rows for the selected script.
-  // Always 15m: that is the only timeframe the DB records.
-  // Enriched with trade + live P/L. 45s cadence.
-
-  useEffect(() => {
-
-    let cancelled = false;
-
-    const rsExch: string | null = selectedSymbol?.exch ?? null;
-    const rsToken: string | null = selectedSymbol?.token ?? null;
-    const rsTsym: string | null = selectedSymbol?.tsym ?? null;
-
-    if (!rsExch || !rsToken || !rsTsym) {
-      setRecentSignals([]);
-      return;
-    }
-
-    async function load() {
-      try {
-        const rows = await fetchSymbolSignals({
-          exchange: rsExch,
-          token: rsToken,
-          symbol: rsTsym,
-          timeframe: "15m",
-          limit: 5,
-        });
-        if (!cancelled) setRecentSignals(rows);
-      } catch {
-        if (!cancelled) setRecentSignals([]);
-      }
-    }
-
-    load();
-
-    const poll = setInterval(load, 45_000);
-
-    return () => {
-      cancelled = true;
-      clearInterval(poll);
-    };
-
-  }, [
     selectedSymbol,
   ]);
 
@@ -2568,104 +2511,6 @@ function App() {
             </div>
 
           </Card>
-
-
-          {/* RECENT SIGNALS — last 5 DB rows for the selected script,
-              each with trade + live P/L. Tap opens the full page. */}
-
-          <Card className="shrink-0 p-3.5">
-
-            <CardTitle
-              right={
-                recentSignals.length > 0 ? (
-                  <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[9px] font-bold text-slate-500">
-                    LAST {recentSignals.length}
-                  </span>
-                ) : null
-              }
-            >
-
-              Recent Signals
-
-            </CardTitle>
-
-
-            {recentSignals.length === 0 ? (
-
-              <div className="px-1 py-4 text-center text-[11px] leading-5 text-slate-400">
-                No recorded signals yet
-                {selectedSymbol ? ` for ${selectedSymbol.tsym}` : ""}.
-                <br />
-                Signals are recorded on MCX 15m going forward.
-              </div>
-
-            ) : (
-
-              <div className="mt-1 divide-y divide-slate-100">
-                {recentSignals.map(row => {
-                  const buy = row.signal === "BUY";
-                  const entry = row.trade?.entryPrice ?? row.price ?? null;
-                  const pl = row.pl ?? null;
-                  const status =
-                    row.tradeStatus === "SIGNAL_ONLY"
-                      ? "SIGNAL"
-                      : (row.trade?.result && row.tradeStatus === "CLOSED"
-                        ? row.trade.result
-                        : row.tradeStatus);
-                  return (
-                    <button
-                      key={row.signalUid}
-                      onClick={() =>
-                        navigate(`/signal/${encodeURIComponent(row.signalUid)}`)
-                      }
-                      className="flex w-full items-center gap-2.5 py-2 text-left transition hover:bg-slate-50"
-                    >
-                      <span
-                        className={[
-                          "flex h-6 w-[44px] shrink-0 items-center justify-center rounded-md text-[10px] font-black tracking-wider",
-                          buy
-                            ? "bg-emerald-50 text-emerald-600 ring-1 ring-emerald-200"
-                            : "bg-rose-50 text-rose-600 ring-1 ring-rose-200",
-                        ].join(" ")}
-                      >
-                        {row.signal}
-                      </span>
-                      <span className="min-w-0 flex-1 leading-tight">
-                        <span className="block truncate font-mono text-[13px] font-extrabold tabular-nums text-slate-900">
-                          {fmt(entry)}
-                        </span>
-                        <span className="block truncate text-[10px] font-medium text-slate-400">
-                          {row.time ? formatISTShortDateTime(row.time) : "—"}
-                        </span>
-                      </span>
-                      <span className="shrink-0 text-right leading-tight">
-                        <span
-                          className={[
-                            "block font-mono text-[12px] font-extrabold tabular-nums",
-                            pl == null
-                              ? "text-slate-400"
-                              : pl >= 0
-                                ? "text-emerald-600"
-                                : "text-rose-600",
-                          ].join(" ")}
-                        >
-                          {pl == null ? status : fmtSigned(pl)}
-                        </span>
-                        <span className="block text-[9px] font-bold uppercase tracking-wider text-slate-400">
-                          {pl == null ? "" : status}
-                        </span>
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-
-            )}
-
-          </Card>
-
-
-
 
         </aside>
 
