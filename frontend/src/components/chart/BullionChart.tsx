@@ -1,5 +1,6 @@
 import {
   useEffect,
+  useMemo,
   useRef,
   useState,
 } from "react";
@@ -23,6 +24,8 @@ import {
 } from "lightweight-charts";
 
 import {
+  ChevronLeft,
+  ChevronRight,
   ChevronsRight,
 } from "lucide-react";
 
@@ -1407,6 +1410,93 @@ markersRef.current =
   const dataCountRef =
     useRef(0);
 
+  /*
+   * SIGNAL HISTORY NAVIGATOR — the chart opens on the most recent
+   * bars, so older BUY/SELL arrows sit off-screen to the left.
+   * prev/next jumps center each historical signal in view, with a
+   * position counter, so the full signal history is one tap away.
+   */
+
+  const navSignals = useMemo(() => {
+    if (!signals?.length || !candles.length) {
+      return [];
+    }
+    const idxBySec = new Map<number, number>();
+    candles.forEach((c, i) => {
+      const t = Math.floor(Number(c.time) / 1000);
+      if (!idxBySec.has(t)) {
+        idxBySec.set(t, i);
+      }
+    });
+    const seen = new Set<number>();
+    const out: { t: number; signal: string; index: number }[] = [];
+    for (const ev of signals) {
+      const t = Math.floor(Number(ev.time) / 1000);
+      if (seen.has(t)) {
+        continue;
+      }
+      const index = idxBySec.get(t);
+      if (index == null) {
+        continue;
+      }
+      seen.add(t);
+      out.push({ t, signal: String(ev.signal), index });
+    }
+    out.sort((a, b) => a.index - b.index);
+    return out;
+  }, [candles, signals]);
+
+  const [navCenter, setNavCenter] = useState<number | null>(null);
+
+  function jumpSignal(dir: -1 | 1) {
+    const chart = chartRef.current;
+    if (!chart || navSignals.length === 0) {
+      return;
+    }
+    const range = chart.timeScale().getVisibleLogicalRange();
+    const center =
+      range != null ? (range.from + range.to) / 2 : candles.length;
+    let target: number | null = null;
+    if (dir < 0) {
+      for (let i = navSignals.length - 1; i >= 0; i--) {
+        if (navSignals[i].index < center - 0.5) {
+          target = navSignals[i].index;
+          break;
+        }
+      }
+    } else {
+      for (let i = 0; i < navSignals.length; i++) {
+        if (navSignals[i].index > center + 0.5) {
+          target = navSignals[i].index;
+          break;
+        }
+      }
+    }
+    if (target == null) {
+      return;
+    }
+    const half = 55;
+    chart.timeScale().setVisibleLogicalRange({
+      from: Math.max(0, target - half),
+      to: target + half,
+    });
+  }
+
+  const navViewCenter =
+    navCenter ?? candles.length;
+
+  const navPos = navSignals.filter(
+    s => s.index <= navViewCenter + 0.5
+  ).length;
+
+  const navPrevDisabled = !navSignals.some(
+    s => s.index < navViewCenter - 0.5
+  );
+
+  const navNextDisabled = !navSignals.some(
+    s => s.index > navViewCenter + 0.5
+  );
+
   useEffect(() => {
     const chart = chartRef.current;
     if (!chart) return;
@@ -1415,9 +1505,11 @@ markersRef.current =
       const total = dataCountRef.current;
       if (!range || total === 0) {
         setShowJumpLatest(false);
+        setNavCenter(null);
         return;
       }
       setShowJumpLatest(range.to < total - 1);
+      setNavCenter((range.from + range.to) / 2);
     }
 
     const ts = chart.timeScale();
@@ -1451,6 +1543,37 @@ markersRef.current =
 
       </div>
 
+
+{/* SIGNAL HISTORY NAVIGATOR */}
+
+      {navSignals.length > 1 && (
+        <div className="absolute bottom-4 left-4 z-20 flex items-center gap-0.5 rounded-full border border-slate-200 bg-white/95 py-1 pl-1 pr-2 shadow-md">
+          <button
+            onClick={() => jumpSignal(-1)}
+            disabled={navPrevDisabled}
+            title="Previous signal"
+            aria-label="Previous signal"
+            className="flex h-6 w-6 items-center justify-center rounded-full text-slate-600 transition hover:bg-slate-100 hover:text-slate-900 disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-slate-600"
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </button>
+          <span
+            title={`${navSignals.length} signals on this chart — jump through the full BUY/SELL history`}
+            className="min-w-[52px] text-center font-mono text-[11px] font-bold tabular-nums text-slate-700"
+          >
+            {navPos} / {navSignals.length}
+          </span>
+          <button
+            onClick={() => jumpSignal(1)}
+            disabled={navNextDisabled}
+            title="Next signal"
+            aria-label="Next signal"
+            className="flex h-6 w-6 items-center justify-center rounded-full text-slate-600 transition hover:bg-slate-100 hover:text-slate-900 disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-slate-600"
+          >
+            <ChevronRight className="h-4 w-4" />
+          </button>
+        </div>
+      )}
 
 {/* JUMP TO LATEST */}
 

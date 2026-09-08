@@ -2296,8 +2296,10 @@ function App() {
 
                 <aside className={`flex w-full flex-col gap-3 lg:w-[300px] lg:min-h-0 lg:shrink-0 max-lg:min-h-0 max-lg:flex-1 order-3 lg:order-1 ${mobileTab === "signals" ? "flex" : "hidden"} lg:flex`}>
 
-          {/* TIMEFRAME — premium segmented selector (drives strategy + chart) */}
-          <div className="flex shrink-0 items-center gap-1 overflow-x-auto rounded-full border border-slate-200/70 bg-white/60 p-1 shadow-sm slim-scroll">
+          {/* TIMEFRAME — premium segmented selector (drives strategy + chart).
+              Mobile Signals tab only: on desktop the chart's own TF bar
+              drives the shared timeframe, so the duplicate row is hidden. */}
+          <div className="flex shrink-0 items-center gap-1 overflow-x-auto rounded-full border border-slate-200/70 bg-white/60 p-1 shadow-sm slim-scroll lg:hidden">
             {TIMEFRAMES.map(tf => {
               const active = tf.value === selectedTimeframe;
               return (
