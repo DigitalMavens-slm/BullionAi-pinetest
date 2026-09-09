@@ -1074,6 +1074,13 @@ function App() {
           }
         }
 
+        if (ev.type === "strategy" && (ev as any).maxPoints != null) {
+          const cur = latestSelRef.current;
+          if (cur && String((ev as any).token) === String(cur.sym.split(":")[1] || "")) {
+            setViewStrategy(prev => prev ? { ...prev, bestPL: (ev as any).maxPoints, maxPoints: (ev as any).maxPoints, currentPL: (ev as any).currentPL ?? prev.currentPL } as any : prev);
+          }
+        }
+
         // Contract rollover: swap the selected symbol to the new token so
         // the chart, candles and signal engine refresh automatically.
         if (ev.type === "contract_change" && ev.nextToken) {
@@ -1307,27 +1314,20 @@ function App() {
 
 
   /* Best P/L — market extreme (Pine maxHigh/maxLow) */
-  // The backend already returns the Pine-computed best P/L. Use it as
-  // authoritative. Only recompute from the live tick as a fallback for
-  // the trailing strategy (where extremePrice is a real price). For the
-  // fixed-target strategy, extremePrice is MAX POINTS (a points value),
-  // so never treat it as a price.
-  const bestPL =
-    strategy?.bestPL != null &&
-    strategy.bestPL !== 0
-      ? strategy.bestPL
-      : !usesFixedTargets && isTradeOpen && entryPrice !== null
-        ? signal === "SELL"
-          ? entryPrice -
-            Math.min(
-              strategy?.extremePrice ?? Infinity,
-              livePrice ?? Infinity
-            )
-          : Math.max(
-              strategy?.extremePrice ?? -Infinity,
-              livePrice ?? -Infinity
-            ) - entryPrice
-        : (strategy?.bestPL ?? null);
+  // Live maxPoints for fixed-target: extend backend max with live currentPL so Max Points ticks every LTP, not just on candle close
+  const bestPL = (() => {
+    if (usesFixedTargets && isTradeOpen) {
+      const liveMax = Math.max(strategy?.bestPL ?? -Infinity, currentPL ?? -Infinity);
+      if (Number.isFinite(liveMax)) return liveMax;
+    }
+    if (strategy?.bestPL != null && strategy.bestPL !== 0) return strategy.bestPL;
+    if (!usesFixedTargets && isTradeOpen && entryPrice !== null) {
+      return signal === "SELL"
+        ? entryPrice - Math.min(strategy?.extremePrice ?? Infinity, livePrice ?? Infinity)
+        : Math.max(strategy?.extremePrice ?? -Infinity, livePrice ?? -Infinity) - entryPrice;
+    }
+    return strategy?.bestPL ?? null;
+  })();
 
 
   /* Timeline */

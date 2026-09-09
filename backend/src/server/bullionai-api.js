@@ -4786,17 +4786,23 @@ const allowedTimeframes =
                     if (!isFixedTgt) continue;
                     const st = this.tradeEngine.getState({ exchange: exch, symbol: token, timeframe: tf });
                     if (st?.active) {
+                        const prevMax = st.active.maxPoints;
+                        const prevPL = st.active.currentPL;
                         const upd = this.tradeEngine.updatePrice({ exchange: exch, symbol: token, timeframe: tf, price, time: Date.now() });
-                        if (upd.events.length) {
+                        const maxChanged = upd.trade && upd.trade.maxPoints !== prevMax;
+                        const plChanged = upd.trade && upd.trade.currentPL !== prevPL;
+                        if (upd.events.length || maxChanged || plChanged) {
                             for (const ev of upd.events) {
                                 this.broadcastEvent(ev.type, this.segmentEvent(ev.type, { exchange: exch, symbol: token, timeframe: tf, ...(ev.trade || {}), result: ev.result, resultPoints: ev.resultPoints }));
                             }
-                            // Invalidate strategy cache so next GET /api/strategy returns fresh trade state immediately
+                            // For maxPoints/currentPL live updates without TGT event, also push a lightweight strategy tick
+                            if ((maxChanged || plChanged) && !upd.events.length) {
+                                this.broadcastEvent("strategy", this.segmentEvent("strategy", { exchange: exch, symbol: token, timeframe: tf, maxPoints: upd.trade.maxPoints, currentPL: upd.trade.currentPL, status: upd.trade.status }));
+                            }
                             const cacheKey = `${exch}_${token}_${tf}`;
                             this.strategyCache?.delete(cacheKey);
                             this.strategyInflight?.delete(cacheKey);
-                            // Persist (fire-and-forget, now immediate)
-                            this.persistPerfTrade({ exchange: exch, symbol: token, token, timeframe: tf, trade: upd.trade, hitTimes: {} }).catch(() => {});
+                            if (upd.events.length) this.persistPerfTrade({ exchange: exch, symbol: token, token, timeframe: tf, trade: upd.trade, hitTimes: {} }).catch(() => {});
                         }
                     }
                 }
