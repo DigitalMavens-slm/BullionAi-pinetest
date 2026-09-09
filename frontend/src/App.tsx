@@ -2371,23 +2371,35 @@ function App() {
                         ["SL", fmt(trailSL), "text-amber-600"],
                         [
                           "TGT-1",
-                          (strategy as any)?.target1 ?? "-",
-                          (strategy as any)?.target1 &&
-                          String((strategy as any).target1).includes(
-                            "ACHIEVED"
-                          )
-                            ? "text-emerald-600"
-                            : "",
+                          (() => {
+                            const raw = (strategy as any)?.target1 ?? "-";
+                            const tgt = Number(String(raw).replace(/[^0-9.-]/g, ""));
+                            const liveHit = isTradeOpen && livePrice != null && Number.isFinite(tgt) && (signal === "BUY" ? livePrice >= tgt : livePrice <= tgt);
+                            if (liveHit && String(raw).includes("WAITING")) return String(raw).replace("WAITING", "ACHIEVED");
+                            return raw;
+                          })(),
+                          (() => {
+                            const raw = (strategy as any)?.target1 ?? "";
+                            const tgt = Number(String(raw).replace(/[^0-9.-]/g, ""));
+                            const liveHit = isTradeOpen && livePrice != null && Number.isFinite(tgt) && (signal === "BUY" ? livePrice >= tgt : livePrice <= tgt);
+                            return liveHit || String(raw).includes("ACHIEVED") ? "text-emerald-600" : "";
+                          })(),
                         ],
                         [
                           "TGT-2",
-                          (strategy as any)?.target2 ?? "-",
-                          (strategy as any)?.target2 &&
-                          String((strategy as any).target2).includes(
-                            "ACHIEVED"
-                          )
-                            ? "text-emerald-600"
-                            : "",
+                          (() => {
+                            const raw = (strategy as any)?.target2 ?? "-";
+                            const tgt = Number(String(raw).replace(/[^0-9.-]/g, ""));
+                            const liveHit = isTradeOpen && livePrice != null && Number.isFinite(tgt) && (signal === "BUY" ? livePrice >= tgt : livePrice <= tgt);
+                            if (liveHit && String(raw).includes("WAITING")) return String(raw).replace("WAITING", "ACHIEVED");
+                            return raw;
+                          })(),
+                          (() => {
+                            const raw = (strategy as any)?.target2 ?? "";
+                            const tgt = Number(String(raw).replace(/[^0-9.-]/g, ""));
+                            const liveHit = isTradeOpen && livePrice != null && Number.isFinite(tgt) && (signal === "BUY" ? livePrice >= tgt : livePrice <= tgt);
+                            return liveHit || String(raw).includes("ACHIEVED") ? "text-emerald-600" : "";
+                          })(),
                         ],
                         [
                           "Current P/L",
@@ -2400,14 +2412,11 @@ function App() {
                         ],
                         [
                           "Max Points",
-                          (strategy as any)?.maxPointsText ??
-                            ((strategy as any)?.maxPoints !=
-                            null
-                              ? fmt(
-                                  (strategy as any)
-                                    .maxPoints
-                                )
-                              : "-"),
+                          (() => {
+                            const liveMax = usesFixedTargets && isTradeOpen ? Math.max((strategy as any)?.maxPoints ?? -Infinity, currentPL ?? -Infinity) : null;
+                            if (Number.isFinite(liveMax as number)) return fmt(liveMax as number) + " pts";
+                            return (strategy as any)?.maxPointsText ?? ((strategy as any)?.maxPoints != null ? fmt((strategy as any).maxPoints) : "-");
+                          })(),
                           "",
                         ],
                         [
