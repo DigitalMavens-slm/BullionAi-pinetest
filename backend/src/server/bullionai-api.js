@@ -4773,6 +4773,36 @@ const allowedTimeframes =
         const now =
             Date.now();
 
+        // Immediate TGT/SL check on every tick for fixed-target lanes (MCX 15m + NSE/BSE all)
+        // This makes TGT hit visible instantly on LTP, not at next 15m candle close.
+        try {
+            const exch = String(tick?.exchange || "").toUpperCase();
+            const token = String(tick?.token || "");
+            const price = Number(tick?.price ?? tick?.ltp ?? tick?.lastPrice ?? tick?.close);
+            if (Number.isFinite(price) && token && (exch === "MCX" || exch === "NSE" || exch === "BSE") && this.tradeEngine) {
+                const tfs = exch === "MCX" ? ["15m"] : ["15m", "30m", "60m", "120m", "180m", "240m", "1D", "1W", "1M"];
+                for (const tf of tfs) {
+                    const isFixedTgt = (exch === "MCX" && tf === "15m") || exch === "NSE" || exch === "BSE";
+                    if (!isFixedTgt) continue;
+                    const st = this.tradeEngine.getState({ exchange: exch, symbol: token, timeframe: tf });
+                    if (st?.active) {
+                        const upd = this.tradeEngine.updatePrice({ exchange: exch, symbol: token, timeframe: tf, price, time: Date.now() });
+                        if (upd.events.length) {
+                            for (const ev of upd.events) {
+                                this.broadcastEvent(ev.type, this.segmentEvent(ev.type, { exchange: exch, symbol: token, timeframe: tf, ...(ev.trade || {}), result: ev.result, resultPoints: ev.resultPoints }));
+                            }
+                            // Invalidate strategy cache so next GET /api/strategy returns fresh trade state immediately
+                            const cacheKey = `${exch}_${token}_${tf}`;
+                            this.strategyCache?.delete(cacheKey);
+                            this.strategyInflight?.delete(cacheKey);
+                            // Persist (fire-and-forget, now immediate)
+                            this.persistPerfTrade({ exchange: exch, symbol: token, token, timeframe: tf, trade: upd.trade, hitTimes: {} }).catch(() => {});
+                        }
+                    }
+                }
+            }
+        } catch {}
+
         if (
             now - this._lastTickEmit <
                 500

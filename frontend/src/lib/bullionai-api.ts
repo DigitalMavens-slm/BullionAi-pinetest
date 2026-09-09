@@ -348,6 +348,16 @@ export async function fetchStrategy(
   return requestStrategy(url);
 }
 
+export async function fetchStrategyFresh(
+  timeframe: string,
+  instrument: Instrument = "gold",
+  sym?: { exch: string; token: string; tsym: string } | null
+): Promise<StrategyRunResponse> {
+  const url =
+    `${API_BASE}/api/strategy?timeframe=${encodeURIComponent(timeframe)}&instrument=${encodeURIComponent(instrument)}${sym ? `&exchange=${encodeURIComponent(sym.exch)}&token=${encodeURIComponent(sym.token)}&tsym=${encodeURIComponent(sym.tsym)}` : ''}&_t=${Date.now()}`;
+  return doFetchStrategy(url);
+}
+
 export function createStateStream(
   onState: (state: BullionState) => void,
   onError?: (error: Event) => void,

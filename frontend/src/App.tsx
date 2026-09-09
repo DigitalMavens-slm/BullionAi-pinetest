@@ -50,6 +50,7 @@ import {
   subscribeSymbol,
   fetchCandles,
   fetchStrategy,
+  fetchStrategyFresh,
   getCurrentContract,
   getApiSessionStatus,
   type ApiSessionStatus,
@@ -485,7 +486,8 @@ function App() {
       tf: string;
       inst: string;
       sym: string;
-    }>({ tf: "", inst: "", sym: "" });
+      selected: SelectedSymbol | null;
+    }>({ tf: "", inst: "", sym: "", selected: null });
 
   /* User-added scripts (persisted locally) */
 
@@ -633,6 +635,7 @@ function App() {
     tf: selectedTimeframe,
     inst: selectedSymbol ? `${selectedSymbol.exch}` : "",
     sym: selectedSymbol ? `${selectedSymbol.exch}:${selectedSymbol.token}` : "",
+    selected: selectedSymbol,
   };
 
   function makeLoadGuard() {
@@ -1058,6 +1061,19 @@ function App() {
           });
         }
 
+        // Immediate TGT/SL hit — refresh strategy for the affected symbol instantly on tick, not at next 30s poll (bypass 8s cache)
+        if (["target1", "target2", "trade_close", "trade_open", "sl_update"].includes(ev.type)) {
+          const cur = latestSelRef.current;
+          if (cur && String(ev.token) === String(cur.sym.split(":")[1] || "") && String(ev.exchange || "").toUpperCase() === String(cur.inst || "").toUpperCase() && String(ev.timeframe || "") === String(cur.tf || "")) {
+            const sym = cur.selected;
+            if (sym) {
+              fetchStrategyFresh(cur.tf, undefined, sym).then((res) => {
+                if (res.ok && res.strategy) setViewStrategy(res.strategy);
+              }).catch(() => {});
+            }
+          }
+        }
+
         // Contract rollover: swap the selected symbol to the new token so
         // the chart, candles and signal engine refresh automatically.
         if (ev.type === "contract_change" && ev.nextToken) {
@@ -1080,7 +1096,7 @@ function App() {
         }
       },
       {
-        types: ["tick", "candle_close", "candle_update", "strategy", "contract_change", "connection_status"],
+        types: ["tick", "candle_close", "candle_update", "strategy", "contract_change", "connection_status", "trade_open", "target1", "target2", "sl_update", "trade_close"],
         onSnapshot: (snap) => {
           if (snap?.state) setState(snap.state);
         },
