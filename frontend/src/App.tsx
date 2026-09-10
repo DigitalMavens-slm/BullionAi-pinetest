@@ -1297,6 +1297,40 @@ function App() {
       null)
     : null;
 
+  /* LIVE PATCHED CANDLES — the forming candle follows every tick, like TradingView.
+     Extends the last candle's close/high/low with the live LTP, and opens a fresh
+     candle once the clock rolls past its timeframe bucket. */
+  const tfSecNow = TF_SECONDS[selectedTimeframe] ?? 3600;
+  const chartCandles = useMemo(() => {
+    if (!candles.length || livePrice == null) return candles;
+    const p = Number(livePrice);
+    if (!Number.isFinite(p)) return candles;
+    const arr = candles.slice();
+    const last = arr[arr.length - 1];
+    const lastSec = Math.floor(Number(last.time) / 1000);
+    const nowSec = Math.floor(Date.now() / 1000);
+    const bucket = Math.floor(nowSec / tfSecNow) * tfSecNow;
+    if (bucket > lastSec) {
+      arr.push({
+        ...last,
+        time: bucket * 1000,
+        open: p,
+        high: p,
+        low: p,
+        close: p,
+        volume: 0,
+      } as any);
+    } else {
+      arr[arr.length - 1] = {
+        ...last,
+        close: p,
+        high: Math.max(Number(last.high), p),
+        low: Math.min(Number(last.low), p),
+      } as any;
+    }
+    return arr;
+  }, [candles, livePrice, tfSecNow]);
+
 
   /* Current P/L — Pine formula on live tick */
 
@@ -2616,7 +2650,7 @@ function App() {
 
               <BullionChart
 
-                candles={candles}
+                candles={chartCandles}
 
                 signal={signal}
 
