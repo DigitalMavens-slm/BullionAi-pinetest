@@ -120,7 +120,7 @@ export function AuthScreen({
           <div className="pointer-events-none absolute -bottom-24 -left-16 h-72 w-72 rounded-full bg-gold-light/10 blur-3xl" />
 
           <div>
-            <BrandLogo className="h-24 w-72 rounded-xl bg-white" />
+            <BrandLogo className="h-24 w-72 rounded-xl bg-white p-3" />
 
             <h1 className="font-display mt-10 text-[28px] font-bold leading-tight text-white">
               Trade bullion with
@@ -158,7 +158,7 @@ export function AuthScreen({
             <span aria-hidden="true">←</span> Back to home
           </button>
 
-          <BrandLogo className="mb-6 h-16 w-48 lg:hidden" />
+          <BrandLogo variant="compact" className="mb-6 lg:hidden" />
 
           <h2 className="font-display text-[24px] font-bold tracking-tight text-slate-900">
             {mode === "login" ? "Welcome back" : "Create your account"}

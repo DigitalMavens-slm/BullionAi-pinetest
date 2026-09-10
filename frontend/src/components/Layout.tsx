@@ -133,8 +133,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
     <div className="min-h-screen bg-paper text-slate-900 flex flex-col">
       <header className={`sticky top-0 z-40 transition-shadow ${scrolled ? "shadow-md" : ""} bg-white/95 backdrop-blur-md border-b border-slate-200/80`}>
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6">
-          <Link to="/" className="flex items-center" aria-label="BullionAI home">
-            <BrandLogo className="h-12 w-36" />
+<Link to="/" className="flex items-center" aria-label="BullionAI home">
+            <BrandLogo variant="full" className="hidden h-10 w-[120px] md:block" />
+            <BrandLogo variant="compact" className="md:hidden" />
           </Link>
 
           <nav className="hidden items-center gap-2 lg:flex" aria-label="Primary">
@@ -202,7 +203,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
       <footer className="border-t border-slate-200/80 bg-slate-50/60">
         <div className="mx-auto grid max-w-7xl gap-10 px-4 py-12 sm:px-6 sm:py-16 lg:grid-cols-4">
           <div className="lg:col-span-1">
-            <BrandLogo className="h-20 w-60" />
+<BrandLogo className="h-20 w-60" />
+            <div className="mt-3 text-[10px] font-bold uppercase tracking-[0.22em] text-gold">Where Market Meets Intelligence</div>
             <p className="mt-4 max-w-xs text-[12px] leading-relaxed text-slate-500">
               AI-powered market intelligence for MCX Gold, Silver &amp; Crude Oil and NSE/BSE equities. Premium, server-verified signals.
             </p>

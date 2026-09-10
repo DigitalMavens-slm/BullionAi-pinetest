@@ -1444,8 +1444,8 @@ markersRef.current =
 
       <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
 
-        <BrandLogo
-          variant="mark"
+<BrandLogo
+          variant="symbol"
           className="h-44 w-60 opacity-[0.05] lg:h-64 lg:w-[360px]"
           alt=""
         />

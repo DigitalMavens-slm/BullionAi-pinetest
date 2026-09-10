@@ -440,7 +440,7 @@ export function HomePage({ onStartTrial, onSignIn }: { onStartTrial: () => void;
           <div className="mx-auto mt-6 max-w-md overflow-hidden rounded-2xl border border-slate-800 bg-[#0c0e12] shadow-[0_24px_64px_-16px_rgba(0,0,0,0.5)]">
             <div className="grid grid-cols-2 gap-px bg-[#1a1d23] p-px">
               <div className="flex items-center justify-center bg-white px-3 py-1">
-                <BrandLogo className="h-10 w-[120px]" />
+                <BrandLogo variant="symbol" className="h-8 w-auto" />
               </div>
               <div className="bg-[#be9619] px-3 py-2 text-center text-[10px] font-bold text-black">INFORMATION CENTER</div>
               {[

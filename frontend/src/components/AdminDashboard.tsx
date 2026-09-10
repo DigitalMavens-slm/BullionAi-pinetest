@@ -386,7 +386,7 @@ export function AdminDashboard({ onExit }: { onExit: () => void }) {
     <div className="min-h-screen bg-[#f8fafc] flex">
       <aside className="hidden w-64 shrink-0 flex-col border-r border-slate-200 bg-slate-900 text-white lg:flex">
         <div className="flex h-16 items-center gap-3 border-b border-white/10 px-6">
-          <BrandLogo variant="mark" className="h-9 w-12 rounded-lg bg-white" />
+          <BrandLogo variant="symbol" className="h-9 w-auto" />
           <span className="font-black tracking-tight">Admin</span>
           <span className="ml-auto rounded-full bg-white/10 px-2 py-0.5 text-[10px] font-bold">PRO</span>
         </div>
@@ -432,7 +432,7 @@ export function AdminDashboard({ onExit }: { onExit: () => void }) {
         <div className="sticky top-0 z-20 border-b border-slate-200 bg-white/90 backdrop-blur">
           <div className="mx-auto flex w-full max-w-[1600px] items-center justify-between px-4 py-3 lg:px-6">
             <div className="flex items-center gap-3">
-              <BrandLogo variant="mark" className="h-9 w-12 rounded-lg bg-white lg:hidden" />
+              <BrandLogo variant="compact" className="lg:hidden" />
               <div>
                 <div className="text-sm font-black tracking-tight text-slate-900 capitalize">{activeTab}</div>
                 <div className="hidden text-[11px] font-medium text-slate-400 lg:block">Premium Control Center</div>
