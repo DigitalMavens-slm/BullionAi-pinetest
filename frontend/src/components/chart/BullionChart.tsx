@@ -843,22 +843,67 @@ markersRef.current =
       }));
 
 
+    const lastFormatted =
+      formatted.length
+        ? formatted[formatted.length - 1]
+        : null;
+
+    const lastVolume =
+      volumes.length
+        ? volumes[volumes.length - 1]
+        : null;
+
+    const dataSig = {
+      len: formatted.length,
+      lastTime: lastFormatted
+        ? Number(lastFormatted.time)
+        : 0,
+    };
+
+    const prevSig =
+      dataSigRef.current;
+
+    /*
+     * Incremental path: the dataset only extended/updated its
+     * forming candle (live tick patch) → series.update() on the
+     * last bar instead of re-transferring the entire history.
+     */
+    const incremental =
+      prevSig !== null &&
+      (dataSig.len === prevSig.len ||
+        dataSig.len === prevSig.len + 1) &&
+      dataSig.lastTime >= prevSig.lastTime;
+
     try {
-      series.setData(
-        formatted
-      );
+      if (incremental && lastFormatted) {
+        candleSeriesRef.current?.update(
+          lastFormatted
+        );
+        if (lastVolume) {
+          volumeSeriesRef.current?.update(
+            lastVolume
+          );
+        }
+        dataCountRef.current = formatted.length;
+      } else {
+        series.setData(
+          formatted
+        );
 
-      dataCountRef.current = formatted.length;
+        dataCountRef.current = formatted.length;
 
-      volume.setData(
-        volumes
-      );
+        volume.setData(
+          volumes
+        );
+      }
     } catch (err) {
       // Defensive: a lightweight-charts internal error (e.g. reportAllChanges
       // reading an undefined candle) must never take down the whole dashboard.
       console.error("Chart setData failed:", err);
       return;
     }
+
+    dataSigRef.current = dataSig;
 
     const last =
       valid[
@@ -1407,6 +1452,11 @@ markersRef.current =
 
   const dataCountRef =
     useRef(0);
+
+  /* Signature of the last applied dataset — enables series.update()
+     instead of full setData() when only the forming candle changes. */
+  const dataSigRef =
+    useRef<{ len: number; lastTime: number } | null>(null);
 
   useEffect(() => {
     const chart = chartRef.current;

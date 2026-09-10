@@ -1,4 +1,4 @@
-require("dotenv").config();
+﻿require("dotenv").config();
 
 const http = require("http");
 const fs = require("fs");
@@ -154,7 +154,7 @@ class BullionAIApi {
          * =====================================================
          * MARKET-DATA OWNERSHIP
          *
-         * The backend — not the browser — owns candle
+         * The backend â€” not the browser â€” owns candle
          * persistence:
          *
          *   1. Live ticks  -> CandleAggregator -> per-TF
@@ -276,7 +276,7 @@ class BullionAIApi {
         /*
          * Instruments explicitly added by the
          * user (search box). Drives live
-         * reconciliation — nothing is
+         * reconciliation â€” nothing is
          * reconciled until it is added here.
          */
 
@@ -285,7 +285,7 @@ class BullionAIApi {
 
 
         /*
-         * Tap the live feed's per-tick stream directly —
+         * Tap the live feed's per-tick stream directly â€”
          * no change to the working WebSocket pipeline.
          */
 
@@ -462,7 +462,7 @@ class BullionAIApi {
         ) {
 
             // Already starting (in the background). Do not block the
-            // caller waiting on it — serve whatever state exists now.
+            // caller waiting on it â€” serve whatever state exists now.
             return;
 
         }
@@ -662,7 +662,7 @@ class BullionAIApi {
          */
 
         console.log(
-            "[boot] coordinator live — launching reconciliation"
+            "[boot] coordinator live â€” launching reconciliation"
         );
 
         this.reconcileAll("startup").catch(
@@ -697,7 +697,7 @@ class BullionAIApi {
 
     // 
     // =========================================================
-    // MARKET-DATA OWNERSHIP — reconciliation
+    // MARKET-DATA OWNERSHIP â€” reconciliation
     //
     // Fetches ONLY from latest stored candle onward (+overlap),
     // merges, dedupes by timestamp, sorts, persists. Existing
@@ -914,7 +914,7 @@ async reconcileAll(label) {
                     /*
                      * Route through the coordinator so the SAME
                      * invalidation + re-login flow used by the
-                     * WebSocket also runs here — exactly one
+                     * WebSocket also runs here â€” exactly one
                      * authentication state for everything.
                      */
 
@@ -1015,7 +1015,7 @@ async reconcileAll(label) {
 
         const st = coord.getSessionStatus?.() || {};
         if (st.shoonya !== "authenticated") {
-            // Not authenticated — nothing to reconnect. LOGIN_REQUIRED already
+            // Not authenticated â€” nothing to reconnect. LOGIN_REQUIRED already
             // surfaced; the watchdog must NOT demand a login on its own.
             return;
         }
@@ -1028,7 +1028,7 @@ async reconcileAll(label) {
         if (!st.feedStarted) return;
 
         if (feedState === "connected") {
-            // Healthy — reset any reconnect backoff naturally.
+            // Healthy â€” reset any reconnect backoff naturally.
             return;
         }
 
@@ -1041,7 +1041,7 @@ async reconcileAll(label) {
             this._watchdogReconnect = Date.now();
 
             console.log(
-                `[shoonya] feed ${feedState} — watchdog reconnecting`
+                `[shoonya] feed ${feedState} â€” watchdog reconnecting`
             );
 
             // Mark reconnecting so the status flips before the socket actually
@@ -1053,7 +1053,7 @@ async reconcileAll(label) {
                 if (feed) {
                     await feed.reconnectWithCurrentSession();
                 } else {
-                    // Feed object missing but session valid — re-run startup.
+                    // Feed object missing but session valid â€” re-run startup.
                     await coord.start?.();
                 }
                 console.log("[shoonya] websocket reconnected (watchdog)");
@@ -1436,7 +1436,7 @@ const allowedTimeframes =
     // Guarantees any requested script is subscribed to the
     // Shoonya WebSocket feed and routed into the candle
     // aggregator. Ticks then build OHLCV buckets and completed
-    // candles persist to disk — a reliable source that does not
+    // candles persist to disk â€” a reliable source that does not
     // depend on the (sometimes unavailable) historical endpoint.
     // =========================================================
 
@@ -1485,7 +1485,7 @@ const allowedTimeframes =
     //
     // Subscribes every MCX current contract to the live feed +
     // aggregator so their candle datasets build automatically from
-    // ticks during market hours — even for symbols Shoonya's
+    // ticks during market hours â€” even for symbols Shoonya's
     // historical endpoint won't backfill. Also registers them for
     // periodic reconciliation.
     // =========================================================
@@ -1525,7 +1525,7 @@ const allowedTimeframes =
     // Runs the TradeEngine lifecycle for EVERY MCX 15m strategy-enabled
     // registry contract and persists any resulting trade to perf_trades.
     // This makes Performance independent of the user's watchlist /
-    // activeInstruments — if the engine generates a trade, it belongs in the
+    // activeInstruments â€” if the engine generates a trade, it belongs in the
     // ledger. Reuses the single TradeEngine (no second engine). Lightweight:
     // runs on a timer and reuses the existing snapshot path.
     // =========================================================
@@ -1723,7 +1723,7 @@ const allowedTimeframes =
     // Periodically re-attempts the Shoonya historical backfill for
     // any active instrument that still has no cached 15m dataset.
     // As soon as Shoonya's TPSeries endpoint becomes available
-    // again, the script populates automatically — no manual action.
+    // again, the script populates automatically â€” no manual action.
     // =========================================================
 
     hasDataset(exchange, token, tfKey = "15m") {
@@ -1783,7 +1783,7 @@ const allowedTimeframes =
                     );
                 }
             } catch {
-                // TPSeries still unavailable — retry next cycle.
+                // TPSeries still unavailable â€” retry next cycle.
             }
             await new Promise(r => setTimeout(r, 1000));
         }
@@ -1799,7 +1799,7 @@ const allowedTimeframes =
     // file is missing or empty AND a
     // Shoonya session exists, real
     // candles are fetched once and
-    // persisted — no dummy data.
+    // persisted â€” no dummy data.
     // =========================================================
 
     // Yahoo Finance historical fallback for NSE/BSE. Called when
@@ -1882,7 +1882,7 @@ const allowedTimeframes =
         }
     }
 
-    /* EOD AGGREGATES (1d/1w/1m) — resampled from the minute file.
+    /* EOD AGGREGATES (1d/1w/1m) â€” resampled from the minute file.
      *
      * The live aggregator only builds minute timeframes and Shoonya
      * cannot backfill EOD (D/W/M) for freshly-rolled contracts, so
@@ -1891,7 +1891,7 @@ const allowedTimeframes =
      * token guarantees the day high/low can never show another
      * contract's price levels.
      *
-     * Runs on every ensure: rebuilds from the minute file (cheap —
+     * Runs on every ensure: rebuilds from the minute file (cheap â€”
      * a few thousand bars) so today's bucket always reflects live
      * data, and persists the result. Older existing EOD bars are kept
      * only when their levels are continuous with the resampled range
@@ -1925,7 +1925,7 @@ const allowedTimeframes =
 
         // Keep older existing EOD bars only when continuous with the
         // resampled range (same-contract history). A level jump means
-        // foreign-contract fallback data — drop it (self-heal).
+        // foreign-contract fallback data â€” drop it (self-heal).
         try {
             if (fs.existsSync(filePath)) {
                 const parsed = JSON.parse(
@@ -1971,7 +1971,7 @@ const allowedTimeframes =
                 }
             }
         } catch {
-            // Corrupt EOD file — the resampled rebuild replaces it.
+            // Corrupt EOD file â€” the resampled rebuild replaces it.
         }
 
         try {
@@ -2123,7 +2123,7 @@ const allowedTimeframes =
                     }
                 } else {
                     console.log(
-                        "[spot] no GOLD_API_KEY set — showing live forming candle only (no historical backfill)"
+                        "[spot] no GOLD_API_KEY set â€” showing live forming candle only (no historical backfill)"
                     );
                 }
             }
@@ -2163,7 +2163,7 @@ const allowedTimeframes =
         }
 
         // -----------------------------------------------------
-        // SPOT removed — gold/silver spot data will be provided later via a
+        // SPOT removed â€” gold/silver spot data will be provided later via a
         // dedicated metals API (not a Yahoo-backed exchange).
         // -----------------------------------------------------
 
@@ -2256,7 +2256,7 @@ const allowedTimeframes =
 
         }
 
-        // Rollover — stitch current + next with back-adjust (audit-safe, in-memory only)
+        // Rollover â€” stitch current + next with back-adjust (audit-safe, in-memory only)
         // If the CURRENT contract has no cached data yet, fall back to the
         // PREVIOUS contract's dataset so the chart + signal engine still render
         // (Shoonya's historical endpoint often cannot backfill a fresh contract).
@@ -2306,7 +2306,7 @@ const allowedTimeframes =
                         fallbackAnchored = true;
                     }
                     console.log(
-                        `[rollover] ${exchange}_${inst.token}_${tf.key} empty -> using previous contract (${stitched.length} candles${fallbackAnchored ? ", back-adjusted to live" : ", UNANCHORED — not persisted"})`
+                        `[rollover] ${exchange}_${inst.token}_${tf.key} empty -> using previous contract (${stitched.length} candles${fallbackAnchored ? ", back-adjusted to live" : ", UNANCHORED â€” not persisted"})`
                     );
                 }
             } else {
@@ -2330,7 +2330,7 @@ const allowedTimeframes =
         // Persist previous-contract fallback data so the strategy engine
         // (which reads the current token's file directly) still gets candles
         // even though Shoonya's historical endpoint can't backfill it.
-        // ONLY when back-adjusted to the live price — raw foreign-contract
+        // ONLY when back-adjusted to the live price â€” raw foreign-contract
         // levels must never be written into the current token's file.
         if (
             hadNoCandles &&
@@ -2358,7 +2358,7 @@ const allowedTimeframes =
             }
         }
 
-        /* EOD AGGREGATES (1d/1w/1m) — resampled from the minute file.
+        /* EOD AGGREGATES (1d/1w/1m) â€” resampled from the minute file.
          *
          * Nothing else builds D/W/M: the live aggregator only writes
          * minute TFs, Shoonya won't backfill EOD for fresh contracts,
@@ -2398,7 +2398,7 @@ const allowedTimeframes =
              * Refresh whenever the CURRENT
              * forming bar is missing, so the
              * dataset is always up to now.
-             * Only for minute intervals —
+             * Only for minute intervals â€”
              * D/W/M aggregates are rebuilt
              * by the backfill script.
              */
@@ -2458,7 +2458,7 @@ const allowedTimeframes =
                     ?.market;
 
 
-            /* HISTORY DEEPENING — 2-month target
+            /* HISTORY DEEPENING â€” 2-month target
              *
              * Files created before the 60-day lookback only
              * hold ~7 days of intraday history, and the
@@ -2609,7 +2609,7 @@ const allowedTimeframes =
                                 deepened;
 
                             /*
-                             * STRATEGY REFRESH — re-run Pine immediately
+                             * STRATEGY REFRESH â€” re-run Pine immediately
                              * on the deepened two-month dataset for every
                              * timeframe EXCEPT the 15m fixed-target lane,
                              * so chart arrows and the Signals panel update
@@ -2788,7 +2788,7 @@ const allowedTimeframes =
 
 
                         console.log(
-                            `Refreshed → ${merged.length} candles (was ${candles.length})`
+                            `Refreshed â†’ ${merged.length} candles (was ${candles.length})`
                         );
 
                         candles =
@@ -2821,7 +2821,7 @@ const allowedTimeframes =
                 market &&
                 market.isAuthenticated() &&
                 Number.isFinite(Number(tf.interval)) &&
-                // SPOT removed — gold/silver spot will use a metals API later;
+                // SPOT removed â€” gold/silver spot will use a metals API later;
                 // no longer skip any exchange from the Shoonya backfill.
                 true
             ) {
@@ -2903,7 +2903,7 @@ const allowedTimeframes =
 
 
         /*
-         * Empty dataset → backfill
+         * Empty dataset â†’ backfill
          * from Shoonya when a session
          * is available.
          */
@@ -2947,7 +2947,7 @@ const allowedTimeframes =
 
         /*
          * Two-month history for every timeframe: at least
-         * 60 days (or tf × 400 bars when that is longer),
+         * 60 days (or tf Ã— 400 bars when that is longer),
          * capped at 180 days. Minute intervals are fetched
          * in <=20-day chunks by MarketDataService.
          */
@@ -3057,7 +3057,7 @@ const allowedTimeframes =
 
 
                 console.log(
-                    `Backfilled ${candles.length} candles → ${fileName}`
+                    `Backfilled ${candles.length} candles â†’ ${fileName}`
                 );
 
             }
@@ -3375,7 +3375,7 @@ const allowedTimeframes =
     // 52-WEEK RANGE (BEST EFFORT)
     //
     // 1. Noren quotes expose week
-    //    high/low (wh/wl) — used when
+    //    high/low (wh/wl) â€” used when
     //    a session is live.
     // 2. Fallback: extremes of the
     //    instrument's stored history.
@@ -3520,7 +3520,7 @@ const allowedTimeframes =
             }
 
         } catch {
-            // Quotes unavailable — fall through.
+            // Quotes unavailable â€” fall through.
         }
 
 
@@ -3589,7 +3589,7 @@ const allowedTimeframes =
     //
     // Exchange-authoritative daily figures.
     // Primary: Shoonya live tick o/h/l/c (MCX official open,
-    // day high/low, prev close) — perfectly syncs with MCX and
+    // day high/low, prev close) â€” perfectly syncs with MCX and
     // TradingView MCX. Fallback: real intraday candles grouped
     // by IST date when no live tick yet (unauthenticated / offline).
     // =========================================================
@@ -3600,7 +3600,7 @@ const allowedTimeframes =
 
         // Scope candle files AND the REST fallback to the instrument's
         // own exchange. (Previously the env default leaked in, so NSE/BSE
-        // scripts looked for MCX_* files and queried MCX quotes —
+        // scripts looked for MCX_* files and queried MCX quotes â€”
         // dayStats always came back null for them.)
         const exchange = String(
             inst.exchange ||
@@ -3873,7 +3873,7 @@ const allowedTimeframes =
                         const qo = pick(q, ["o", "open", "day_open", "open_price"]);
                         // NOTE: week/life-time highs/lows ("wh", "52h",
                         // "weekHigh", "wl", "52l", "weekLow") must NEVER be
-                        // picked here — on MCX "52l" is the LIFE-TIME low.
+                        // picked here â€” on MCX "52l" is the LIFE-TIME low.
                         // A week low shown as the day low is a price that
                         // never traded today. When "h"/"l" are absent the
                         // candle-derived values below are used instead.
@@ -3953,7 +3953,7 @@ const allowedTimeframes =
     // =========================================================
 
     // Persist a TradeEngine trade into the perf_trades ledger (idempotent by
-    // tradeUid). Reads existing engine values only — never re-derives them.
+    // tradeUid). Reads existing engine values only â€” never re-derives them.
     // target1Profit/target2Profit are derived from entry->target distances;
     // hit times come from the transition events.
     async persistPerfTrade({ exchange, symbol, token, timeframe, trade, hitTimes = {} }) {
@@ -4007,9 +4007,9 @@ const allowedTimeframes =
     /* Enrich a strategy_signals row with its trade (if the signal opened
      * one) plus live engine state. A signal that opened a trade shares
      * the trade's uid (same exchange/symbol/timeframe/time/side/price
-     * components); otherwise fall back to a ±5min fuzzy match on the
+     * components); otherwise fall back to a Â±5min fuzzy match on the
      * same script and side. Returns {...row, tradeStatus, trade, live,
-     * pl} — pl is realized points when CLOSED, live P/L when OPEN,
+     * pl} â€” pl is realized points when CLOSED, live P/L when OPEN,
      * null for signal-only rows. Never throws.
      */
     async enrichSignalRow(row) {
@@ -4140,8 +4140,8 @@ const allowedTimeframes =
             return { exchange: exch, symbol, token: String(token), timeframe: tf.key, status: "no-data" };
         }
 
-        // Use exact Pine via PineTS for every scrip/timeframe — no JS drift
-        // Fixed-target: MCX 15m + NSE/* + BSE/* (all TFs) → BullionAI-fixedtgt.pine; all else → trailing
+        // Use exact Pine via PineTS for every scrip/timeframe â€” no JS drift
+        // Fixed-target: MCX 15m + NSE/* + BSE/* (all TFs) â†’ BullionAI-fixedtgt.pine; all else â†’ trailing
         const isFixedTgtPine = (exch === "MCX" && tf.key === "15m") || exch === "NSE" || exch === "BSE";
         const pineFile = isFixedTgtPine ? "BullionAI-fixedtgt.pine" : "BullionAI.pine";
         let pineState = null;
@@ -4169,11 +4169,11 @@ const allowedTimeframes =
                 };
             }
         } catch (e) {
-            // PineTS failed — will fallback to JS, but log
+            // PineTS failed â€” will fallback to JS, but log
             console.error(`[pine] ${exch} ${symbol} ${tf.key} failed:`, e?.message || e);
         }
         if (!sig) {
-            // Fallback only if Pine truly failed — still JS trailing, but log
+            // Fallback only if Pine truly failed â€” still JS trailing, but log
             const jsSig = latestSignal(candles);
             sig = { signal: jsSig.signal, close: jsSig.close, time: jsSig.time, indicators: jsSig.indicators, state: null, results: null };
         }
@@ -4202,7 +4202,7 @@ const allowedTimeframes =
                             exchange: exch, symbol: token, timeframe: tf.key, signal: sig.signal,
                             entry: res.trade.entryPrice, sl: res.trade.initialSL, target1: res.trade.target1, target2: res.trade.target2,
                         }));
-                        // Persist the freshly-opened trade — ONLY 15m (canonical symbol=token)
+                        // Persist the freshly-opened trade â€” ONLY 15m (canonical symbol=token)
                         await this.persistPerfTrade({
                             exchange: exch, symbol: token, token: String(token), timeframe: tf.key,
                             trade: res.trade,
@@ -4217,7 +4217,7 @@ const allowedTimeframes =
             }));
         }
 
-        // Advance the active trade with the latest close (for live P/L / max points) — fixed-target lane
+        // Advance the active trade with the latest close (for live P/L / max points) â€” fixed-target lane
         if (isFixedTgt && active.active) {
             const upd = this.tradeEngine.updatePrice({
                 exchange: exch, symbol: token, timeframe: tf.key,
@@ -4232,7 +4232,7 @@ const allowedTimeframes =
                 }));
             }
 
-            // Persist the lifecycle update — fixed-target (all TFs for NSE/BSE, 15m for MCX)
+            // Persist the lifecycle update â€” fixed-target (all TFs for NSE/BSE, 15m for MCX)
             const hitTimes = {};
             const lastCloseMs = candles[candles.length - 1]?.time || Date.now();
             for (const ev of upd.events) {
@@ -4269,7 +4269,7 @@ const allowedTimeframes =
         // RECENT SIGNALS (per script): combine the ACTIVE trade with the
         // completed-trade history, dedupe by a stable tradeUid, and return
         // the newest (max) 5. This is read-only exposure of the TradeEngine
-        // state — no change to signal/trade lifecycle logic.
+        // state â€” no change to signal/trade lifecycle logic.
         //
         // tradeUid = `${exch}:${symbol}:${timeframe}:${entryTime}:${signal}:${entryPrice}`
         // Identifies ONE signal/trade across SSE reconnects, re-renders,
@@ -4394,7 +4394,7 @@ const allowedTimeframes =
 
         if (!liveMarket) {
 
-            // No Shoonya live market (no session / not started) — still serve
+            // No Shoonya live market (no session / not started) â€” still serve
             // SPOT prices so Gold/Silver spot shows without a Shoonya login.
             return {
                 connected:
@@ -4604,24 +4604,55 @@ const allowedTimeframes =
         state
     ) {
 
-        for (
-            const client of this.sseClients
-        ) {
+        /*
+         * THROTTLED: the full enriched state is large (~35KB). The coordinator
+         * emits state on every tick batch, so broadcasting each one floods
+         * every SSE client at ~340kbps. Lean tick/candle_update/strategy
+         * events carry the realtime data; the full state is a reconciliation
+         * safety net — at most one broadcast per 2s, with a trailing flush
+         * so the latest state always eventually goes out.
+         */
+        const now = Date.now();
+        const since = now - (this._lastStateBroadcastAt || 0);
 
-            try {
-
-                this.sendSseEvent(
-                    client,
-                    "state",
-                    state
-                );
-
-            } catch {
-
-                this.sseClients.delete(
-                    client
-                );
+        const send = (st) => {
+            this._lastStateBroadcastAt = Date.now();
+            for (
+                const client of this.sseClients
+            ) {
+                try {
+                    this.sendSseEvent(
+                        client,
+                        "state",
+                        st
+                    );
+                } catch {
+                    this.sseClients.delete(
+                        client
+                    );
+                }
             }
+        };
+
+        if (since >= 2000) {
+            this._pendingState = null;
+            if (this._pendingStateTimer) {
+                clearTimeout(this._pendingStateTimer);
+                this._pendingStateTimer = null;
+            }
+            send(state);
+            return;
+        }
+
+        this._pendingState = state;
+        if (!this._pendingStateTimer) {
+            this._pendingStateTimer = setTimeout(() => {
+                this._pendingStateTimer = null;
+                const st = this._pendingState;
+                this._pendingState = null;
+                if (!st) return;
+                send(st);
+            }, 2000 - since);
         }
     }
 
@@ -4810,8 +4841,7 @@ const allowedTimeframes =
         } catch {}
 
         if (
-            now - this._lastTickEmit <
-                500
+            now - this._lastTickEmit < 100
         ) {
             return;
         }
@@ -5194,7 +5224,7 @@ const allowedTimeframes =
                     ok:
                         true,
 
-                    // HTTP_SERVER_READY is always true — the API is up.
+                    // HTTP_SERVER_READY is always true â€” the API is up.
                     server:
                         "ready",
 
@@ -5297,7 +5327,7 @@ const allowedTimeframes =
         //   GET  /api/shoonya/config             -> diagnostic
         // -----------------------------------------------------
 
-        // Diagnostic — shows exact redirect & IP Shoonya will see
+        // Diagnostic â€” shows exact redirect & IP Shoonya will see
         if (
             url.pathname === "/api/shoonya/config" &&
             request.method === "GET"
@@ -5772,7 +5802,7 @@ const allowedTimeframes =
         }
 
         // -----------------------------------------------------
-        // ADMIN — users & subscriptions (X-Admin-Key)
+        // ADMIN â€” users & subscriptions (X-Admin-Key)
         // -----------------------------------------------------
 
         const isAdminRoute =
@@ -6157,7 +6187,7 @@ const allowedTimeframes =
             }
         }
 
-        // ADMIN — clear server in-memory caches
+        // ADMIN â€” clear server in-memory caches
         if (
             url.pathname === "/api/admin/clear-cache" &&
             request.method === "POST" &&
@@ -6187,7 +6217,7 @@ const allowedTimeframes =
             return;
         }
 
-        // ADMIN — clear ALL users (destructive)
+        // ADMIN â€” clear ALL users (destructive)
         if (
             url.pathname === "/api/admin/clear-users" &&
             request.method === "POST" &&
@@ -6208,7 +6238,7 @@ const allowedTimeframes =
             return;
         }
 
-        // ADMIN — wipe signals + trades (fresh start for completion-gated storage)
+        // ADMIN â€” wipe signals + trades (fresh start for completion-gated storage)
         if (
             url.pathname === "/api/admin/wipe-signals" &&
             request.method === "POST" &&
@@ -6230,7 +6260,7 @@ const allowedTimeframes =
             }
         }
 
-        // ADMIN — restart the server
+        // ADMIN â€” restart the server
         // Responds 200 first, then gracefully exits. Render's process
         // supervisor respawns it. The Shoonya session is persisted in
         // Postgres so it auto-restores on boot.
@@ -6244,7 +6274,7 @@ const allowedTimeframes =
                     this.sendJson(response, 401, { ok: false, error: "Admin authorization required." });
                     return;
                 }
-                console.log("[admin] restart requested — exiting for Render to respawn");
+                console.log("[admin] restart requested â€” exiting for Render to respawn");
                 this.sendJson(response, 200, { ok: true, restarting: true });
                 // Give the response a moment to flush before exiting.
                 setTimeout(() => {
@@ -6349,13 +6379,13 @@ const allowedTimeframes =
                 let notice = ensured.notice ?? null;
                 if (!notice && liveOnly) {
                     notice =
-                        "Live candle only — historical data will fill in automatically as trading occurs.";
+                        "Live candle only â€” historical data will fill in automatically as trading occurs.";
                 } else if (!notice && outCandles.length === 0) {
                     notice =
-                        "No candles yet. The script is now live-subscribed — candles will appear on the next market tick.";
+                        "No candles yet. The script is now live-subscribed â€” candles will appear on the next market tick.";
                 } else if (notice && notice.startsWith("No historical data")) {
                     notice =
-                        notice + " Live subscription active — candles will appear on the next market tick.";
+                        notice + " Live subscription active â€” candles will appear on the next market tick.";
                 }
 
 
@@ -6527,7 +6557,7 @@ const allowedTimeframes =
         //
         // Reads from the perf_trades ledger. Publicly accessible (no Bearer
         // token) for the public /performance page and the dashboard. READ-ONLY
-        // — the only writer is the backend TradeEngine persistence layer.
+        // â€” the only writer is the backend TradeEngine persistence layer.
         // Queries are server-side aggregated; never expose DB internals.
         // -----------------------------------------------------
 
@@ -6636,7 +6666,7 @@ const allowedTimeframes =
 
         // Signal detail: /api/performance/signal?uid=<signalUid>
         // Full signal component: DB row + linked trade (exact uid, else
-        // ±5min fuzzy) + live engine state when the trade is OPEN.
+        // Â±5min fuzzy) + live engine state when the trade is OPEN.
         if (
             url.pathname ===
             "/api/performance/signal"
@@ -7051,3 +7081,4 @@ module.exports = {
 // Hostinger Node.js hosting loads the entry file without require.main === module.
 // Invoke unconditionally so listen() is called within 3s.
 main();
+
