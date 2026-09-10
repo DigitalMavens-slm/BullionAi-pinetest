@@ -1922,7 +1922,7 @@ function App() {
 
         <div className="flex items-center gap-3">
 
-          <BrandLogo className="h-14 w-[76px]" />
+          <BrandLogo className="h-12 w-36" />
 
         </div>
 

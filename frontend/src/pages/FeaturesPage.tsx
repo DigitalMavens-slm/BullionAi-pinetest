@@ -276,7 +276,7 @@ export function FeaturesPage() {
         <div className="mt-10 rounded-2xl border border-slate-200 bg-white overflow-hidden shadow-xl">
           <div className="bg-navy px-4 py-3 flex items-center justify-between border-b border-slate-800">
             <div className="flex items-center gap-2">
-              <BrandLogo variant="mark" className="h-8 w-8 rounded-lg bg-white" />
+              <BrandLogo variant="mark" className="h-9 w-12 rounded-lg bg-white" />
               <span className="font-display font-bold text-white">BULLIONAI TERMINAL</span>
             </div>
             <div className="flex items-center gap-4 text-[11px] text-slate-300">

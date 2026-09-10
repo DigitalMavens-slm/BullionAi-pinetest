@@ -1446,7 +1446,7 @@ markersRef.current =
 
         <BrandLogo
           variant="mark"
-          className="h-44 w-44 opacity-[0.035] lg:h-64 lg:w-64"
+          className="h-44 w-60 opacity-[0.05] lg:h-64 lg:w-[360px]"
           alt=""
         />
 

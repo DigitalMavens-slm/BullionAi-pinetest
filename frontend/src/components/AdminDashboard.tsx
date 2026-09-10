@@ -305,7 +305,7 @@ export function AdminDashboard({ onExit }: { onExit: () => void }) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#0f172a] p-4">
         <div className="w-full max-w-md rounded-3xl bg-white p-8 shadow-2xl">
-          <BrandLogo className="mx-auto h-28 w-36" />
+          <BrandLogo className="mx-auto h-24 w-72" />
           <h1 className="mt-4 text-center text-xl font-black tracking-tight text-slate-900">
             Admin Login
           </h1>
@@ -386,7 +386,7 @@ export function AdminDashboard({ onExit }: { onExit: () => void }) {
     <div className="min-h-screen bg-[#f8fafc] flex">
       <aside className="hidden w-64 shrink-0 flex-col border-r border-slate-200 bg-slate-900 text-white lg:flex">
         <div className="flex h-16 items-center gap-3 border-b border-white/10 px-6">
-          <BrandLogo variant="mark" className="h-9 w-9 rounded-lg bg-white" />
+          <BrandLogo variant="mark" className="h-9 w-12 rounded-lg bg-white" />
           <span className="font-black tracking-tight">Admin</span>
           <span className="ml-auto rounded-full bg-white/10 px-2 py-0.5 text-[10px] font-bold">PRO</span>
         </div>
@@ -432,7 +432,7 @@ export function AdminDashboard({ onExit }: { onExit: () => void }) {
         <div className="sticky top-0 z-20 border-b border-slate-200 bg-white/90 backdrop-blur">
           <div className="mx-auto flex w-full max-w-[1600px] items-center justify-between px-4 py-3 lg:px-6">
             <div className="flex items-center gap-3">
-              <BrandLogo variant="mark" className="h-9 w-9 rounded-lg bg-white lg:hidden" />
+              <BrandLogo variant="mark" className="h-9 w-12 rounded-lg bg-white lg:hidden" />
               <div>
                 <div className="text-sm font-black tracking-tight text-slate-900 capitalize">{activeTab}</div>
                 <div className="hidden text-[11px] font-medium text-slate-400 lg:block">Premium Control Center</div>
