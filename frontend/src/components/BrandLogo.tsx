@@ -12,7 +12,7 @@ export function BrandLogo({
   return (
     <span className={`relative inline-block shrink-0 ${className}`}>
       <img
-        src={variant === "mark" ? "/bullionai-logo-mark.png" : "/bullionai-logo.png"}
+        src={variant === "mark" ? "/bullionai-logo-mark-v2.png" : "/bullionai-logo-v2.png"}
         alt={alt}
         className="h-full w-full object-contain"
       />

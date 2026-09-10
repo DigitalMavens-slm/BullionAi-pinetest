@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 
 const ROOT_URL = "https://bullionai.in";
-const DEFAULT_SOCIAL_IMAGE = `${ROOT_URL}/bullionai-logo.png`;
+const DEFAULT_SOCIAL_IMAGE = `${ROOT_URL}/bullionai-logo-v2.png`;
 
 type SeoProps = {
   title?: string;

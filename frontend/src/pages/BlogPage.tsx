@@ -276,7 +276,7 @@ export function BlogArticlePage({ article }: { article: typeof ARTICLES[0] }) {
       "description": article.excerpt,
       "image": article.image,
       "author": { "@type": "Organization", "name": "BullionAI" },
-      "publisher": { "@type": "Organization", "name": "BullionAI", "logo": { "@type": "ImageObject", "url": "https://bullionai.in/bullionai-logo.png" } },
+      "publisher": { "@type": "Organization", "name": "BullionAI", "logo": { "@type": "ImageObject", "url": "https://bullionai.in/bullionai-logo-v2.png" } },
       "datePublished": article.date,
       "dateModified": article.date,
       "mainEntityOfPage": url,
