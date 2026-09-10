@@ -1,6 +1,7 @@
 ﻿require("dotenv").config();
 
 const http = require("http");
+const zlib = require("zlib");
 const fs = require("fs");
 const path = require("path");
 
@@ -420,8 +421,7 @@ class BullionAIApi {
                 data
             );
 
-        response.writeHead(
-            statusCode,
+        const headers =
             {
                 "Content-Type":
                     "application/json",
@@ -437,7 +437,52 @@ class BullionAIApi {
 
                 "Access-Control-Allow-Headers":
                     "Content-Type, Authorization, X-Admin-Key, X-Admin-Token",
+            };
+
+        /*
+         * Gzip large payloads: /api/candles 15m ships ~2800 candles
+         * (~280KB raw → ~35KB gzipped), /api/state ~35KB → ~5KB.
+         * Browsers, RN fetch and the mobile WebView all send
+         * Accept-Encoding: gzip by default.
+         */
+        const acceptEncoding =
+            String(
+                response.req?.headers?.["accept-encoding"] || ""
+            );
+
+        if (
+            acceptEncoding.includes("gzip") &&
+            body.length > 1024
+        ) {
+
+            try {
+
+                const gz =
+                    zlib.gzipSync(
+                        Buffer.from(body)
+                    );
+
+                response.writeHead(
+                    statusCode,
+                    {
+                        ...headers,
+                        "Content-Encoding": "gzip",
+                        "Content-Length": gz.length,
+                    }
+                );
+
+                response.end(gz);
+
+                return;
+
+            } catch {
+                /* fall through to plain response */
             }
+        }
+
+        response.writeHead(
+            statusCode,
+            headers
         );
 
         response.end(
@@ -6319,6 +6364,38 @@ const allowedTimeframes =
                 const reqTsym =
                     url.searchParams.get("tsym");
 
+                /*
+                 * Short-TTL response cache: /api/candles rebuilds the whole
+                 * series (60m/1D resampling takes 5-19s on first compute).
+                 * Realtime tail updates flow via SSE candle_update, so a 5s
+                 * cached response is safe and makes repeat polls instant.
+                 */
+                const candlesCacheKey =
+                    `${reqExch || requestedInstrument}:${reqToken || ""}:${requestedTimeframe}`;
+
+                this.candlesResponseCache =
+                    this.candlesResponseCache ||
+                    new Map();
+
+                const cachedEntry =
+                    this.candlesResponseCache.get(
+                        candlesCacheKey
+                    );
+
+                if (
+                    cachedEntry &&
+                    Date.now() - cachedEntry.at < 5000
+                ) {
+
+                    this.sendJson(
+                        response,
+                        200,
+                        cachedEntry.data
+                    );
+
+                    return;
+                }
+
                 const instOverride =
                     reqExch && reqToken
                         ? {
@@ -6391,9 +6468,7 @@ const allowedTimeframes =
 
 
 
-                this.sendJson(
-                    response,
-                    200,
+                const candlesPayload =
                     {
                         instrument:
                             ensured.inst
@@ -6432,9 +6507,14 @@ const allowedTimeframes =
 
                         notice,
 
+                        // openInterest is unused by any client — trimming it
+                        // cuts the 15m payload (~2800 candles) by ~20%.
                         candles:
 
-                            outCandles,
+                            outCandles.map(c => {
+                                const { openInterest, ...rest } = c || {};
+                                return rest;
+                            }),
 
                         dayStats:
 
@@ -6454,7 +6534,20 @@ const allowedTimeframes =
                                 },
                                 ensured.tf.key
                             ).catch(() => null),
+                    };
+
+                this.candlesResponseCache.set(
+                    candlesCacheKey,
+                    {
+                        at: Date.now(),
+                        data: candlesPayload,
                     }
+                );
+
+                this.sendJson(
+                    response,
+                    200,
+                    candlesPayload
                 );
 
             } catch (error) {
