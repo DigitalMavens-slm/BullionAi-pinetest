@@ -10,15 +10,11 @@ export function BrandLogo({
   alt = "BullionAI",
 }: BrandLogoProps) {
   return (
-    <span className={`relative inline-block shrink-0 overflow-hidden ${className}`}>
+    <span className={`relative inline-block shrink-0 ${className}`}>
       <img
-        src="/bullionai-logo.png"
+        src={variant === "mark" ? "/bullionai-logo-mark.png" : "/bullionai-logo.png"}
         alt={alt}
-        className={
-          variant === "mark"
-            ? "absolute -left-[45%] -top-[25%] h-[190%] w-[190%] max-w-none"
-            : "absolute -left-[7%] -top-[25%] h-[155%] w-auto max-w-none"
-        }
+        className="h-full w-full object-contain"
       />
     </span>
   );
