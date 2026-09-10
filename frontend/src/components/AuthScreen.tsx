@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  BarChart3,
   Eye,
   EyeOff,
   Loader2,
@@ -16,6 +15,7 @@ import {
   registerEmail,
   type AuthUser,
 } from "../lib/auth";
+import { BrandLogo } from "./BrandLogo";
 
 type Mode = "login" | "register";
 
@@ -120,15 +120,7 @@ export function AuthScreen({
           <div className="pointer-events-none absolute -bottom-24 -left-16 h-72 w-72 rounded-full bg-gold-light/10 blur-3xl" />
 
           <div>
-            <div className="flex items-center gap-3">
-              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-white/10">
-                <BarChart3 className="h-5 w-5 text-gold-light" />
-              </div>
-              <div className="font-display text-xl font-bold text-white">
-                BULLION
-                <span className="text-gold-light">AI</span>
-              </div>
-            </div>
+            <BrandLogo className="h-32 w-44 rounded-xl bg-white" />
 
             <h1 className="font-display mt-10 text-[28px] font-bold leading-tight text-white">
               Trade bullion with
@@ -166,14 +158,7 @@ export function AuthScreen({
             <span aria-hidden="true">←</span> Back to home
           </button>
 
-          <div className="mb-6 flex items-center gap-3 lg:hidden">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-navy">
-              <BarChart3 className="h-4 w-4 text-white" />
-            </div>
-            <div className="font-display text-lg font-bold text-slate-900">
-              BULLION<span className="text-accent">AI</span>
-            </div>
-          </div>
+          <BrandLogo className="mb-6 h-24 w-32 lg:hidden" />
 
           <h2 className="font-display text-[24px] font-bold tracking-tight text-slate-900">
             {mode === "login" ? "Welcome back" : "Create your account"}

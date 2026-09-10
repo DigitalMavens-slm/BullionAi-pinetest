@@ -26,6 +26,7 @@ import { AuthScreen } from "./components/AuthScreen";
 import { InstrumentPicker, type SelectedSymbol } from "./components/SymbolSearch";
 import { TrialExpired, TrialBadge } from "./components/HomePage";
 import { AdminDashboard } from "./components/AdminDashboard";
+import { BrandLogo } from "./components/BrandLogo";
 import { ContactPage } from "./pages/ContactPage";
 import { AboutPage } from "./pages/AboutPage";
 import { Layout } from "./components/Layout";
@@ -1921,32 +1922,7 @@ function App() {
 
         <div className="flex items-center gap-3">
 
-          <div className="brand-gold-dot flex h-9 w-9 items-center justify-center rounded-xl">
-
-            <BarChart3 className="h-[18px] w-[18px] text-white" />
-
-          </div>
-
-
-          <div className="leading-tight">
-
-            <div className="font-display text-[17px] font-bold tracking-tight text-slate-900">
-
-              BULLION
-
-              <span className="gold-text">
-                AI
-              </span>
-
-            </div>
-
-            <div className="text-[9px] font-semibold uppercase tracking-[0.22em] text-slate-400">
-
-              Market intelligence · MCX
-
-            </div>
-
-          </div>
+          <BrandLogo className="h-14 w-[76px]" />
 
         </div>
 

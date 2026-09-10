@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 
 const ROOT_URL = "https://bullionai.in";
+const DEFAULT_SOCIAL_IMAGE = `${ROOT_URL}/bullionai-logo.png`;
 
 type SeoProps = {
   title?: string;
@@ -40,9 +41,11 @@ export function useSeo({
     setMeta("property", "og:description", ogDescription ?? description);
     setMeta("property", "og:type", ogType);
     setMeta("property", "og:url", ogUrl ?? ROOT_URL + window.location.pathname);
-    if (ogImage) setMeta("property", "og:image", ogImage);
+    const socialImage = ogImage ?? DEFAULT_SOCIAL_IMAGE;
+    setMeta("property", "og:image", socialImage);
     setMeta("name", "twitter:title", ogTitle ?? title);
     setMeta("name", "twitter:description", ogDescription ?? description);
+    setMeta("name", "twitter:image", socialImage);
 
     let canonicalLink = document.querySelector('link[rel="canonical"]') as HTMLLinkElement | null;
     if (!canonicalLink) {

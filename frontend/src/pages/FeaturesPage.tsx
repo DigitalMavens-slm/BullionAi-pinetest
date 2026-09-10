@@ -16,6 +16,7 @@ import {
   Building2,
 } from "lucide-react";
 import { Link } from "react-router-dom";
+import { BrandLogo } from "../components/BrandLogo";
 
 const MARKETS = [
   {
@@ -275,9 +276,7 @@ export function FeaturesPage() {
         <div className="mt-10 rounded-2xl border border-slate-200 bg-white overflow-hidden shadow-xl">
           <div className="bg-navy px-4 py-3 flex items-center justify-between border-b border-slate-800">
             <div className="flex items-center gap-2">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/10">
-                <BarChart2 className="h-4 w-4 text-white" />
-              </div>
+              <BrandLogo variant="mark" className="h-8 w-8 rounded-lg bg-white" />
               <span className="font-display font-bold text-white">BULLIONAI TERMINAL</span>
             </div>
             <div className="flex items-center gap-4 text-[11px] text-slate-300">

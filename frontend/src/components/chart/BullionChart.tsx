@@ -25,6 +25,7 @@ import {
 import {
   ChevronsRight,
 } from "lucide-react";
+import { BrandLogo } from "../BrandLogo";
 
 
 import {
@@ -1443,11 +1444,11 @@ markersRef.current =
 
       <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
 
-        <span className="select-none text-[64px] font-bold uppercase tracking-[0.35em] text-slate-900/[0.035] lg:text-[88px]">
-
-          BULLIONAI
-
-        </span>
+        <BrandLogo
+          variant="mark"
+          className="h-44 w-44 opacity-[0.035] lg:h-64 lg:w-64"
+          alt=""
+        />
 
       </div>
 

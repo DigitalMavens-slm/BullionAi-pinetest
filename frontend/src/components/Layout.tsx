@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { BarChart3, LogIn, Menu, MessageCircle, X, Phone, Mail, MapPin } from "lucide-react";
+import { LogIn, Menu, MessageCircle, X, Phone, Mail, MapPin } from "lucide-react";
 import { getAuthSession } from "../lib/auth";
 import { useSeo } from "../lib/useSeo";
+import { BrandLogo } from "./BrandLogo";
 
 const WHATSAPP_URL = `https://wa.me/917904311778?text=${encodeURIComponent("Hi BullionAI, I'd like to know more about your plans.")}`;
 
@@ -132,16 +133,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
     <div className="min-h-screen bg-paper text-slate-900 flex flex-col">
       <header className={`sticky top-0 z-40 transition-shadow ${scrolled ? "shadow-md" : ""} bg-white/95 backdrop-blur-md border-b border-slate-200/80`}>
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6">
-          <Link to="/" className="flex items-center gap-2.5">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-navy">
-              <BarChart3 className="h-5 w-5 text-white" />
-            </div>
-            <div className="leading-none">
-              <div className="font-display text-[16px] font-bold tracking-tight text-slate-900">
-                BULLION<span className="text-accent">AI</span>
-              </div>
-              <div className="hidden min-[380px]:block text-[8px] font-semibold uppercase tracking-[0.2em] text-slate-500">Market Intelligence</div>
-            </div>
+          <Link to="/" className="flex items-center" aria-label="BullionAI home">
+            <BrandLogo className="h-11 w-[60px] sm:h-12 sm:w-16" />
           </Link>
 
           <nav className="hidden items-center gap-2 lg:flex" aria-label="Primary">
@@ -209,14 +202,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
       <footer className="border-t border-slate-200/80 bg-slate-50/60">
         <div className="mx-auto grid max-w-7xl gap-10 px-4 py-12 sm:px-6 sm:py-16 lg:grid-cols-4">
           <div className="lg:col-span-1">
-            <div className="flex items-center gap-2.5">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-navy">
-                <BarChart3 className="h-5 w-5 text-white" />
-              </div>
-              <div className="font-display text-[16px] font-bold text-slate-900">
-                BULLION<span className="text-accent">AI</span>
-              </div>
-            </div>
+            <BrandLogo className="h-24 w-32" />
             <p className="mt-4 max-w-xs text-[12px] leading-relaxed text-slate-500">
               AI-powered market intelligence for MCX Gold, Silver &amp; Crude Oil and NSE/BSE equities. Premium, server-verified signals.
             </p>

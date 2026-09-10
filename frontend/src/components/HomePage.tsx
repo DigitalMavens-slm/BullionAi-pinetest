@@ -25,6 +25,7 @@ import {
   Database,
 } from "lucide-react";
 import { clearAuthSession, type AuthUser } from "../lib/auth";
+import { BrandLogo } from "./BrandLogo";
 
 const WHATSAPP_NUMBER = import.meta.env.VITE_WHATSAPP_NUMBER || "917904311778";
 const WHATSAPP_DISPLAY = "+91 79043 11778";
@@ -438,7 +439,9 @@ export function HomePage({ onStartTrial, onSignIn }: { onStartTrial: () => void;
           </div>
           <div className="mx-auto mt-6 max-w-md overflow-hidden rounded-2xl border border-slate-800 bg-[#0c0e12] shadow-[0_24px_64px_-16px_rgba(0,0,0,0.5)]">
             <div className="grid grid-cols-2 gap-px bg-[#1a1d23] p-px">
-              <div className="bg-[#be9619] px-3 py-2 text-center text-[11px] font-black tracking-wider text-black">BULLIONAI</div>
+              <div className="flex items-center justify-center bg-white px-3 py-1">
+                <BrandLogo className="h-10 w-14" />
+              </div>
               <div className="bg-[#be9619] px-3 py-2 text-center text-[10px] font-bold text-black">INFORMATION CENTER</div>
               {[
                 ["TRADE", "BUY", "text-lime-400"],

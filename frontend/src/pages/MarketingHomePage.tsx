@@ -1,7 +1,6 @@
 import { Link } from "react-router-dom";
 import {
   ArrowRight,
-  BarChart2,
   Check,
   Shield,
   Server,
@@ -14,6 +13,7 @@ import {
   Layers,
   Quote,
 } from "lucide-react";
+import { BrandLogo } from "../components/BrandLogo";
 
 const FEATURES = [
   { title: "Real-Time Signals", desc: "Verified BUY/SELL signals with entry, SL, TGT1, TGT2 — pushed via WebSocket.", icon: Zap },
@@ -80,9 +80,7 @@ export function MarketingHomePage() {
             <div className="rounded-2xl border border-slate-200 bg-white shadow-[0_40px_90px_-20px_rgba(10,37,64,0.35)] p-3 sm:p-4">
               <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                 <div className="flex items-center gap-2">
-                  <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-navy">
-                    <BarChart2 className="h-4 w-4 text-white" />
-                  </div>
+                  <BrandLogo variant="mark" className="h-7 w-7 rounded-lg bg-white" />
                   <span className="font-display text-[13px] font-bold text-slate-900">BULLIONAI TERMINAL</span>
                   <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[9px] font-bold text-emerald-700">LIVE</span>
                 </div>
