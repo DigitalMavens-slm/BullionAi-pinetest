@@ -7,12 +7,9 @@
     "icon": "./assets/icon.png",
     "scheme": "bullionai",
     "userInterfaceStyle": "automatic",
-    "splash": {
-      "image": "./assets/splash-icon.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#0F1420"
-    },
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.bullionai.app"
@@ -20,13 +17,16 @@
     "android": {
       "package": "com.bullionai.app",
       "adaptiveIcon": {
-        "backgroundColor": "#0F1420",
+        "backgroundColor": "#0A2540",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "permissions": ["RECEIVE_BOOT_COMPLETED", "VIBRATE"]
+      "permissions": [
+        "RECEIVE_BOOT_COMPLETED",
+        "VIBRATE"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png",
@@ -34,20 +34,35 @@
     },
     "plugins": [
       "expo-router",
+      "expo-secure-store",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 220,
+          "resizeMode": "contain",
+          "backgroundColor": "#0A2540"
+        }
+      ],
       [
         "expo-notifications",
         {
-          "icon": "./assets/notification-icon.png",
-          "color": "#2962FF"
+          "icon": "./assets/icon.png",
+          "color": "#0A2540",
+          "sounds": []
         }
-      ],
-      "expo-secure-store"
+      ]
     ],
     "experiments": {
-      "typedRoutes": true
+      "typedRoutes": false
     },
     "extra": {
-      "apiBase": "https://backend.bullionai.in"
-    }
+      "apiBase": "https://backend.bullionai.in",
+      "router": {},
+      "eas": {
+        "projectId": "146b1aba-f449-4d8f-846b-b0c042cacb52"
+      }
+    },
+    "owner": "sheriffdmlearning"
   }
 }
