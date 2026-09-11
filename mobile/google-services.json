@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "799308195011",
+    "project_id": "bullionai",
+    "storage_bucket": "bullionai.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:799308195011:android:8cd8e9e0188dd004af6e76",
+        "android_client_info": {
+          "package_name": "com.bullionai.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBOcEpsa5zt2ELOvaTAcsNJVTgKC6SzaXs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
