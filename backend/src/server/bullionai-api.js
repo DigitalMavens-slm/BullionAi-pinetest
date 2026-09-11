@@ -4247,6 +4247,7 @@ const allowedTimeframes =
                             exchange: exch, symbol: token, timeframe: tf.key, signal: sig.signal,
                             entry: res.trade.entryPrice, sl: res.trade.initialSL, target1: res.trade.target1, target2: res.trade.target2,
                         }));
+                        try { const push = require("../push/push-service"); push.onTradeOpen({ exchange: exch, token: String(token), symbol: token, timeframe: tf.key, signal: sig.signal, entryPrice: res.trade.entryPrice, sl: res.trade.initialSL, target1: res.trade.target1, target2: res.trade.target2 }); } catch {}
                         // Persist the freshly-opened trade â€” ONLY 15m (canonical symbol=token)
                         await this.persistPerfTrade({
                             exchange: exch, symbol: token, token: String(token), timeframe: tf.key,
@@ -4275,6 +4276,17 @@ const allowedTimeframes =
                     result: ev.result,
                     resultPoints: ev.resultPoints,
                 }));
+            }
+            // Push notifications for TGT1 / SL / TGT2 (candle-close) - candle-close push
+            for (const ev of upd.events) {
+                try {
+                    const push = require("../push/push-service");
+                    if (ev.type === "target1") push.onTarget1({ exchange: exch, token: String(token), symbol, timeframe: tf.key, signal: ev.trade?.signal, target1: ev.trade?.target1 });
+                    else if (ev.type === "trade_close") {
+                        if (ev.trigger === "SL" || String(ev.result || "").includes("SL")) push.onSL({ exchange: exch, token: String(token), symbol, timeframe: tf.key, signal: ev.trade?.signal, result: ev.result, currentPrice: ev.trade?.activeSL ?? ev.trade?.exitPrice });
+                        else push.onTGT2({ exchange: exch, token: String(token), symbol, timeframe: tf.key, signal: ev.trade?.signal, result: ev.result, target2: ev.trade?.target2 });
+                    }
+                } catch {}
             }
 
             // Persist the lifecycle update â€” fixed-target (all TFs for NSE/BSE, 15m for MCX)
@@ -4870,6 +4882,17 @@ const allowedTimeframes =
                         if (upd.events.length || maxChanged || plChanged) {
                             for (const ev of upd.events) {
                                 this.broadcastEvent(ev.type, this.segmentEvent(ev.type, { exchange: exch, symbol: token, timeframe: tf, ...(ev.trade || {}), result: ev.result, resultPoints: ev.resultPoints }));
+                            }
+                            // Push notifications for TGT1 / SL / TGT2 (tick-level, instant)
+                            for (const ev of upd.events) {
+                                try {
+                                    const push = require("../push/push-service");
+                                    if (ev.type === "target1") push.onTarget1({ exchange: exch, token, symbol: token, timeframe: tf, signal: ev.trade?.signal, target1: ev.trade?.target1 });
+                                    else if (ev.type === "trade_close") {
+                                        if (ev.trigger === "SL" || String(ev.result || "").includes("SL")) push.onSL({ exchange: exch, token, symbol: token, timeframe: tf, signal: ev.trade?.signal, result: ev.result, currentPrice: price });
+                                        else push.onTGT2({ exchange: exch, token, symbol: token, timeframe: tf, signal: ev.trade?.signal, result: ev.result, target2: ev.trade?.target2 });
+                                    }
+                                } catch {}
                             }
                             // For maxPoints/currentPL live updates without TGT event, also push a lightweight strategy tick
                             if ((maxChanged || plChanged) && !upd.events.length) {
@@ -5847,7 +5870,97 @@ const allowedTimeframes =
         }
 
         // -----------------------------------------------------
-        // ADMIN â€” users & subscriptions (X-Admin-Key)
+        // PUSH — notifications (Bearer auth)
+        // -----------------------------------------------------
+        if (
+            url.pathname === "/api/push/register" &&
+            request.method === "POST"
+        ) {
+            const header = request.headers.authorization || "";
+            const token = header.startsWith("Bearer ") ? header.slice(7) : null;
+            const data = verifyToken(token);
+            if (!data) {
+                this.sendJson(response, 401, { ok: false, error: "Invalid or expired session." });
+                return;
+            }
+            try {
+                const body = await readBody(request);
+                const expoToken = String(body.expoToken || body.token || "").trim();
+                const platform = String(body.platform || "").trim() || null;
+                const pushStore = require("../push/push-store");
+                await pushStore.registerToken(data.email, expoToken, platform);
+                this.sendJson(response, 200, { ok: true });
+            } catch (e) {
+                this.sendJson(response, 400, { ok: false, error: e?.message || String(e) });
+            }
+            return;
+        }
+
+        if (url.pathname === "/api/push/unregister" && request.method === "POST") {
+            const header = request.headers.authorization || "";
+            const token = header.startsWith("Bearer ") ? header.slice(7) : null;
+            const data = verifyToken(token);
+            if (!data) {
+                this.sendJson(response, 401, { ok: false, error: "Invalid or expired session." });
+                return;
+            }
+            try {
+                const body = await readBody(request).catch(() => ({}));
+                const expoToken = String(body.expoToken || body.token || "").trim() || null;
+                const pushStore = require("../push/push-store");
+                await pushStore.unregisterToken(data.email, expoToken);
+                this.sendJson(response, 200, { ok: true });
+            } catch (e) {
+                this.sendJson(response, 400, { ok: false, error: e?.message || String(e) });
+            }
+            return;
+        }
+
+        if (url.pathname === "/api/push/preferences" && request.method === "GET") {
+            const header = request.headers.authorization || "";
+            const token = header.startsWith("Bearer ") ? header.slice(7) : null;
+            const data = verifyToken(token);
+            if (!data) {
+                this.sendJson(response, 401, { ok: false, error: "Invalid or expired session." });
+                return;
+            }
+            try {
+                const pushStore = require("../push/push-store");
+                const prefs = await pushStore.getPreferences(data.email);
+                this.sendJson(response, 200, { ok: true, preferences: prefs });
+            } catch (e) {
+                this.sendJson(response, 400, { ok: false, error: e?.message || String(e) });
+            }
+            return;
+        }
+
+        if (
+            url.pathname === "/api/push/preferences" &&
+            (request.method === "POST" || request.method === "PUT")
+        ) {
+            const header = request.headers.authorization || "";
+            const token = header.startsWith("Bearer ") ? header.slice(7) : null;
+            const data = verifyToken(token);
+            if (!data) {
+                this.sendJson(response, 401, { ok: false, error: "Invalid or expired session." });
+                return;
+            }
+            try {
+                const body = await readBody(request);
+                const pushStore = require("../push/push-store");
+                const prefs = await pushStore.setPreferences(data.email, {
+                    enabled: body.enabled,
+                    scripts: body.scripts,
+                });
+                this.sendJson(response, 200, { ok: true, preferences: prefs });
+            } catch (e) {
+                this.sendJson(response, 400, { ok: false, error: e?.message || String(e) });
+            }
+            return;
+        }
+
+        // -----------------------------------------------------
+        // ADMIN — users & subscriptions (X-Admin-Key)
         // -----------------------------------------------------
 
         const isAdminRoute =
